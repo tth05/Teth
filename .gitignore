@@ -1,9 +1,4 @@
-# Project exclude paths
-/.gradle/
-/cli/build/
-/cli/out/
-/cli/out/production/classes/
-/lang/build/
-/lang/out/
-/lang/out/production/classes/
-/lang/out/test/classes/
+.gradle
+**/out/
+**/build/
+.idea

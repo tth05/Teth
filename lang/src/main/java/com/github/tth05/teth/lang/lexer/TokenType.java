@@ -9,5 +9,6 @@ public enum TokenType {
     OP_ASSIGN,
     L_PAREN,
     R_PAREN,
-    LINE_BREAK;
+    LINE_BREAK,
+    EOF;
 }

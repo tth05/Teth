@@ -16,10 +16,12 @@ public class Tokenizer {
     public List<Token> tokenize() {
         List<Token> tokens = new ArrayList<>();
 
-        while (!this.stream.isEmpty()) {
+        while (true) {
             char c = this.stream.peek();
-            if (c == 0)
+            if (c == 0) {
+                tokens.add(new Token("", TokenType.EOF));
                 break;
+            }
 
             if (isNumber(c)) {
                 tokens.add(parseNumber());
