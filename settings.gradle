@@ -1,0 +1,4 @@
+rootProject.name = 'teth'
+include 'lang'
+include 'cli'
+

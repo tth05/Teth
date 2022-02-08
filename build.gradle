@@ -1,0 +1,11 @@
+version '0.0.1'
+
+subprojects {
+    apply plugin: 'java'
+
+    group "com.github.tth05.teth"
+
+    repositories {
+        mavenCentral()
+    }
+}
