@@ -29,6 +29,8 @@ public class Tokenizer {
                 tokens.add(parseIdentifier());
             } else if (isOperator(c)) {
                 tokens.add(parseOperator());
+            } else if (isParen(c)) {
+                tokens.add(parseParen());
             } else if (isLineBreak(c)) {
                 this.stream.consume();
                 tokens.add(new Token("\n", TokenType.LINE_BREAK));
@@ -72,6 +74,20 @@ public class Tokenizer {
         var op = this.stream.consume();
         return new Token("" + op, switch (op) {
             case '=' -> TokenType.OP_ASSIGN;
+            case '+' -> TokenType.OP_PLUS;
+            case '-' -> TokenType.OP_MINUS;
+            case '*' -> TokenType.OP_STAR;
+            case '/' -> TokenType.OP_SLASH;
+            case '^' -> TokenType.OP_ROOF;
+            default -> throw new IllegalStateException("Unreachable");
+        });
+    }
+
+    private Token parseParen() {
+        var c = this.stream.consume();
+        return new Token("" + c, switch (c) {
+            case '(' -> TokenType.L_PAREN;
+            case ')' -> TokenType.R_PAREN;
             default -> throw new IllegalStateException("Unreachable");
         });
     }
@@ -85,7 +101,11 @@ public class Tokenizer {
     }
 
     private boolean isOperator(char c) {
-        return c == '=' || c == '+' || c == '-';
+        return c == '=' || c == '+' || c == '-' || c == '*' || c == '/' || c == '^';
+    }
+
+    private boolean isParen(char c) {
+        return c == '(' || c == ')';
     }
 
     private boolean isUnderscore(char c) {
@@ -93,7 +113,7 @@ public class Tokenizer {
     }
 
     private boolean isSeparator(char c) {
-        return c == 0 || isWhitespace(c) || isLineBreak(c);
+        return c == 0 || isWhitespace(c) || isLineBreak(c) || isOperator(c) || isParen(c);
     }
 
     private boolean isLineBreak(char c) {
