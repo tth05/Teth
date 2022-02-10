@@ -2,38 +2,34 @@ package com.github.tth05.teth.lang.lexer;
 
 import com.github.tth05.teth.lang.stream.CharStream;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class Tokenizer {
 
     private final CharStream stream;
+    private final TokenStream tokenStream = new TokenStream();
 
-    public Tokenizer(CharStream stream) {
+    private Tokenizer(CharStream stream) {
         this.stream = stream;
     }
 
-    public List<Token> tokenize() {
-        List<Token> tokens = new ArrayList<>();
-
+    public TokenStream tokenize() {
         while (true) {
             char c = this.stream.peek();
             if (c == 0) {
-                tokens.add(new Token("", TokenType.EOF));
+                emit(new Token("", TokenType.EOF));
                 break;
             }
 
             if (isNumber(c)) {
-                tokens.add(parseNumber());
+                emit(parseNumber());
             } else if (isIdentifierChar(c)) {
-                tokens.add(parseIdentifier());
+                emit(parseIdentifier());
             } else if (isOperator(c)) {
-                tokens.add(parseOperator());
+                emit(parseOperator());
             } else if (isParen(c)) {
-                tokens.add(parseParen());
+                emit(parseParen());
             } else if (isLineBreak(c)) {
                 this.stream.consume();
-                tokens.add(new Token("\n", TokenType.LINE_BREAK));
+                emit(new Token("\n", TokenType.LINE_BREAK));
             } else if (isWhitespace(c)) {
                 this.stream.consume();
             } else {
@@ -41,7 +37,15 @@ public class Tokenizer {
             }
         }
 
-        return tokens;
+        return this.tokenStream;
+    }
+
+    public TokenStream getTokenStream() {
+        return this.tokenStream;
+    }
+
+    private void emit(Token token) {
+        this.tokenStream.push(token);
     }
 
     private Token parseIdentifier() {
@@ -122,5 +126,9 @@ public class Tokenizer {
 
     private boolean isWhitespace(char c) {
         return c == ' ';
+    }
+
+    public static TokenStream streamOf(CharStream charStream) {
+        return new Tokenizer(charStream).tokenize();
     }
 }

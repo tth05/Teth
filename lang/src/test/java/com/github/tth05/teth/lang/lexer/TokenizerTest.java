@@ -14,8 +14,8 @@ public class TokenizerTest {
 
     @Test
     public void testNumber() {
-        var positive = new Tokenizer(CharStream.fromString("12345")).tokenize();
-        var negative = new Tokenizer(CharStream.fromString("-12345")).tokenize();
+        var positive = Tokenizer.streamOf(CharStream.fromString("12345")).toList();
+        var negative = Tokenizer.streamOf(CharStream.fromString("-12345")).toList();
 
         assertIterableEquals(tokenList(new Token("12345", TokenType.NUMBER)), positive);
         assertIterableEquals(tokenList(
@@ -26,12 +26,12 @@ public class TokenizerTest {
 
     @Test
     public void testInvalidNumber() {
-        assertThrows(UnexpectedCharException.class, () -> new Tokenizer(CharStream.fromString("123anIdentifier")).tokenize());
+        assertThrows(UnexpectedCharException.class, () -> Tokenizer.streamOf(CharStream.fromString("123anIdentifier")).toList());
     }
 
     @Test
     public void testIdentifier() {
-        var tokens = new Tokenizer(CharStream.fromString("anIdentifier")).tokenize();
+        var tokens = Tokenizer.streamOf(CharStream.fromString("anIdentifier")).toList();
         assertIterableEquals(tokenList(new Token("anIdentifier", TokenType.IDENTIFIER)), tokens);
     }
 
@@ -43,13 +43,13 @@ public class TokenizerTest {
             if (matcher.reset(str).matches())
                 continue;
 
-            assertThrows(UnexpectedCharException.class, () -> new Tokenizer(CharStream.fromString(str)).tokenize(), "No exception thrown for '" + str + "' " + i);
+            assertThrows(UnexpectedCharException.class, () -> Tokenizer.streamOf(CharStream.fromString(str)).toList(), "No exception thrown for '" + str + "' " + i);
         }
     }
 
     @Test
     public void testAssign() {
-        var tokens = new Tokenizer(CharStream.fromString("type anIdentifier = 56")).tokenize();
+        var tokens = Tokenizer.streamOf(CharStream.fromString("type anIdentifier = 56")).toList();
         assertIterableEquals(tokenList(
                 new Token("type", TokenType.IDENTIFIER),
                 new Token("anIdentifier", TokenType.IDENTIFIER),
@@ -60,7 +60,7 @@ public class TokenizerTest {
 
     @Test
     public void testAssignMultiline() {
-        var tokens = new Tokenizer(CharStream.fromString("type anIdentifier\n =\n 56")).tokenize();
+        var tokens = Tokenizer.streamOf(CharStream.fromString("type anIdentifier\n =\n 56")).toList();
         assertIterableEquals(tokenList(
                 new Token("type", TokenType.IDENTIFIER),
                 new Token("anIdentifier", TokenType.IDENTIFIER),
@@ -73,7 +73,7 @@ public class TokenizerTest {
 
     @Test
     public void testMathExpression() {
-        var tokens = new Tokenizer(CharStream.fromString("5*(1^2-45)/10+1")).tokenize();
+        var tokens = Tokenizer.streamOf(CharStream.fromString("5*(1^2-45)/10+1")).toList();
         assertIterableEquals(tokenList(
                 new Token("5", TokenType.NUMBER),
                 new Token("*", TokenType.OP_STAR),
