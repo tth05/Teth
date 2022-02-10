@@ -3,15 +3,14 @@ package com.github.tth05.teth.lang.lexer;
 import com.github.tth05.teth.lang.parser.UnexpectedTokenException;
 import com.github.tth05.teth.lang.stream.EndOfStreamException;
 
-import java.util.ArrayDeque;
-import java.util.Deque;
+import java.util.LinkedList;
 import java.util.List;
 
 public class TokenStream {
 
     private static final Token EOF = new Token("", TokenType.EOF);
 
-    private final Deque<Token> tokens = new ArrayDeque<>();
+    private final LinkedList<Token> tokens = new LinkedList<>();
 
     private int index;
 
@@ -20,7 +19,7 @@ public class TokenStream {
     }
 
     public Token consumeType(TokenType expectedType) {
-        return consumeTypeOrElse(expectedType, () -> {throw new UnexpectedTokenException(peek());});
+        return consumeTypeOrElse(expectedType, () -> {throw new UnexpectedTokenException(peek(), expectedType);});
     }
 
     public Token consumeTypeOrElse(TokenType expectedType, Runnable orElse) {
@@ -35,7 +34,7 @@ public class TokenStream {
     public Token consume() {
         validateIndex(0);
 
-        return this.tokens.pop();
+        return this.tokens.removeFirst();
     }
 
     public Token peek() {
@@ -46,7 +45,7 @@ public class TokenStream {
         if (!isValidIndex(offset))
             return EOF;
 
-        return this.tokens.peek();
+       return this.tokens.get(offset);
     }
 
     public List<Token> toList() {
