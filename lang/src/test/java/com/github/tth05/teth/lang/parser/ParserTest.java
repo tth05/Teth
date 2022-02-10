@@ -8,6 +8,6 @@ public class ParserTest {
 
     @Test
     public void parseVariableDeclaration() {
-        System.out.println(Parser.from(Tokenizer.streamOf(CharStream.fromString("double d /"))));
+        System.out.println(Parser.from(Tokenizer.streamOf(CharStream.fromString("double d = (5 + 5* 2^2)^(100+1)"))));
     }
 }

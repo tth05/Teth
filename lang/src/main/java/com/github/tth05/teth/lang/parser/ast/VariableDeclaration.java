@@ -1,7 +1,7 @@
 package com.github.tth05.teth.lang.parser.ast;
 
 public class VariableDeclaration extends Statement {
-    
+
     private final String type;
     private final String name;
 
