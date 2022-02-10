@@ -47,6 +47,30 @@ public class BinaryExpression extends Expression {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+
+        BinaryExpression that = (BinaryExpression) o;
+
+        if (!this.left.equals(that.left))
+            return false;
+        if (!this.right.equals(that.right))
+            return false;
+        return this.operator == that.operator;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = this.left.hashCode();
+        result = 31 * result + this.right.hashCode();
+        result = 31 * result + this.operator.hashCode();
+        return result;
+    }
+
+    @Override
     public String toString() {
         return "BinaryExpression{" +
                "left=" + this.left +

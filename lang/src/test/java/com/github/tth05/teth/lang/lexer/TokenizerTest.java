@@ -1,6 +1,6 @@
 package com.github.tth05.teth.lang.lexer;
 
-import com.github.tth05.teth.lang.stream.CharStream;
+import com.github.tth05.teth.lang.AbstractTokenizerTest;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -10,29 +10,35 @@ import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TokenizerTest {
+public class TokenizerTest extends AbstractTokenizerTest {
 
     @Test
-    public void testNumber() {
-        var positive = Tokenizer.streamOf(CharStream.fromString("12345")).toList();
-        var negative = Tokenizer.streamOf(CharStream.fromString("-12345")).toList();
+    public void testPositiveNumber() {
+        createStreams("12345");
+        assertIterableEquals(tokenList(new Token("12345", TokenType.NUMBER)), tokensIntoList());
+        assertStreamsEmpty();
+    }
 
-        assertIterableEquals(tokenList(new Token("12345", TokenType.NUMBER)), positive);
+    @Test
+    public void testNegativeNumber() {
+        createStreams("-12345");
         assertIterableEquals(tokenList(
                 new Token("-", TokenType.OP_MINUS),
                 new Token("12345", TokenType.NUMBER)
-        ), negative);
+        ), tokensIntoList());
+        assertStreamsEmpty();
     }
 
     @Test
     public void testInvalidNumber() {
-        assertThrows(UnexpectedCharException.class, () -> Tokenizer.streamOf(CharStream.fromString("123anIdentifier")).toList());
+        assertThrows(UnexpectedCharException.class, () -> createStreams("123anIdentifier"));
     }
 
     @Test
     public void testIdentifier() {
-        var tokens = Tokenizer.streamOf(CharStream.fromString("anIdentifier")).toList();
-        assertIterableEquals(tokenList(new Token("anIdentifier", TokenType.IDENTIFIER)), tokens);
+        createStreams("anIdentifier");
+        assertIterableEquals(tokenList(new Token("anIdentifier", TokenType.IDENTIFIER)), tokensIntoList());
+        assertStreamsEmpty();
     }
 
     @Test
@@ -43,24 +49,25 @@ public class TokenizerTest {
             if (matcher.reset(str).matches())
                 continue;
 
-            assertThrows(UnexpectedCharException.class, () -> Tokenizer.streamOf(CharStream.fromString(str)).toList(), "No exception thrown for '" + str + "' " + i);
+            assertThrows(UnexpectedCharException.class, () -> createStreams(str), "No exception thrown for '" + str + "' " + i);
         }
     }
 
     @Test
     public void testAssign() {
-        var tokens = Tokenizer.streamOf(CharStream.fromString("type anIdentifier = 56")).toList();
+        createStreams("type anIdentifier = 56");
         assertIterableEquals(tokenList(
                 new Token("type", TokenType.IDENTIFIER),
                 new Token("anIdentifier", TokenType.IDENTIFIER),
                 new Token("=", TokenType.OP_ASSIGN),
                 new Token("56", TokenType.NUMBER)
-        ), tokens);
+        ), tokensIntoList());
+        assertStreamsEmpty();
     }
 
     @Test
     public void testAssignMultiline() {
-        var tokens = Tokenizer.streamOf(CharStream.fromString("type anIdentifier\n =\n 56")).toList();
+        createStreams("type anIdentifier\n =\n 56");
         assertIterableEquals(tokenList(
                 new Token("type", TokenType.IDENTIFIER),
                 new Token("anIdentifier", TokenType.IDENTIFIER),
@@ -68,12 +75,13 @@ public class TokenizerTest {
                 new Token("=", TokenType.OP_ASSIGN),
                 new Token("\n", TokenType.LINE_BREAK),
                 new Token("56", TokenType.NUMBER)
-        ), tokens);
+        ), tokensIntoList());
+        assertStreamsEmpty();
     }
 
     @Test
     public void testMathExpression() {
-        var tokens = Tokenizer.streamOf(CharStream.fromString("5*(1^2-45)/10+1")).toList();
+        createStreams("5*(1^2-45)/10+1");
         assertIterableEquals(tokenList(
                 new Token("5", TokenType.NUMBER),
                 new Token("*", TokenType.OP_STAR),
@@ -88,7 +96,8 @@ public class TokenizerTest {
                 new Token("10", TokenType.NUMBER),
                 new Token("+", TokenType.OP_PLUS),
                 new Token("1", TokenType.NUMBER)
-        ), tokens);
+        ), tokensIntoList());
+        assertStreamsEmpty();
     }
 
     private List<Token> tokenList(Token... tokens) {

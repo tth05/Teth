@@ -13,9 +13,26 @@ public class LongLiteralExpression extends Expression {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+
+        return this.value == ((LongLiteralExpression) o).value;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + (int) (this.value ^ (this.value >>> 32));
+        return result;
+    }
+
+    @Override
     public String toString() {
         return "LongLiteralExpression{" +
-               "value=" + value +
+               "value=" + this.value +
                '}';
     }
 }
