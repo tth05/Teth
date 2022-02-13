@@ -1,10 +1,12 @@
 package com.github.tth05.teth.lang.parser.ast;
 
+import com.github.tth05.teth.lang.parser.IDumpable;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class Expression {
+public abstract class Expression implements IDumpable {
 
     private List<Expression> children;
 

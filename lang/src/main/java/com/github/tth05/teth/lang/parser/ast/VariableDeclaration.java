@@ -1,5 +1,7 @@
 package com.github.tth05.teth.lang.parser.ast;
 
+import com.github.tth05.teth.lang.util.ASTDumpBuilder;
+
 import java.util.Objects;
 
 public class VariableDeclaration extends Statement {
@@ -41,6 +43,20 @@ public class VariableDeclaration extends Statement {
         result = 31 * result + this.name.hashCode();
         result = 31 * result + (this.expression != null ? this.expression.hashCode() : 0);
         return result;
+    }
+
+    @Override
+    public void dump(ASTDumpBuilder builder) {
+        builder.startBlock();
+        builder.append("VariableDeclaration {").newLine();
+        builder.startBlock();
+        builder.appendAttribute("type", this.type).newLine();
+        builder.appendAttribute("name", this.name).newLine();
+        builder.appendAttribute("expression");
+        this.expression.dump(builder);
+        builder.endBlock();
+        builder.newLine().append("}");
+        builder.endBlock();
     }
 
     @Override
