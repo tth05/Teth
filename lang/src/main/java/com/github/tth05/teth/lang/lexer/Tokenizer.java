@@ -21,6 +21,8 @@ public class Tokenizer {
 
             if (isNumber(c)) {
                 emit(parseNumber());
+            } else if (isQuote(c)) {
+                emit(parseString());
             } else if (isIdentifierChar(c)) {
                 emit(parseIdentifier());
             } else if (isOperator(c)) {
@@ -59,6 +61,24 @@ public class Tokenizer {
         } while (!isSeparator(this.stream.peek()));
 
         return new Token(ident.toString(), TokenType.IDENTIFIER);
+    }
+
+    private Token parseString() {
+        StringBuilder string = new StringBuilder(5);
+        this.stream.consume(); //Prefix
+        while (true) {
+            var next = this.stream.peek();
+            if (next == 0 || isLineBreak(next))
+                throw new UnexpectedCharException(next, TokenType.STRING);
+            if (isQuote(next))
+                break;
+
+            //TODO: Escapes etc.
+            string.append(this.stream.consume());
+        }
+        this.stream.consume(); //Suffix
+
+        return new Token(string.toString(), TokenType.STRING);
     }
 
     private Token parseNumber() {
@@ -106,6 +126,10 @@ public class Tokenizer {
 
     private boolean isOperator(char c) {
         return c == '=' || c == '+' || c == '-' || c == '*' || c == '/' || c == '^';
+    }
+
+    private boolean isQuote(char c) {
+        return c == '"';
     }
 
     private boolean isParen(char c) {

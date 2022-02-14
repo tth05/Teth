@@ -35,6 +35,23 @@ public class TokenizerTest extends AbstractTokenizerTest {
     }
 
     @Test
+    public void testSimpleString() {
+        createStreams("\"a cool string\"");
+        assertIterableEquals(tokenList(new Token("a cool string", TokenType.STRING)), tokensIntoList());
+        assertStreamsEmpty();
+
+        createStreams("\"teth_is_great!\"");
+        assertIterableEquals(tokenList(new Token("teth_is_great!", TokenType.STRING)), tokensIntoList());
+        assertStreamsEmpty();
+    }
+
+    @Test
+    public void testUnclosedString() {
+        assertThrows(UnexpectedCharException.class, () -> createStreams("\"123anIdentifier"));
+        assertThrows(UnexpectedCharException.class, () -> createStreams("\"123anIdentifier\n"));
+    }
+
+    @Test
     public void testIdentifier() {
         createStreams("anIdentifier");
         assertIterableEquals(tokenList(new Token("anIdentifier", TokenType.IDENTIFIER)), tokensIntoList());

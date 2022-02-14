@@ -5,6 +5,7 @@ public enum TokenType {
     IDENTIFIER,
     KEYWORD,
     NUMBER,
+    STRING,
     COMMA,
     OP_ASSIGN,
     OP_PLUS,

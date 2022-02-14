@@ -2,10 +2,7 @@ package com.github.tth05.teth.lang.parser;
 
 import com.github.tth05.teth.lang.lexer.TokenStream;
 import com.github.tth05.teth.lang.lexer.TokenType;
-import com.github.tth05.teth.lang.parser.ast.BinaryExpression;
-import com.github.tth05.teth.lang.parser.ast.Expression;
-import com.github.tth05.teth.lang.parser.ast.LongLiteralExpression;
-import com.github.tth05.teth.lang.parser.ast.VariableDeclaration;
+import com.github.tth05.teth.lang.parser.ast.*;
 
 import java.util.List;
 import java.util.function.Supplier;
@@ -103,11 +100,12 @@ public class Parser {
 
     private Expression parseLiteralExpression() {
         var token = this.stream.peek();
-        if (token.is(TokenType.NUMBER)) {
-            return new LongLiteralExpression(Long.parseLong(this.stream.consume().value()));
-        }
 
-        return null;
+        return switch (token.type()) {
+            case NUMBER -> new LongLiteralExpression(Long.parseLong(this.stream.consume().value()));
+            case STRING -> new StringLiteralExpression(this.stream.consume().value());
+            default -> null;
+        };
     }
 
     public static SourceFileUnit from(TokenStream stream) {
