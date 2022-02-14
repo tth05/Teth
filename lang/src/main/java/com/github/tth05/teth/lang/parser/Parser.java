@@ -16,7 +16,7 @@ public class Parser {
         this.stream = stream;
     }
 
-    private SourceFileUnit parse() {
+    public SourceFileUnit parse() {
         while (true) {
             var token = this.stream.peek();
             if (token.is(TokenType.EOF))
