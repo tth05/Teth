@@ -11,7 +11,8 @@ public class CharStream {
     }
 
     public char consume() {
-        validateIndex(0);
+        if (!isValidIndex(0))
+            throw new EndOfStreamException();
 
         return this.chars[this.index++];
     }
@@ -33,11 +34,6 @@ public class CharStream {
 
     private boolean isValidIndex(int offset) {
         return this.index + offset < this.chars.length;
-    }
-
-    private void validateIndex(int offset) {
-        if (!isValidIndex(offset))
-            throw new EndOfStreamException();
     }
 
     public static CharStream fromString(String source) {

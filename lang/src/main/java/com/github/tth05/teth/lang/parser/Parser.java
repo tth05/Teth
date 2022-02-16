@@ -33,12 +33,12 @@ public class Parser {
     }
 
     private VariableDeclaration parseVariableDeclaration() {
-        var type = this.stream.consume();
+        var type = this.stream.consumeType(TokenType.IDENTIFIER);
         var name = this.stream.consumeType(TokenType.IDENTIFIER);
 
         Expression assignment = null;
         if (this.stream.peek().is(TokenType.OP_ASSIGN)) {
-            this.stream.consume();
+            this.stream.consumeType(TokenType.OP_ASSIGN);
             assignment = parseExpression();
         }
 
@@ -82,15 +82,17 @@ public class Parser {
      * Literals, variable access, method calls
      */
     private Expression parsePrimaryExpression() {
-        var expr = switch (this.stream.peek().type()) {
-            case L_PAREN -> {
-                this.stream.consume();
-                var parenExpr = parseExpression();
-                this.stream.consumeType(TokenType.R_PAREN);
-                yield parenExpr;
-            }
-            default -> parseLiteralExpression();
-        };
+        Expression expr;
+
+        var currentType = this.stream.peek().type();
+        if (currentType == TokenType.L_PAREN) {
+            this.stream.consumeType(TokenType.L_PAREN);
+            var parenExpr = parseExpression();
+            this.stream.consumeType(TokenType.R_PAREN);
+            expr = parenExpr;
+        } else {
+            expr = parseLiteralExpression();
+        }
 
         if (expr == null)
             throw new UnsupportedOperationException();
@@ -102,8 +104,8 @@ public class Parser {
         var token = this.stream.peek();
 
         return switch (token.type()) {
-            case NUMBER -> new LongLiteralExpression(Long.parseLong(this.stream.consume().value()));
-            case STRING -> new StringLiteralExpression(this.stream.consume().value());
+            case NUMBER -> new LongLiteralExpression(Long.parseLong(this.stream.consumeType(TokenType.NUMBER).value()));
+            case STRING -> new StringLiteralExpression(this.stream.consumeType(TokenType.STRING).value());
             default -> null;
         };
     }
