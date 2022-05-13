@@ -1,4 +1,4 @@
 rootProject.name = 'teth'
-include 'lang'
+include 'parser'
 include 'cli'
 

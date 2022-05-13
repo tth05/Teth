@@ -6,7 +6,7 @@ plugins {
 version '0.0.1'
 
 dependencies {
-    implementation project(":lang")
+    implementation project(":parser")
     implementation 'info.picocli:picocli:4.6.3'
     implementation 'org.fusesource.jansi:jansi:2.2.0'
 

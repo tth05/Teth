@@ -11,10 +11,13 @@ public class StatementList extends ArrayList<Statement> implements IDumpable {
     @Override
     public void dump(ASTDumpBuilder builder) {
         builder.append("[").newLine().startBlock();
-        forEach(s -> {
+        for (int i = 0; i < this.size(); i++) {
+            Statement s = this.get(i);
             s.dump(builder);
-            builder.append(",").newLine();
-        });
+            if (i < size() - 1)
+                builder.append(",");
+            builder.newLine();
+        }
         builder.endBlock();
         builder.append("]");
     }
