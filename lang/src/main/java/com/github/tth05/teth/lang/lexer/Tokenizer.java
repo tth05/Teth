@@ -24,7 +24,10 @@ public class Tokenizer {
             } else if (isQuote(c)) {
                 emit(parseString());
             } else if (isIdentifierChar(c)) {
-                emit(parseIdentifier());
+                var ident = parseIdentifier();
+                if (isKeyword(ident.value()))
+                    ident = new Token(ident.value(), TokenType.KEYWORD);
+                emit(ident);
             } else if (isOperator(c)) {
                 emit(parseOperator());
             } else if (isParen(c)) {
@@ -96,15 +99,22 @@ public class Tokenizer {
 
     private Token parseOperator() {
         var op = this.stream.consume();
-        return new Token("" + op, switch (op) {
-            case '=' -> TokenType.OP_ASSIGN;
-            case '+' -> TokenType.OP_PLUS;
-            case '-' -> TokenType.OP_MINUS;
-            case '*' -> TokenType.OP_STAR;
-            case '/' -> TokenType.OP_SLASH;
-            case '^' -> TokenType.OP_ROOF;
+        return switch (op) {
+            case '=' -> {
+                if (this.stream.peek() == '=') {
+                    this.stream.consume();
+                    yield new Token("==", TokenType.OP_EQUAL);
+                }
+
+                yield new Token("=", TokenType.OP_ASSIGN);
+            }
+            case '+' -> new Token("+", TokenType.OP_PLUS);
+            case '-' -> new Token("-", TokenType.OP_MINUS);
+            case '*' -> new Token("*", TokenType.OP_STAR);
+            case '/' -> new Token("/", TokenType.OP_SLASH);
+            case '^' -> new Token("^", TokenType.OP_ROOF);
             default -> throw new IllegalStateException("Unreachable");
-        });
+        };
     }
 
     private Token parseParen() {
@@ -112,43 +122,49 @@ public class Tokenizer {
         return new Token("" + c, switch (c) {
             case '(' -> TokenType.L_PAREN;
             case ')' -> TokenType.R_PAREN;
+            case '{' -> TokenType.L_CURLY_PAREN;
+            case '}' -> TokenType.R_CURLY_PAREN;
             default -> throw new IllegalStateException("Unreachable");
         });
     }
 
-    private boolean isIdentifierChar(char c) {
+    private static boolean isKeyword(String value) {
+        return value.equals("if") || value.equals("else");
+    }
+
+    private static boolean isIdentifierChar(char c) {
         return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || isNumber(c) || isUnderscore(c);
     }
 
-    private boolean isNumber(char c) {
+    private static boolean isNumber(char c) {
         return c >= '0' && c <= '9';
     }
 
-    private boolean isOperator(char c) {
+    private static boolean isOperator(char c) {
         return c == '=' || c == '+' || c == '-' || c == '*' || c == '/' || c == '^';
     }
 
-    private boolean isQuote(char c) {
+    private static boolean isQuote(char c) {
         return c == '"';
     }
 
-    private boolean isParen(char c) {
-        return c == '(' || c == ')';
+    private static boolean isParen(char c) {
+        return c == '(' || c == ')' || c == '{' || c == '}';
     }
 
-    private boolean isUnderscore(char c) {
+    private static boolean isUnderscore(char c) {
         return c == '_';
     }
 
-    private boolean isSeparator(char c) {
+    private static boolean isSeparator(char c) {
         return c == 0 || isWhitespace(c) || isLineBreak(c) || isOperator(c) || isParen(c);
     }
 
-    private boolean isLineBreak(char c) {
+    private static boolean isLineBreak(char c) {
         return c == '\n';
     }
 
-    private boolean isWhitespace(char c) {
+    private static boolean isWhitespace(char c) {
         return c == ' ';
     }
 

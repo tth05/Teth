@@ -2,15 +2,18 @@ package com.github.tth05.teth.lang.parser.ast;
 
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
-public class LongLiteralExpression extends Expression {
+import java.util.Objects;
 
-    private final long value;
 
-    public LongLiteralExpression(long value) {
+public class IdentifierExpression extends Expression {
+
+    private final String value;
+
+    public IdentifierExpression(String value) {
         this.value = value;
     }
 
-    public long getValue() {
+    public String getValue() {
         return this.value;
     }
 
@@ -21,19 +24,19 @@ public class LongLiteralExpression extends Expression {
         if (o == null || getClass() != o.getClass())
             return false;
 
-        return this.value == ((LongLiteralExpression) o).value;
+        return Objects.equals(this.value, ((IdentifierExpression) o).value);
     }
 
     @Override
     public int hashCode() {
         int result = super.hashCode();
-        result = 31 * result + (int) (this.value ^ (this.value >>> 32));
+        result = 31 * result + this.value.hashCode();
         return result;
     }
 
     @Override
     public void dump(ASTDumpBuilder builder) {
-        builder.append(Long.toString(this.value)).append("L");
+        builder.append(this.value);
     }
 
     @Override

@@ -35,4 +35,9 @@ public class StringLiteralExpression extends Expression {
     public int hashCode() {
         return this.value.hashCode();
     }
+
+    @Override
+    public String toString() {
+        return dumpToString();
+    }
 }

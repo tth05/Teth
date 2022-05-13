@@ -3,22 +3,14 @@ package com.github.tth05.teth.lang.parser;
 import com.github.tth05.teth.lang.parser.ast.Statement;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class SourceFileUnit implements IDumpable {
 
-    private final List<Statement> statements = new ArrayList<>();
-
-    public SourceFileUnit() {
-    }
+    private final StatementList statements = new StatementList();
 
     public SourceFileUnit(List<Statement> statements) {
         this.statements.addAll(statements);
-    }
-
-    public void addStatement(Statement statement) {
-        this.statements.add(statement);
     }
 
     @Override
@@ -41,14 +33,14 @@ public class SourceFileUnit implements IDumpable {
     @Override
     public void dump(ASTDumpBuilder builder) {
         builder.append("SourceFileUnit {").newLine();
-        this.statements.forEach(s -> s.dump(builder));
+        builder.startBlock();
+        this.statements.dump(builder);
+        builder.endBlock();
         builder.newLine().append("}");
     }
 
     @Override
     public String toString() {
-        return "SourceFileUnit{" +
-               "statements=" + this.statements +
-               '}';
+        return dumpToString();
     }
 }

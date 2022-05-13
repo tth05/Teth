@@ -60,7 +60,7 @@ public class TokenizerTest extends AbstractTokenizerTest {
 
     @Test
     public void testInvalidChars() {
-        var matcher = Pattern.compile("^[a-zA-Z0-9+\\-*/^_=\\n ()]$").matcher("");
+        var matcher = Pattern.compile("^[a-zA-Z0-9+\\-*/^_=\\n (){}]$").matcher("");
         for (int i = 1; i < 1000; i++) {
             var str = "" + (char) i;
             if (matcher.reset(str).matches())
@@ -113,6 +113,59 @@ public class TokenizerTest extends AbstractTokenizerTest {
                 new Token("10", TokenType.NUMBER),
                 new Token("+", TokenType.OP_PLUS),
                 new Token("1", TokenType.NUMBER)
+        ), tokensIntoList());
+        assertStreamsEmpty();
+    }
+
+    @Test
+    public void testIfStatement() {
+        createStreams("if (1 == 2) { 3 }");
+        assertIterableEquals(tokenList(
+                new Token("if", TokenType.KEYWORD),
+                new Token("(", TokenType.L_PAREN),
+                new Token("1", TokenType.NUMBER),
+                new Token("==", TokenType.OP_EQUAL),
+                new Token("2", TokenType.NUMBER),
+                new Token(")", TokenType.R_PAREN),
+                new Token("{", TokenType.L_CURLY_PAREN),
+                new Token("3", TokenType.NUMBER),
+                new Token("}", TokenType.R_CURLY_PAREN)
+        ), tokensIntoList());
+        assertStreamsEmpty();
+
+        createStreams("if (1 == 2) { 3 } else 5 == 5");
+        assertIterableEquals(tokenList(
+                new Token("if", TokenType.KEYWORD),
+                new Token("(", TokenType.L_PAREN),
+                new Token("1", TokenType.NUMBER),
+                new Token("==", TokenType.OP_EQUAL),
+                new Token("2", TokenType.NUMBER),
+                new Token(")", TokenType.R_PAREN),
+                new Token("{", TokenType.L_CURLY_PAREN),
+                new Token("3", TokenType.NUMBER),
+                new Token("}", TokenType.R_CURLY_PAREN),
+                new Token("else", TokenType.KEYWORD),
+                new Token("5", TokenType.NUMBER),
+                new Token("==", TokenType.OP_EQUAL),
+                new Token("5", TokenType.NUMBER)
+        ), tokensIntoList());
+        assertStreamsEmpty();
+
+        createStreams("if (1 == 2) 3 else if (a) 5");
+        assertIterableEquals(tokenList(
+                new Token("if", TokenType.KEYWORD),
+                new Token("(", TokenType.L_PAREN),
+                new Token("1", TokenType.NUMBER),
+                new Token("==", TokenType.OP_EQUAL),
+                new Token("2", TokenType.NUMBER),
+                new Token(")", TokenType.R_PAREN),
+                new Token("3", TokenType.NUMBER),
+                new Token("else", TokenType.KEYWORD),
+                new Token("if", TokenType.KEYWORD),
+                new Token("(", TokenType.L_PAREN),
+                new Token("a", TokenType.IDENTIFIER),
+                new Token(")", TokenType.R_PAREN),
+                new Token("5", TokenType.NUMBER)
         ), tokensIntoList());
         assertStreamsEmpty();
     }

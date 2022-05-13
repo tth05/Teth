@@ -21,7 +21,8 @@ public class BinaryExpression extends Expression {
         OP_SUBTRACT,
         OP_MULTIPLY,
         OP_DIVIDE,
-        OP_POW;
+        OP_POW,
+        OP_EQUAL;
 
         public static Operator fromTokenType(TokenType type) {
             return switch (type) {
@@ -30,6 +31,7 @@ public class BinaryExpression extends Expression {
                 case OP_STAR -> Operator.OP_MULTIPLY;
                 case OP_SLASH -> Operator.OP_DIVIDE;
                 case OP_ROOF -> Operator.OP_POW;
+                case OP_EQUAL -> Operator.OP_EQUAL;
                 default -> throw new IllegalArgumentException();
             };
         }
@@ -41,6 +43,7 @@ public class BinaryExpression extends Expression {
                 case OP_MULTIPLY -> "*";
                 case OP_DIVIDE -> "/";
                 case OP_POW -> "^";
+                case OP_EQUAL -> "==";
             };
         }
     }
@@ -55,6 +58,25 @@ public class BinaryExpression extends Expression {
 
     public Operator getOperator() {
         return this.operator;
+    }
+
+    @Override
+    public void dump(ASTDumpBuilder builder) {
+        builder.append("BinaryExpression {").newLine();
+        builder.startBlock();
+        builder.appendAttribute("left");
+        this.left.dump(builder);
+        builder.newLine().appendAttribute("operator")
+                .append("'")
+                .append(this.operator.asString())
+                .append("'")
+                .append(" ")
+                .append(this.operator.name())
+                .newLine();
+        builder.appendAttribute("right");
+        this.right.dump(builder);
+        builder.endBlock();
+        builder.newLine().append("}");
     }
 
     @Override
@@ -82,30 +104,7 @@ public class BinaryExpression extends Expression {
     }
 
     @Override
-    public void dump(ASTDumpBuilder builder) {
-        builder.append("BinaryExpression {").newLine();
-        builder.startBlock();
-        builder.appendAttribute("left");
-        this.left.dump(builder);
-        builder.newLine().appendAttribute("operator")
-                .append("'")
-                .append(this.operator.asString())
-                .append("'")
-                .append(" ")
-                .append(this.operator.name())
-                .newLine();
-        builder.appendAttribute("right");
-        this.right.dump(builder);
-        builder.endBlock();
-        builder.newLine().append("}");
-    }
-
-    @Override
     public String toString() {
-        return "BinaryExpression{" +
-               "left=" + this.left +
-               ", operator=" + this.operator +
-               ", right=" + this.right +
-               '}';
+        return dumpToString();
     }
 }

@@ -47,7 +47,6 @@ public class VariableDeclaration extends Statement {
 
     @Override
     public void dump(ASTDumpBuilder builder) {
-        builder.startBlock();
         builder.append("VariableDeclaration {").newLine();
         builder.startBlock();
         builder.appendAttribute("type", this.type).newLine();
@@ -56,15 +55,10 @@ public class VariableDeclaration extends Statement {
         this.expression.dump(builder);
         builder.endBlock();
         builder.newLine().append("}");
-        builder.endBlock();
     }
 
     @Override
     public String toString() {
-        return "VariableDeclaration{" +
-               "type='" + this.type + '\'' +
-               ", name='" + this.name + '\'' +
-               ", expression=" + this.expression +
-               '}';
+        return dumpToString();
     }
 }

@@ -13,8 +13,11 @@ public enum TokenType {
     OP_STAR,
     OP_SLASH,
     OP_ROOF,
+    OP_EQUAL,
     L_PAREN,
     R_PAREN,
+    L_CURLY_PAREN,
+    R_CURLY_PAREN,
     LINE_BREAK,
     EOF;
 }

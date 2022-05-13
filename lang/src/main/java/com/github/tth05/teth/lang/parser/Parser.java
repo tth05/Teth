@@ -6,11 +6,11 @@ import com.github.tth05.teth.lang.lexer.TokenType;
 import com.github.tth05.teth.lang.parser.ast.*;
 
 import java.util.List;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 public class Parser {
 
-    private final SourceFileUnit unit = new SourceFileUnit();
     private final TokenStream stream;
 
     public Parser(TokenStream stream) {
@@ -18,23 +18,83 @@ public class Parser {
     }
 
     public SourceFileUnit parse() {
+        var unit = new SourceFileUnit(parseStatementList(t -> t.is(TokenType.EOF)));
+        this.stream.consumeType(TokenType.EOF);
+        return unit;
+    }
+
+    private StatementList parseStatementList(Predicate<Token> terminatorPredicate) {
+        var statements = new StatementList();
         while (true) {
+            consumeLineBreaks();
+
             var token = this.stream.peek();
-            if (token.is(TokenType.EOF))
+            if (terminatorPredicate.test(token))
                 break;
 
-            // Variable declaration
-            if (token.is(TokenType.IDENTIFIER) && this.stream.peek(1).is(TokenType.IDENTIFIER)) {
-                this.unit.addStatement(parseVariableDeclaration());
-            } else { // Expression statement which does nothing
-                this.unit.addStatement(parseExpression());
-                this.stream.consumeMatchingOrElse(Token::isLineTerminating, () -> {
-                    throw new UnexpectedTokenException(this.stream.peek(), TokenType.EOF, TokenType.LINE_BREAK);
-                });
-            }
+            statements.add(parseStatement());
         }
 
-        return this.unit;
+        return statements;
+    }
+
+    private void consumeLineBreaks() {
+        while (this.stream.peek().is(TokenType.LINE_BREAK))
+            this.stream.consume();
+    }
+
+    private Statement parseStatement() {
+        // Variable declaration
+        var token = this.stream.peek();
+        if (token.is(TokenType.IDENTIFIER)) {
+            var next = this.stream.peek(1);
+            if (next.is(TokenType.IDENTIFIER))
+                return parseVariableDeclaration();
+            else if (next.is(TokenType.OP_ASSIGN))
+                return parseAssignmentStatement();
+
+            throw new UnexpectedTokenException(next);
+        } else if (token.is(TokenType.KEYWORD)) {
+            if (token.value().equals("if")) {
+                return parseIfStatement();
+            } else if (token.value().equals("else")) {
+                return parseElseStatement();
+            }
+
+            throw new IllegalStateException("Unexpected keyword: " + token.value());
+        } else { // Expression statement which does nothing
+            return parseExpression();
+        }
+    }
+
+    private IfStatement parseIfStatement() {
+        this.stream.consumeType(TokenType.KEYWORD);
+        var condition = parseParenthesisedExpression();
+        var body = parseBlock();
+        return new IfStatement(condition, body);
+    }
+
+    private ElseStatement parseElseStatement() {
+        this.stream.consumeType(TokenType.KEYWORD);
+        var body = parseBlock();
+        return new ElseStatement(body);
+    }
+
+    private BlockStatement parseBlock() {
+        consumeLineBreaks();
+        if (this.stream.peek().is(TokenType.L_CURLY_PAREN)) {
+            this.stream.consumeType(TokenType.L_CURLY_PAREN);
+            consumeLineBreaks();
+            var block = new BlockStatement(parseStatementList(t -> t.is(TokenType.R_CURLY_PAREN)));
+            consumeLineBreaks();
+            this.stream.consumeType(TokenType.R_CURLY_PAREN);
+            return block;
+        } else {
+            var list = new StatementList();
+            list.add(parseStatement());
+            consumeLineBreaks();
+            return new BlockStatement(list);
+        }
     }
 
     private VariableDeclaration parseVariableDeclaration() {
@@ -47,18 +107,25 @@ public class Parser {
             assignment = parseExpression();
         }
 
-        var next = this.stream.peek();
-        if (!next.isLineTerminating())
-            throw new UnexpectedTokenException(next, TokenType.EOF, TokenType.LINE_BREAK);
-        this.stream.consume();
         return new VariableDeclaration(type.value(), name.value(), assignment);
     }
 
+    private AssignmentStatement parseAssignmentStatement() {
+        var name = this.stream.consumeType(TokenType.IDENTIFIER);
+        this.stream.consumeType(TokenType.OP_ASSIGN);
+        var value = parseExpression();
+        return new AssignmentStatement(new IdentifierExpression(name.value()), value);
+    }
+
     private Expression parseExpression() {
+        //TODO: Make this not recursive
         return parseBinaryExpression( //Additive
                 () -> parseBinaryExpression( //Multiplicative
                         () -> parseBinaryExpression( //Pow
-                                this::parsePrimaryExpression, //Primary
+                                () -> parseBinaryExpression( //Equal
+                                        this::parsePrimaryExpression, //Primary
+                                        List.of(TokenType.OP_EQUAL)
+                                ),
                                 List.of(TokenType.OP_ROOF)
                         ),
                         List.of(TokenType.OP_STAR, TokenType.OP_SLASH)
@@ -91,10 +158,7 @@ public class Parser {
 
         var currentType = this.stream.peek().type();
         if (currentType == TokenType.L_PAREN) {
-            this.stream.consumeType(TokenType.L_PAREN);
-            var parenExpr = parseExpression();
-            this.stream.consumeType(TokenType.R_PAREN);
-            expr = parenExpr;
+            expr = parseParenthesisedExpression();
         } else {
             expr = parseLiteralExpression();
         }
@@ -105,12 +169,20 @@ public class Parser {
         return expr;
     }
 
+    private Expression parseParenthesisedExpression() {
+        this.stream.consumeType(TokenType.L_PAREN);
+        var parenExpr = parseExpression();
+        this.stream.consumeType(TokenType.R_PAREN);
+        return parenExpr;
+    }
+
     private Expression parseLiteralExpression() {
         var token = this.stream.peek();
 
         return switch (token.type()) {
             case NUMBER -> new LongLiteralExpression(Long.parseLong(this.stream.consumeType(TokenType.NUMBER).value()));
             case STRING -> new StringLiteralExpression(this.stream.consumeType(TokenType.STRING).value());
+            case IDENTIFIER -> new IdentifierExpression(this.stream.consumeType(TokenType.IDENTIFIER).value());
             default -> null;
         };
     }
