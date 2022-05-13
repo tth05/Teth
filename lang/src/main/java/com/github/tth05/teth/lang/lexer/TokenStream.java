@@ -5,6 +5,7 @@ import com.github.tth05.teth.lang.stream.EndOfStreamException;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.function.Predicate;
 
 public class TokenStream {
 
@@ -16,6 +17,15 @@ public class TokenStream {
 
     void push(Token token) {
         this.tokens.add(token);
+    }
+
+    public Token consumeMatchingOrElse(Predicate<Token> predicate, Runnable orElse) {
+        if (!predicate.test(peek())) {
+            orElse.run();
+            throw new IllegalStateException("TokenStream has no values");
+        }
+
+        return consume();
     }
 
     public Token consumeType(TokenType expectedType) {
@@ -45,7 +55,7 @@ public class TokenStream {
         if (!isValidIndex(offset))
             return EOF;
 
-       return this.tokens.get(offset);
+        return this.tokens.get(offset);
     }
 
     public List<Token> toList() {

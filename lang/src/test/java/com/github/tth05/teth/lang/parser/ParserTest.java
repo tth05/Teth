@@ -29,14 +29,14 @@ public class ParserTest extends AbstractParserTest {
     }
 
     @Test
-    public void testParseVariableDeclaration() {
-        createAST("double d = (5 + 5* 2^2)^(100+1)");
+    public void testParseMathExpression() {
+        createAST("1+(5 + 5* 2^2)^(100+1)");
         assertEquals(
                 new SourceFileUnit(
                         List.of(
-                                new VariableDeclaration(
-                                        "double",
-                                        "d",
+                                new BinaryExpression(
+                                        new LongLiteralExpression(1),
+
                                         new BinaryExpression(
                                                 new BinaryExpression(
                                                         new LongLiteralExpression(5),
@@ -57,7 +57,25 @@ public class ParserTest extends AbstractParserTest {
                                                         BinaryExpression.Operator.OP_ADD
                                                 ),
                                                 BinaryExpression.Operator.OP_POW
-                                        )
+                                        ), BinaryExpression.Operator.OP_ADD
+                                )
+                        )
+                ),
+                this.unit
+        );
+        assertStreamsEmpty();
+    }
+
+    @Test
+    public void testParseVariableDeclaration() {
+        createAST("double d = 25");
+        assertEquals(
+                new SourceFileUnit(
+                        List.of(
+                                new VariableDeclaration(
+                                        "double",
+                                        "d",
+                                        new LongLiteralExpression(25)
                                 )
                         )
                 ),

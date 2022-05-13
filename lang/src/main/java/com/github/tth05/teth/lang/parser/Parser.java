@@ -1,5 +1,6 @@
 package com.github.tth05.teth.lang.parser;
 
+import com.github.tth05.teth.lang.lexer.Token;
 import com.github.tth05.teth.lang.lexer.TokenStream;
 import com.github.tth05.teth.lang.lexer.TokenType;
 import com.github.tth05.teth.lang.parser.ast.*;
@@ -22,10 +23,14 @@ public class Parser {
             if (token.is(TokenType.EOF))
                 break;
 
-            if (token.is(TokenType.IDENTIFIER)) {
+            // Variable declaration
+            if (token.is(TokenType.IDENTIFIER) && this.stream.peek(1).is(TokenType.IDENTIFIER)) {
                 this.unit.addStatement(parseVariableDeclaration());
-            } else {
-                throw new UnexpectedTokenException(token);
+            } else { // Expression statement which does nothing
+                this.unit.addStatement(parseExpression());
+                this.stream.consumeMatchingOrElse(Token::isLineTerminating, () -> {
+                    throw new UnexpectedTokenException(this.stream.peek(), TokenType.EOF, TokenType.LINE_BREAK);
+                });
             }
         }
 
