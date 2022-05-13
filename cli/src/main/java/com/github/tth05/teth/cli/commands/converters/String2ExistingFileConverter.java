@@ -10,14 +10,10 @@ public class String2ExistingFileConverter implements CommandLine.ITypeConverter<
 
     @Override
     public Path convert(String value) throws Exception {
-        try {
-            var path = Paths.get(value);
-            if (!Files.exists(path))
-                throw new Exception("File does not exist");
+        var path = Paths.get(value);
+        if (!Files.exists(path))
+            throw new Exception("File does not exist");
 
-            return path;
-        } catch (Throwable throwable) {
-            throw new Exception("Cannot convert " + value + " to a path. " + throwable.getMessage());
-        }
+        return path;
     }
 }
