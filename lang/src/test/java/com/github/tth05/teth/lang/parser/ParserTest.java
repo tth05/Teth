@@ -66,24 +66,8 @@ public class ParserTest extends AbstractParserTest {
     @Test
     public void testParseIfStatement() {
         createAST("""
-                double d = "a string" + (5 * 5^3) + (5 + 5)*5/5^44
-                        
-                if (a) {
-                    "a is greater than b"
-                } else {
-                    "b is greater than a"
-                }
-                        
-                if (5) {
-                    "a is greater than b"
-                } else if (a == b)
-                    "b is greater than a"
-                        
-                if (5 == 5) { 1 } else if (b) c = 2 else
-                    c = 5
-                """);
-        createAST("""
                 if (5 == 5) { 1 } else if (b) c = 2 else \nc = 5
+                if (c == 2) "true"
                 """);
         assertEquals(
                 new SourceFileUnit(
@@ -98,9 +82,7 @@ public class ParserTest extends AbstractParserTest {
                                                 StatementList.of(
                                                         new LongLiteralExpression(1)
                                                 )
-                                        )
-                                ),
-                                new ElseStatement(
+                                        ),
                                         new BlockStatement(
                                                 StatementList.of(
                                                         new IfStatement(
@@ -112,22 +94,32 @@ public class ParserTest extends AbstractParserTest {
                                                                                         new LongLiteralExpression(2)
                                                                                 )
                                                                         )
+                                                                ),
+                                                                new BlockStatement(
+                                                                        StatementList.of(
+                                                                                new AssignmentStatement(
+                                                                                        new IdentifierExpression("c"),
+                                                                                        new LongLiteralExpression(5)
+                                                                                )
+                                                                        )
                                                                 )
                                                         )
                                                 )
                                         )
                                 ),
-                                new ElseStatement(
+                                new IfStatement(
+                                        new BinaryExpression(
+                                                new IdentifierExpression("c"),
+                                                new LongLiteralExpression(2),
+                                                BinaryExpression.Operator.OP_EQUAL
+                                        ),
                                         new BlockStatement(
                                                 StatementList.of(
-                                                        new AssignmentStatement(
-                                                                new IdentifierExpression("c"),
-                                                                new LongLiteralExpression(5)
-                                                        )
+                                                        new StringLiteralExpression("true")
                                                 )
-                                        )
+                                        ),
+                                        null
                                 )
-
                         )
                 ),
                 this.unit

@@ -58,10 +58,12 @@ public class Parser {
             if (token.value().equals("if")) {
                 return parseIfStatement();
             } else if (token.value().equals("else")) {
-                return parseElseStatement();
+                throw new UnexpectedTokenException(token);
             }
 
             throw new IllegalStateException("Unexpected keyword: " + token.value());
+        } else if (token.is(TokenType.L_CURLY_PAREN)) {
+            return parseBlock();
         } else { // Expression statement which does nothing
             return parseExpression();
         }
@@ -71,13 +73,14 @@ public class Parser {
         this.stream.consumeType(TokenType.KEYWORD);
         var condition = parseParenthesisedExpression();
         var body = parseBlock();
-        return new IfStatement(condition, body);
-    }
+        var next = this.stream.peek();
+        if (next.is(TokenType.KEYWORD) && next.value().equals("else")) {
+            this.stream.consumeType(TokenType.KEYWORD);
+            var elseBody = parseBlock();
+            return new IfStatement(condition, body, elseBody);
+        }
 
-    private ElseStatement parseElseStatement() {
-        this.stream.consumeType(TokenType.KEYWORD);
-        var body = parseBlock();
-        return new ElseStatement(body);
+        return new IfStatement(condition, body, null);
     }
 
     private BlockStatement parseBlock() {
