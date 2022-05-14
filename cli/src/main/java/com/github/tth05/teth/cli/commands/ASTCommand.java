@@ -30,7 +30,7 @@ public class ASTCommand implements Runnable {
     @Override
     public void run() {
         try {
-            System.out.println(new Parser(Tokenizer.streamOf(CharStream.fromString(Files.readString(this.filePath)))).parse().dumpToString());
+            System.out.println(Parser.from(Tokenizer.streamOf(CharStream.fromString(Files.readString(this.filePath)))).dumpToString());
         } catch (IOException e) {
             e.printStackTrace();
         }

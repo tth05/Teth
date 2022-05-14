@@ -12,7 +12,7 @@ public class String2ExistingFileConverter implements CommandLine.ITypeConverter<
     public Path convert(String value) throws Exception {
         var path = Paths.get(value);
         if (!Files.exists(path))
-            throw new Exception("File does not exist");
+            throw new CommandLine.TypeConversionException("File does not exist");
 
         return path;
     }

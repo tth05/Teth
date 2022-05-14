@@ -54,7 +54,7 @@ public class Parser {
                 return parseAssignmentStatement();
 
             throw new UnexpectedTokenException(next);
-        } else if (token.is(TokenType.KEYWORD)) {
+        } else if (token.is(TokenType.KEYWORD)) { // Keyword statement
             if (token.value().equals("if")) {
                 return parseIfStatement();
             } else if (token.value().equals("else")) {
@@ -62,7 +62,7 @@ public class Parser {
             }
 
             throw new IllegalStateException("Unexpected keyword: " + token.value());
-        } else if (token.is(TokenType.L_CURLY_PAREN)) {
+        } else if (token.is(TokenType.L_CURLY_PAREN)) { // Block statement
             return parseBlock();
         } else { // Expression statement which does nothing
             return parseExpression();
