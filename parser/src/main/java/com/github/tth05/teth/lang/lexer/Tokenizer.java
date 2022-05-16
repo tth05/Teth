@@ -37,6 +37,9 @@ public class Tokenizer {
                 emit(new Token("\n", TokenType.LINE_BREAK));
             } else if (isWhitespace(c)) {
                 this.stream.consume();
+            } else if (isComma(c)) {
+                this.stream.consume();
+                emit(new Token(",", TokenType.COMMA));
             } else {
                 throw new UnexpectedCharException(c);
             }
@@ -129,7 +132,7 @@ public class Tokenizer {
     }
 
     private static boolean isKeyword(String value) {
-        return value.equals("if") || value.equals("else");
+        return value.equals("if") || value.equals("else") || value.equals("fn");
     }
 
     private static boolean isIdentifierChar(char c) {
@@ -156,8 +159,12 @@ public class Tokenizer {
         return c == '_';
     }
 
+    private static boolean isComma(char c) {
+        return c == ',';
+    }
+
     private static boolean isSeparator(char c) {
-        return c == 0 || isWhitespace(c) || isLineBreak(c) || isOperator(c) || isParen(c);
+        return c == 0 || isWhitespace(c) || isLineBreak(c) || isOperator(c) || isParen(c) || isComma(c);
     }
 
     private static boolean isLineBreak(char c) {
@@ -165,7 +172,7 @@ public class Tokenizer {
     }
 
     private static boolean isWhitespace(char c) {
-        return c == ' ';
+        return c == ' ' || c == '\t';
     }
 
     public static TokenStream streamOf(CharStream charStream) {

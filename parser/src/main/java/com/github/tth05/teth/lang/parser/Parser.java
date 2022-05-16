@@ -5,11 +5,12 @@ import com.github.tth05.teth.lang.lexer.TokenStream;
 import com.github.tth05.teth.lang.lexer.TokenType;
 import com.github.tth05.teth.lang.parser.ast.*;
 
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 
+//TODO: Allow new-lines everywhere
 public class Parser {
 
     private static final EnumSet<TokenType> UNARY_OPERATORS = EnumSet.of(
@@ -68,11 +69,11 @@ public class Parser {
         } else if (token.is(TokenType.KEYWORD)) { // Keyword statement
             if (token.value().equals("if")) {
                 return parseIfStatement();
-            } else if (token.value().equals("else")) {
-                throw new UnexpectedTokenException(token);
+            } else if (token.value().equals("fn")) {
+                return parseFunctionDeclaration();
             }
 
-            throw new IllegalStateException("Unexpected keyword: " + token.value());
+            throw new UnexpectedTokenException(token);
         } else if (token.is(TokenType.L_CURLY_PAREN)) { // Block statement
             return parseBlock();
         } else { // Expression statement which does nothing
@@ -124,6 +125,29 @@ public class Parser {
         return new VariableDeclaration(type.value(), name.value(), assignment);
     }
 
+    private FunctionDeclaration parseFunctionDeclaration() {
+        this.stream.consumeType(TokenType.KEYWORD);
+        var name = this.stream.consumeType(TokenType.IDENTIFIER);
+        this.stream.consumeType(TokenType.L_PAREN);
+        var parameters = new ArrayList<FunctionDeclaration.Parameter>();
+        while (true) {
+            var token = this.stream.peek();
+            if (token.is(TokenType.R_PAREN))
+                break;
+            if (!parameters.isEmpty())
+                this.stream.consumeType(TokenType.COMMA);
+
+            parameters.add(new FunctionDeclaration.Parameter(
+                    this.stream.consumeType(TokenType.IDENTIFIER).value(),
+                    this.stream.consumeType(TokenType.IDENTIFIER).value())
+            );
+        }
+
+        this.stream.consumeType(TokenType.R_PAREN);
+        var body = parseBlock();
+        return new FunctionDeclaration(name.value(), parameters, body);
+    }
+
     private AssignmentStatement parseAssignmentStatement() {
         var name = this.stream.consumeType(TokenType.IDENTIFIER);
         this.stream.consumeType(TokenType.OP_ASSIGN);
@@ -154,22 +178,6 @@ public class Parser {
         return head;
     }
 
-    private Expression parseBinaryExpression(Supplier<Expression> leftRightSupplier, List<TokenType> validOperatorTokens) {
-        var left = leftRightSupplier.get();
-
-        while (true) {
-            var token = this.stream.peek();
-            if (!validOperatorTokens.contains(token.type()))
-                break;
-            this.stream.consume();
-
-            var operator = BinaryExpression.Operator.fromTokenType(token.type());
-            left = new BinaryExpression(left, leftRightSupplier.get(), operator);
-        }
-
-        return left;
-    }
-
     /**
      * Literals, variable access, method calls
      */
@@ -185,9 +193,6 @@ public class Parser {
         } else {
             expr = parseLiteralExpression();
         }
-
-        if (expr == null)
-            throw new UnsupportedOperationException();
 
         return expr;
     }
@@ -206,7 +211,7 @@ public class Parser {
             case NUMBER -> new LongLiteralExpression(Long.parseLong(this.stream.consumeType(TokenType.NUMBER).value()));
             case STRING -> new StringLiteralExpression(this.stream.consumeType(TokenType.STRING).value());
             case IDENTIFIER -> new IdentifierExpression(this.stream.consumeType(TokenType.IDENTIFIER).value());
-            default -> null;
+            default -> throw new UnexpectedTokenException(token);
         };
     }
 
