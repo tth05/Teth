@@ -11,6 +11,13 @@ import java.util.function.Supplier;
 
 public class Parser {
 
+    private static final List<TokenType> BINARY_OPERATORS = List.of(
+            TokenType.OP_EQUAL, // Comparison
+            TokenType.OP_ROOF,
+            TokenType.OP_STAR, TokenType.OP_SLASH, // Multiplicative
+            TokenType.OP_PLUS, TokenType.OP_MINUS // Additive
+    );
+
     private final TokenStream stream;
 
     public Parser(TokenStream stream) {
@@ -121,20 +128,26 @@ public class Parser {
     }
 
     private Expression parseExpression() {
-        //TODO: Make this not recursive
-        return parseBinaryExpression( //Additive
-                () -> parseBinaryExpression( //Multiplicative
-                        () -> parseBinaryExpression( //Pow
-                                () -> parseBinaryExpression( //Equal
-                                        this::parsePrimaryExpression, //Primary
-                                        List.of(TokenType.OP_EQUAL)
-                                ),
-                                List.of(TokenType.OP_ROOF)
-                        ),
-                        List.of(TokenType.OP_STAR, TokenType.OP_SLASH)
-                ),
-                List.of(TokenType.OP_PLUS, TokenType.OP_MINUS)
-        );
+        var head = parsePrimaryExpression();
+        var current = head;
+
+        while (true) {
+            var next = this.stream.peek();
+            if (!BINARY_OPERATORS.contains(next.type()))
+                break;
+
+            this.stream.consume();
+            if (current instanceof BinaryExpression old) {
+                var newRight = new BinaryExpression(old.getRight(), parsePrimaryExpression(), BinaryExpression.Operator.fromTokenType(next.type()));
+                old.setRight(newRight);
+                current = newRight;
+            } else { // Convert head into binary expression
+                head = new BinaryExpression(head, parsePrimaryExpression(), BinaryExpression.Operator.fromTokenType(next.type()));
+                current = head;
+            }
+        }
+
+        return head;
     }
 
     private Expression parseBinaryExpression(Supplier<Expression> leftRightSupplier, List<TokenType> validOperatorTokens) {

@@ -6,7 +6,7 @@ import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 public class BinaryExpression extends Expression {
 
     private final Expression left;
-    private final Expression right;
+    private Expression right;
 
     private final Operator operator;
 
@@ -50,6 +50,10 @@ public class BinaryExpression extends Expression {
 
     public Expression getLeft() {
         return this.left;
+    }
+
+    public void setRight(Expression right) {
+        this.right = right;
     }
 
     public Expression getRight() {

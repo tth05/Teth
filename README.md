@@ -26,3 +26,11 @@ if (5) {
 
 if (5 == 5) { 1 } else if (b) c = 2 else
     c = 5
+```
+
+# Operator Precedence
+
+- `==`
+- `^`
+- `*, /`
+- `+, -`

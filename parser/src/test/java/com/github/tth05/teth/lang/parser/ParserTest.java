@@ -27,7 +27,7 @@ public class ParserTest extends AbstractParserTest {
 
     @Test
     public void testParseMathExpression() {
-        createAST("1+(5 + 5* 2^2)^(100+1)");
+        createAST("1+(5 + 6* 2^2)^(100+1)");
         assertEquals(
                 new SourceFileUnit(
                         List.of(
@@ -38,7 +38,7 @@ public class ParserTest extends AbstractParserTest {
                                                 new BinaryExpression(
                                                         new LongLiteralExpression(5),
                                                         new BinaryExpression(
-                                                                new LongLiteralExpression(5),
+                                                                new LongLiteralExpression(6),
                                                                 new BinaryExpression(
                                                                         new LongLiteralExpression(2),
                                                                         new LongLiteralExpression(2),
