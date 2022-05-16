@@ -12,13 +12,33 @@ public class ParserTest extends AbstractParserTest {
 
     @Test
     public void testParseString() {
-        createAST("double d = \"A string!\"");
+        createAST("\"A string!\"");
         assertEquals(new SourceFileUnit(
                 List.of(
-                        new VariableDeclaration(
-                                "double",
-                                "d",
-                                new StringLiteralExpression("A string!")
+                        new StringLiteralExpression("A string!")
+                )
+        ), this.unit);
+        assertStreamsEmpty();
+    }
+
+    @Test
+    public void testParseUnaryExpression() {
+        createAST("-(-1 + -2)");
+        assertEquals(new SourceFileUnit(
+                List.of(
+                        new UnaryExpression(
+                                new BinaryExpression(
+                                        new UnaryExpression(
+                                                new LongLiteralExpression(1),
+                                                UnaryExpression.Operator.OP_NEGATIVE
+                                        ),
+                                        new UnaryExpression(
+                                                new LongLiteralExpression(2),
+                                                UnaryExpression.Operator.OP_NEGATIVE
+                                        ),
+                                        BinaryExpression.Operator.OP_ADD
+                                ),
+                                UnaryExpression.Operator.OP_NEGATIVE
                         )
                 )
         ), this.unit);
@@ -27,34 +47,37 @@ public class ParserTest extends AbstractParserTest {
 
     @Test
     public void testParseMathExpression() {
-        createAST("1+(5 + 6* 2^2)^(100+1)");
+        createAST("1-1+(5 + 6* 2^2)^(100+1)");
         assertEquals(
                 new SourceFileUnit(
                         List.of(
                                 new BinaryExpression(
                                         new LongLiteralExpression(1),
-
                                         new BinaryExpression(
+                                                new LongLiteralExpression(1),
                                                 new BinaryExpression(
-                                                        new LongLiteralExpression(5),
                                                         new BinaryExpression(
-                                                                new LongLiteralExpression(6),
+                                                                new LongLiteralExpression(5),
                                                                 new BinaryExpression(
-                                                                        new LongLiteralExpression(2),
-                                                                        new LongLiteralExpression(2),
-                                                                        BinaryExpression.Operator.OP_POW
+                                                                        new LongLiteralExpression(6),
+                                                                        new BinaryExpression(
+                                                                                new LongLiteralExpression(2),
+                                                                                new LongLiteralExpression(2),
+                                                                                BinaryExpression.Operator.OP_POW
+                                                                        ),
+                                                                        BinaryExpression.Operator.OP_MULTIPLY
                                                                 ),
-                                                                BinaryExpression.Operator.OP_MULTIPLY
+                                                                BinaryExpression.Operator.OP_ADD
                                                         ),
-                                                        BinaryExpression.Operator.OP_ADD
-                                                ),
-                                                new BinaryExpression(
-                                                        new LongLiteralExpression(100),
-                                                        new LongLiteralExpression(1),
-                                                        BinaryExpression.Operator.OP_ADD
-                                                ),
-                                                BinaryExpression.Operator.OP_POW
-                                        ), BinaryExpression.Operator.OP_ADD
+                                                        new BinaryExpression(
+                                                                new LongLiteralExpression(100),
+                                                                new LongLiteralExpression(1),
+                                                                BinaryExpression.Operator.OP_ADD
+                                                        ),
+                                                        BinaryExpression.Operator.OP_POW
+                                                ), BinaryExpression.Operator.OP_ADD
+                                        ),
+                                        BinaryExpression.Operator.OP_SUBTRACT
                                 )
                         )
                 ),

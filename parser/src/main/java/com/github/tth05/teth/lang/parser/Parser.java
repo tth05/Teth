@@ -5,12 +5,16 @@ import com.github.tth05.teth.lang.lexer.TokenStream;
 import com.github.tth05.teth.lang.lexer.TokenType;
 import com.github.tth05.teth.lang.parser.ast.*;
 
+import java.util.EnumSet;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 public class Parser {
 
+    private static final EnumSet<TokenType> UNARY_OPERATORS = EnumSet.of(
+            TokenType.OP_MINUS
+    );
     private static final List<TokenType> BINARY_OPERATORS = List.of(
             TokenType.OP_EQUAL, // Comparison
             TokenType.OP_ROOF,
@@ -175,6 +179,9 @@ public class Parser {
         var currentType = this.stream.peek().type();
         if (currentType == TokenType.L_PAREN) {
             expr = parseParenthesisedExpression();
+        } else if (UNARY_OPERATORS.contains(currentType)) {
+            this.stream.consume();
+            expr = new UnaryExpression(parsePrimaryExpression(), UnaryExpression.Operator.fromTokenType(currentType));
         } else {
             expr = parseLiteralExpression();
         }
