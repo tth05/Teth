@@ -20,7 +20,8 @@ public class Parser {
             TokenType.OP_EQUAL, // Comparison
             TokenType.OP_ROOF,
             TokenType.OP_STAR, TokenType.OP_SLASH, // Multiplicative
-            TokenType.OP_PLUS, TokenType.OP_MINUS // Additive
+            TokenType.OP_PLUS, TokenType.OP_MINUS, // Additive
+            TokenType.OP_ASSIGN // Assignment
     );
 
     private final TokenStream stream;
@@ -60,8 +61,6 @@ public class Parser {
         var next = this.stream.peek(1);
         if (current.is(TokenType.IDENTIFIER) && next.is(TokenType.IDENTIFIER)) {
             return parseVariableDeclaration();
-        } else if (current.is(TokenType.IDENTIFIER) && next.is(TokenType.OP_ASSIGN)) {
-            return parseAssignmentStatement();
         } else if (current.is(TokenType.KEYWORD)) { // Keyword statement
             if (current.value().equals("if")) {
                 return parseIfStatement();
@@ -143,13 +142,6 @@ public class Parser {
         this.stream.consumeType(TokenType.R_PAREN);
         var body = parseBlock();
         return new FunctionDeclaration(name.value(), parameters, body);
-    }
-
-    private AssignmentStatement parseAssignmentStatement() {
-        var name = this.stream.consumeType(TokenType.IDENTIFIER);
-        this.stream.consumeType(TokenType.OP_ASSIGN);
-        var value = parseExpression();
-        return new AssignmentStatement(new IdentifierExpression(name.value()), value);
     }
 
     private Expression parseExpression() {

@@ -112,17 +112,19 @@ public class ParserTest extends AbstractParserTest {
                                                                 new IdentifierExpression("b"),
                                                                 new BlockStatement(
                                                                         StatementList.of(
-                                                                                new AssignmentStatement(
+                                                                                new BinaryExpression(
                                                                                         new IdentifierExpression("c"),
-                                                                                        new LongLiteralExpression(2)
+                                                                                        new LongLiteralExpression(2),
+                                                                                        BinaryExpression.Operator.OP_ASSIGN
                                                                                 )
                                                                         )
                                                                 ),
                                                                 new BlockStatement(
                                                                         StatementList.of(
-                                                                                new AssignmentStatement(
+                                                                                new BinaryExpression(
                                                                                         new IdentifierExpression("c"),
-                                                                                        new LongLiteralExpression(5)
+                                                                                        new LongLiteralExpression(5),
+                                                                                        BinaryExpression.Operator.OP_ASSIGN
                                                                                 )
                                                                         )
                                                                 )

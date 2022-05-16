@@ -22,7 +22,8 @@ public class BinaryExpression extends Expression {
         OP_MULTIPLY,
         OP_DIVIDE,
         OP_POW,
-        OP_EQUAL;
+        OP_EQUAL,
+        OP_ASSIGN;
 
         public static Operator fromTokenType(TokenType type) {
             return switch (type) {
@@ -32,6 +33,7 @@ public class BinaryExpression extends Expression {
                 case OP_SLASH -> Operator.OP_DIVIDE;
                 case OP_ROOF -> Operator.OP_POW;
                 case OP_EQUAL -> Operator.OP_EQUAL;
+                case OP_ASSIGN -> Operator.OP_ASSIGN;
                 default -> throw new IllegalArgumentException();
             };
         }
@@ -44,6 +46,7 @@ public class BinaryExpression extends Expression {
                 case OP_DIVIDE -> "/";
                 case OP_POW -> "^";
                 case OP_EQUAL -> "==";
+                case OP_ASSIGN -> "=";
             };
         }
     }
