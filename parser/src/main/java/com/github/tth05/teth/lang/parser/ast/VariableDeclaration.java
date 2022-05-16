@@ -53,8 +53,7 @@ public class VariableDeclaration extends Statement {
         builder.appendAttribute("name", this.name).newLine();
         builder.appendAttribute("expression");
         this.expression.dump(builder);
-        builder.endBlock();
-        builder.newLine().append("}");
+        builder.endBlock().newLine().append("}");
     }
 
     @Override

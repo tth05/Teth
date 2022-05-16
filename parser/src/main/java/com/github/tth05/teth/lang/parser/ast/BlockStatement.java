@@ -16,8 +16,7 @@ public class BlockStatement extends Statement {
         builder.append("BlockStatement {").newLine();
         builder.startBlock();
         this.statements.dump(builder);
-        builder.endBlock();
-        builder.newLine().append("}");
+        builder.endBlock().newLine().append("}");
     }
 
     StatementList getStatements() {

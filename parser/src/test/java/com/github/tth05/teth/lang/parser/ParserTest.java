@@ -166,4 +166,76 @@ public class ParserTest extends AbstractParserTest {
         );
         assertStreamsEmpty();
     }
+
+    @Test
+    public void testParseFunctionDeclaration() {
+        createAST("""
+                fn foo(type a, int b) {
+                    fn bar() {
+                        "hello"
+                    }
+                    a
+                }
+                """);
+        assertEquals(
+                new SourceFileUnit(
+                        List.of(
+                                new FunctionDeclaration(
+                                        "foo",
+                                        List.of(
+                                                new FunctionDeclaration.Parameter("type", "a"),
+                                                new FunctionDeclaration.Parameter("int", "b")
+                                        ),
+                                        new BlockStatement(
+                                                StatementList.of(
+                                                        new FunctionDeclaration(
+                                                                "bar",
+                                                                List.of(),
+                                                                new BlockStatement(
+                                                                        StatementList.of(
+                                                                                new StringLiteralExpression("hello")
+                                                                        )
+                                                                )
+                                                        ),
+                                                        new IdentifierExpression("a")
+                                                )
+                                        )
+                                )
+                        )
+                ),
+                this.unit
+        );
+        assertStreamsEmpty();
+    }
+
+    @Test
+    public void testParseFunctionInvocation() {
+        createAST("""
+                1 + (foo(1, 2))("hello world")
+                """);
+        assertEquals(
+                new SourceFileUnit(
+                        List.of(
+                                new BinaryExpression(
+                                        new LongLiteralExpression(1),
+                                        new FunctionInvocationExpression(
+                                                new FunctionInvocationExpression(
+                                                        new IdentifierExpression("foo"),
+                                                        ExpressionList.of(
+                                                                new LongLiteralExpression(1),
+                                                                new LongLiteralExpression(2)
+                                                        )
+                                                ),
+                                                ExpressionList.of(
+                                                        new StringLiteralExpression("hello world")
+                                                )
+                                        ),
+                                        BinaryExpression.Operator.OP_ADD
+                                )
+                        )
+                ),
+                this.unit
+        );
+        assertStreamsEmpty();
+    }
 }

@@ -6,12 +6,14 @@ public class ASTDumpBuilder {
     private int indentationLevel;
     private boolean isAtLineStart = true;
 
-    public void startBlock() {
+    public ASTDumpBuilder startBlock() {
         this.indentationLevel++;
+        return this;
     }
 
-    public void endBlock() {
+    public ASTDumpBuilder endBlock() {
         this.indentationLevel--;
+        return this;
     }
 
     public ASTDumpBuilder newLine() {

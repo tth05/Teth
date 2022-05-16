@@ -35,8 +35,7 @@ public class SourceFileUnit implements IDumpable {
         builder.append("SourceFileUnit {").newLine();
         builder.startBlock();
         this.statements.dump(builder);
-        builder.endBlock();
-        builder.newLine().append("}");
+        builder.endBlock().newLine().append("}");
     }
 
     @Override

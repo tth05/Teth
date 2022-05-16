@@ -56,25 +56,21 @@ public class Parser {
     }
 
     private Statement parseStatement() {
-        // Variable declaration
-        var token = this.stream.peek();
-        if (token.is(TokenType.IDENTIFIER)) {
-            var next = this.stream.peek(1);
-            if (next.is(TokenType.IDENTIFIER))
-                return parseVariableDeclaration();
-            else if (next.is(TokenType.OP_ASSIGN))
-                return parseAssignmentStatement();
-
-            throw new UnexpectedTokenException(next);
-        } else if (token.is(TokenType.KEYWORD)) { // Keyword statement
-            if (token.value().equals("if")) {
+        var current = this.stream.peek();
+        var next = this.stream.peek(1);
+        if (current.is(TokenType.IDENTIFIER) && next.is(TokenType.IDENTIFIER)) {
+            return parseVariableDeclaration();
+        } else if (current.is(TokenType.IDENTIFIER) && next.is(TokenType.OP_ASSIGN)) {
+            return parseAssignmentStatement();
+        } else if (current.is(TokenType.KEYWORD)) { // Keyword statement
+            if (current.value().equals("if")) {
                 return parseIfStatement();
-            } else if (token.value().equals("fn")) {
+            } else if (current.value().equals("fn")) {
                 return parseFunctionDeclaration();
             }
 
-            throw new UnexpectedTokenException(token);
-        } else if (token.is(TokenType.L_CURLY_PAREN)) { // Block statement
+            throw new UnexpectedTokenException(current);
+        } else if (current.is(TokenType.L_CURLY_PAREN)) { // Block statement
             return parseBlock();
         } else { // Expression statement which does nothing
             return parseExpression();
@@ -103,6 +99,7 @@ public class Parser {
             var block = new BlockStatement(parseStatementList(t -> t.is(TokenType.R_CURLY_PAREN)));
             consumeLineBreaks();
             this.stream.consumeType(TokenType.R_CURLY_PAREN);
+            consumeLineBreaks();
             return block;
         } else {
             var list = new StatementList();
@@ -194,7 +191,29 @@ public class Parser {
             expr = parseLiteralExpression();
         }
 
+        currentType = this.stream.peek().type();
+        if (currentType == TokenType.L_PAREN) {
+            expr = parseFunctionInvocation(expr);
+        }
+
         return expr;
+    }
+
+    private Expression parseFunctionInvocation(Expression target) {
+        this.stream.consumeType(TokenType.L_PAREN);
+        var parameters = new ExpressionList();
+        while (true) {
+            var token = this.stream.peek();
+            if (token.is(TokenType.R_PAREN))
+                break;
+            if (!parameters.isEmpty())
+                this.stream.consumeType(TokenType.COMMA);
+
+            parameters.add(parseExpression());
+        }
+
+        this.stream.consumeType(TokenType.R_PAREN);
+        return new FunctionInvocationExpression(target, parameters);
     }
 
     private Expression parseParenthesisedExpression() {

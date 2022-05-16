@@ -28,8 +28,7 @@ public class IfStatement extends Statement {
             builder.newLine().appendAttribute("else");
             this.elseStatement.dump(builder);
         }
-        builder.endBlock();
-        builder.newLine().append("}");
+        builder.endBlock().newLine().append("}");
     }
 
     @Override

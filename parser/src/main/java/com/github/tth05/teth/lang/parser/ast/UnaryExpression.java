@@ -52,8 +52,7 @@ public class UnaryExpression extends Expression {
                 .append(" ")
                 .append(this.operator.name())
                 .newLine();
-        builder.endBlock();
-        builder.newLine().append("}");
+        builder.endBlock().newLine().append("}");
     }
 
     @Override

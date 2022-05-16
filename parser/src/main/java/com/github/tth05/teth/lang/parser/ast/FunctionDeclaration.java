@@ -40,11 +40,9 @@ public class FunctionDeclaration extends Statement {
             p.dump(builder);
             builder.newLine();
         });
-        builder.endBlock();
-        builder.append("]").newLine().appendAttribute("body");
+        builder.endBlock().append("]").newLine().appendAttribute("body");
         this.body.dump(builder);
-        builder.endBlock();
-        builder.newLine().append("}");
+        builder.endBlock().newLine().append("}");
     }
 
     @Override

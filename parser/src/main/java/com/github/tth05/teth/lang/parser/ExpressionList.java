@@ -19,8 +19,7 @@ public class ExpressionList extends ArrayList<Expression> implements IDumpable {
                 builder.append(",");
             builder.newLine();
         }
-        builder.endBlock();
-        builder.append("]");
+        builder.endBlock().append("]");
     }
 
     public static ExpressionList of(Expression... statements) {

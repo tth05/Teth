@@ -66,9 +66,8 @@ public class BinaryExpression extends Expression {
 
     @Override
     public void dump(ASTDumpBuilder builder) {
-        builder.append("BinaryExpression {").newLine();
-        builder.startBlock();
-        builder.appendAttribute("left");
+        builder.append("BinaryExpression {").newLine().startBlock()
+                .appendAttribute("left");
         this.left.dump(builder);
         builder.newLine().appendAttribute("operator")
                 .append("'")
@@ -79,8 +78,7 @@ public class BinaryExpression extends Expression {
                 .newLine();
         builder.appendAttribute("right");
         this.right.dump(builder);
-        builder.endBlock();
-        builder.newLine().append("}");
+        builder.endBlock().newLine().append("}");
     }
 
     @Override

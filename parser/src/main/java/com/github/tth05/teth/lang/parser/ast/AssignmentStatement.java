@@ -20,8 +20,7 @@ public class AssignmentStatement extends Statement {
         this.targetExpression.dump(builder);
         builder.newLine().appendAttribute("expression");
         this.valueExpression.dump(builder);
-        builder.endBlock();
-        builder.newLine().append("}");
+        builder.endBlock().newLine().append("}");
     }
 
     @Override

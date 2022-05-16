@@ -18,8 +18,7 @@ public class StatementList extends ArrayList<Statement> implements IDumpable {
                 builder.append(",");
             builder.newLine();
         }
-        builder.endBlock();
-        builder.append("]");
+        builder.endBlock().append("]");
     }
 
     public static StatementList of(Statement... statements) {
