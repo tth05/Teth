@@ -106,16 +106,40 @@ public class Tokenizer {
             case '=' -> {
                 if (this.stream.peek() == '=') {
                     this.stream.consume();
-                    yield new Token("==", TokenType.OP_EQUAL);
+                    yield new Token("==", TokenType.EQUAL_EQUAL);
                 }
 
-                yield new Token("=", TokenType.OP_ASSIGN);
+                yield new Token("=", TokenType.EQUAL);
             }
-            case '+' -> new Token("+", TokenType.OP_PLUS);
-            case '-' -> new Token("-", TokenType.OP_MINUS);
-            case '*' -> new Token("*", TokenType.OP_STAR);
-            case '/' -> new Token("/", TokenType.OP_SLASH);
-            case '^' -> new Token("^", TokenType.OP_ROOF);
+            case '!' -> {
+                if (this.stream.peek() == '=') {
+                    this.stream.consume();
+                    yield new Token("!=", TokenType.NOT_EQUAL);
+                }
+
+                yield new Token("!", TokenType.NOT);
+            }
+            case '<' -> {
+                if (this.stream.peek() == '=') {
+                    this.stream.consume();
+                    yield new Token("<=", TokenType.LESS_EQUAL);
+                }
+
+                yield new Token("<", TokenType.LESS);
+            }
+            case '>' -> {
+                if (this.stream.peek() == '=') {
+                    this.stream.consume();
+                    yield new Token(">=", TokenType.GREATER_EQUAL);
+                }
+
+                yield new Token(">", TokenType.GREATER);
+            }
+            case '+' -> new Token("+", TokenType.PLUS);
+            case '-' -> new Token("-", TokenType.MINUS);
+            case '*' -> new Token("*", TokenType.MULTIPLY);
+            case '/' -> new Token("/", TokenType.DIVIDE);
+            case '^' -> new Token("^", TokenType.POW);
             default -> throw new IllegalStateException("Unreachable");
         };
     }
@@ -144,7 +168,7 @@ public class Tokenizer {
     }
 
     private static boolean isOperator(char c) {
-        return c == '=' || c == '+' || c == '-' || c == '*' || c == '/' || c == '^';
+        return c == '=' || c == '+' || c == '-' || c == '*' || c == '/' || c == '^' || c == '>' || c == '<' || c == '!';
     }
 
     private static boolean isQuote(char c) {

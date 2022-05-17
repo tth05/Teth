@@ -6,23 +6,10 @@ import com.github.tth05.teth.lang.lexer.TokenType;
 import com.github.tth05.teth.lang.parser.ast.*;
 
 import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.List;
 import java.util.function.Predicate;
 
 //TODO: Allow new-lines everywhere
 public class Parser {
-
-    private static final EnumSet<TokenType> UNARY_OPERATORS = EnumSet.of(
-            TokenType.OP_MINUS
-    );
-    private static final List<TokenType> BINARY_OPERATORS = List.of(
-            TokenType.OP_EQUAL, // Comparison
-            TokenType.OP_ROOF,
-            TokenType.OP_STAR, TokenType.OP_SLASH, // Multiplicative
-            TokenType.OP_PLUS, TokenType.OP_MINUS, // Additive
-            TokenType.OP_ASSIGN // Assignment
-    );
 
     private final TokenStream stream;
 
@@ -113,8 +100,8 @@ public class Parser {
         var name = this.stream.consumeType(TokenType.IDENTIFIER);
 
         Expression assignment = null;
-        if (this.stream.peek().is(TokenType.OP_ASSIGN)) {
-            this.stream.consumeType(TokenType.OP_ASSIGN);
+        if (this.stream.peek().is(TokenType.EQUAL)) {
+            this.stream.consumeType(TokenType.EQUAL);
             assignment = parseExpression();
         }
 
@@ -150,16 +137,18 @@ public class Parser {
 
         while (true) {
             var next = this.stream.peek();
-            if (!BINARY_OPERATORS.contains(next.type()))
+            var operator = BinaryExpression.Operator.fromTokenType(next.type());
+            if (operator == null)
                 break;
 
             this.stream.consume();
-            if (current instanceof BinaryExpression old) {
-                var newRight = new BinaryExpression(old.getRight(), parsePrimaryExpression(), BinaryExpression.Operator.fromTokenType(next.type()));
+
+            if (current instanceof BinaryExpression old && operator.getPrecedence() <= old.getOperator().getPrecedence()) {
+                var newRight = new BinaryExpression(old.getRight(), parsePrimaryExpression(), operator);
                 old.setRight(newRight);
                 current = newRight;
             } else { // Convert head into binary expression
-                head = new BinaryExpression(head, parsePrimaryExpression(), BinaryExpression.Operator.fromTokenType(next.type()));
+                head = new BinaryExpression(head, parsePrimaryExpression(), operator);
                 current = head;
             }
         }
@@ -174,9 +163,10 @@ public class Parser {
         Expression expr;
 
         var currentType = this.stream.peek().type();
+        var operator = UnaryExpression.Operator.fromTokenType(currentType);
         if (currentType == TokenType.L_PAREN) {
             expr = parseParenthesisedExpression();
-        } else if (UNARY_OPERATORS.contains(currentType)) {
+        } else if (operator != null) {
             this.stream.consume();
             expr = new UnaryExpression(parsePrimaryExpression(), UnaryExpression.Operator.fromTokenType(currentType));
         } else {

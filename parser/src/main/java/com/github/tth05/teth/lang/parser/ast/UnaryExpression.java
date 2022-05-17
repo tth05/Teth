@@ -15,18 +15,21 @@ public class UnaryExpression extends Expression {
     }
 
     public enum Operator {
-        OP_NEGATIVE;
+        OP_NEGATIVE,
+        OP_NOT;
 
         public static Operator fromTokenType(TokenType type) {
             return switch (type) {
-                case OP_MINUS -> Operator.OP_NEGATIVE;
-                default -> throw new IllegalArgumentException();
+                case MINUS -> Operator.OP_NEGATIVE;
+                case NOT -> Operator.OP_NOT;
+                default -> null;
             };
         }
 
         public String asString() {
             return switch (this) {
                 case OP_NEGATIVE -> "-";
+                case OP_NOT -> "!";
             };
         }
     }
@@ -50,8 +53,7 @@ public class UnaryExpression extends Expression {
                 .append(this.operator.asString())
                 .append("'")
                 .append(" ")
-                .append(this.operator.name())
-                .newLine();
+                .append(this.operator.name());
         builder.endBlock().newLine().append("}");
     }
 

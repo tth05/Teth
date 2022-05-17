@@ -23,22 +23,89 @@ public class ParserTest extends AbstractParserTest {
 
     @Test
     public void testParseUnaryExpression() {
-        createAST("-(-1 + -2)");
+        createAST("-(-1 + -2)+!a");
         assertEquals(new SourceFileUnit(
                 List.of(
-                        new UnaryExpression(
-                                new BinaryExpression(
-                                        new UnaryExpression(
-                                                new LongLiteralExpression(1),
-                                                UnaryExpression.Operator.OP_NEGATIVE
+                        new BinaryExpression(
+                                new UnaryExpression(
+                                        new BinaryExpression(
+                                                new UnaryExpression(
+                                                        new LongLiteralExpression(1),
+                                                        UnaryExpression.Operator.OP_NEGATIVE
+                                                ),
+                                                new UnaryExpression(
+                                                        new LongLiteralExpression(2),
+                                                        UnaryExpression.Operator.OP_NEGATIVE
+                                                ),
+                                                BinaryExpression.Operator.OP_ADD
                                         ),
-                                        new UnaryExpression(
-                                                new LongLiteralExpression(2),
-                                                UnaryExpression.Operator.OP_NEGATIVE
+                                        UnaryExpression.Operator.OP_NEGATIVE
+                                ),
+                                new UnaryExpression(
+                                        new IdentifierExpression("a"),
+                                        UnaryExpression.Operator.OP_NOT
+                                ),
+                                BinaryExpression.Operator.OP_ADD
+                        )
+                )
+        ), this.unit);
+        assertStreamsEmpty();
+    }
+
+    @Test
+    public void testParseBinaryExpression() {
+        createAST("1+1-1*1/1==1<1<=1>1>=1!=1^(1=1)");
+        assertEquals(new SourceFileUnit(
+                List.of(
+                        new BinaryExpression(
+                                new BinaryExpression(
+                                        new LongLiteralExpression(1),
+                                        new BinaryExpression(
+                                                new LongLiteralExpression(1),
+                                                new BinaryExpression(
+                                                        new LongLiteralExpression(1),
+                                                        new BinaryExpression(
+                                                                new LongLiteralExpression(1),
+                                                                new BinaryExpression(
+                                                                        new LongLiteralExpression(1),
+                                                                        new BinaryExpression(
+                                                                                new LongLiteralExpression(1),
+                                                                                new BinaryExpression(
+                                                                                        new LongLiteralExpression(1),
+                                                                                        new BinaryExpression(
+                                                                                                new LongLiteralExpression(1),
+                                                                                                new BinaryExpression(
+                                                                                                        new LongLiteralExpression(1),
+                                                                                                        new BinaryExpression(
+                                                                                                                new LongLiteralExpression(1),
+                                                                                                                new LongLiteralExpression(1),
+                                                                                                                BinaryExpression.Operator.OP_NOT_EQUAL
+                                                                                                        ),
+                                                                                                        BinaryExpression.Operator.OP_GREATER_EQUAL
+                                                                                                ),
+                                                                                                BinaryExpression.Operator.OP_GREATER
+                                                                                        ),
+                                                                                        BinaryExpression.Operator.OP_LESS_EQUAL
+                                                                                ),
+                                                                                BinaryExpression.Operator.OP_LESS
+                                                                        ),
+                                                                        BinaryExpression.Operator.OP_EQUAL
+                                                                ),
+                                                                BinaryExpression.Operator.OP_DIVIDE
+
+                                                        ),
+                                                        BinaryExpression.Operator.OP_MULTIPLY
+                                                ),
+                                                BinaryExpression.Operator.OP_SUBTRACT
                                         ),
                                         BinaryExpression.Operator.OP_ADD
                                 ),
-                                UnaryExpression.Operator.OP_NEGATIVE
+                                new BinaryExpression(
+                                        new LongLiteralExpression(1),
+                                        new LongLiteralExpression(1),
+                                        BinaryExpression.Operator.OP_ASSIGN
+                                ),
+                                BinaryExpression.Operator.OP_POW
                         )
                 )
         ), this.unit);
@@ -47,7 +114,7 @@ public class ParserTest extends AbstractParserTest {
 
     @Test
     public void testParseMathExpression() {
-        createAST("1-1+(5 + 6* 2^2)^(100+1)");
+        createAST("1 - 1 + (5 * 6 + 1 + 3 * 2^2)^(100 + 1)");
         assertEquals(
                 new SourceFileUnit(
                         List.of(
@@ -57,15 +124,23 @@ public class ParserTest extends AbstractParserTest {
                                                 new LongLiteralExpression(1),
                                                 new BinaryExpression(
                                                         new BinaryExpression(
-                                                                new LongLiteralExpression(5),
                                                                 new BinaryExpression(
+                                                                        new LongLiteralExpression(5),
                                                                         new LongLiteralExpression(6),
-                                                                        new BinaryExpression(
-                                                                                new LongLiteralExpression(2),
-                                                                                new LongLiteralExpression(2),
-                                                                                BinaryExpression.Operator.OP_POW
-                                                                        ),
                                                                         BinaryExpression.Operator.OP_MULTIPLY
+                                                                ),
+                                                                new BinaryExpression(
+                                                                        new LongLiteralExpression(1),
+                                                                        new BinaryExpression(
+                                                                                new LongLiteralExpression(3),
+                                                                                new BinaryExpression(
+                                                                                        new LongLiteralExpression(2),
+                                                                                        new LongLiteralExpression(2),
+                                                                                        BinaryExpression.Operator.OP_POW
+                                                                                ),
+                                                                                BinaryExpression.Operator.OP_MULTIPLY
+                                                                        ),
+                                                                        BinaryExpression.Operator.OP_ADD
                                                                 ),
                                                                 BinaryExpression.Operator.OP_ADD
                                                         ),
