@@ -8,4 +8,12 @@ subprojects {
     repositories {
         mavenCentral()
     }
+
+    compileJava {
+        options.compilerArgs << '--enable-preview'
+    }
+
+    compileTestJava {
+        options.compilerArgs << '--enable-preview'
+    }
 }
