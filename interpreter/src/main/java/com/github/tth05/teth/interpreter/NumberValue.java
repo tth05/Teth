@@ -1,8 +1,9 @@
 package com.github.tth05.teth.interpreter;
 
 import com.github.tth05.teth.lang.parser.ast.BinaryExpression;
+import com.github.tth05.teth.lang.parser.ast.UnaryExpression;
 
-public class NumberValue implements IValue, IBinaryOperatorInvokable {
+public class NumberValue implements IValue, IBinaryOperatorInvokable, IUnaryOperatorInvokable {
 
     private double value;
 
@@ -11,16 +12,37 @@ public class NumberValue implements IValue, IBinaryOperatorInvokable {
     }
 
     @Override
-    public IValue invokeOperator(BinaryExpression.Operator operator, IValue arg) {
+    public IValue invokeUnaryOperator(UnaryExpression.Operator operator) {
+        switch (operator) {
+            case OP_NEGATIVE -> this.value = -this.value;
+            default -> throw new InterpreterException("Unknown intrinsic operation");
+        }
+
+        return this;
+    }
+
+    @Override
+    public IValue invokeBinaryOperator(BinaryExpression.Operator operator, IValue arg) {
         if (!(arg instanceof NumberValue other))
             throw new InterpreterException("Invalid arguments for intrinsic operation");
 
         switch (operator) {
-            case OP_ADD -> this.value += other.value;
-            case OP_SUBTRACT -> this.value -= other.value;
+            case OP_POW -> this.value = Math.pow(this.value, other.value);
             case OP_MULTIPLY -> this.value *= other.value;
             case OP_DIVIDE -> this.value /= other.value;
-            default -> throw new InterpreterException("Unknown intrinsic operation");
+            case OP_ADD -> this.value += other.value;
+            case OP_SUBTRACT -> this.value -= other.value;
+            default -> {
+                return switch (operator) {
+                    case OP_LESS_EQUAL -> new BooleanValue(this.value <= other.value);
+                    case OP_GREATER -> new BooleanValue(this.value > other.value);
+                    case OP_LESS -> new BooleanValue(this.value < other.value);
+                    case OP_GREATER_EQUAL -> new BooleanValue(this.value >= other.value);
+                    case OP_EQUAL -> new BooleanValue(this.value == other.value);
+                    case OP_NOT_EQUAL -> new BooleanValue(this.value != other.value);
+                    default -> throw new InterpreterException("Unknown intrinsic operation");
+                };
+            }
         }
 
         return this;

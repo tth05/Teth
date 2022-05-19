@@ -49,7 +49,15 @@ public class Interpreter {
                 if (!(left instanceof IBinaryOperatorInvokable invokable))
                     throw new InterpreterException("Left operand is not invokable: " + left);
 
-                return invokable.invokeOperator(binaryExpression.getOperator(), right);
+                return invokable.invokeBinaryOperator(binaryExpression.getOperator(), right);
+            }
+            case UnaryExpression unaryExpression -> {
+                IValue operand = evaluateExpression(unaryExpression.getExpression());
+
+                if (!(operand instanceof IUnaryOperatorInvokable invokable))
+                    throw new InterpreterException("Operand is not invokable: " + operand);
+
+                return invokable.invokeUnaryOperator(unaryExpression.getOperator());
             }
             default -> throw new InterpreterException("Unsupported expression: " + expression);
         }

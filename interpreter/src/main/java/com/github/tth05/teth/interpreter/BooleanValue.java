@@ -1,6 +1,9 @@
 package com.github.tth05.teth.interpreter;
 
-public class BooleanValue implements IValue {
+import com.github.tth05.teth.lang.parser.ast.BinaryExpression;
+import com.github.tth05.teth.lang.parser.ast.UnaryExpression;
+
+public class BooleanValue implements IValue, IBinaryOperatorInvokable, IUnaryOperatorInvokable {
 
     private boolean value;
 
@@ -10,6 +13,28 @@ public class BooleanValue implements IValue {
 
     public boolean getValue() {
         return this.value;
+    }
+
+    @Override
+    public IValue invokeUnaryOperator(UnaryExpression.Operator operator) {
+        switch (operator) {
+            case OP_NOT -> this.value = !this.value;
+            default -> throw new InterpreterException("Unknown intrinsic operation");
+        }
+
+        return this;
+    }
+
+    @Override
+    public IValue invokeBinaryOperator(BinaryExpression.Operator operator, IValue arg) {
+        if (!(arg instanceof BooleanValue other))
+            throw new InterpreterException("Invalid arguments for intrinsic operation");
+
+        return switch (operator) {
+            case OP_EQUAL -> new BooleanValue(this.value == other.value);
+            case OP_NOT_EQUAL -> new BooleanValue(this.value != other.value);
+            default -> throw new InterpreterException("Unknown intrinsic operation");
+        };
     }
 
     @Override

@@ -16,12 +16,23 @@ public class InterpreterTest extends AbstractInterpreterTest {
     }
 
     @Test
-    public void testEvaluate() {
+    public void testSimpleMath() {
         createAST("1/2+2*2-3");
         assertStreamsEmpty();
 
         assertEquals(
                 new NumberValue(1.5),
+                this.interpreter.evaluateExpression(assertInstanceOf(Expression.class, this.unit.getStatements().get(0)))
+        );
+    }
+
+    @Test
+    public void testBooleanOperators() {
+        createAST("5 >= 6 == 2 >= 3");
+        assertStreamsEmpty();
+
+        assertEquals(
+                new BooleanValue(true),
                 this.interpreter.evaluateExpression(assertInstanceOf(Expression.class, this.unit.getStatements().get(0)))
         );
     }

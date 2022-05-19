@@ -5,5 +5,5 @@ import com.github.tth05.teth.lang.parser.ast.BinaryExpression;
 public interface IBinaryOperatorInvokable {
 
 
-    IValue invokeOperator(BinaryExpression.Operator operator, IValue arg);
+    IValue invokeBinaryOperator(BinaryExpression.Operator operator, IValue arg);
 }
