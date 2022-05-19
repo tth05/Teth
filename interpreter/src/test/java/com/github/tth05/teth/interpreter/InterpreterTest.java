@@ -36,4 +36,15 @@ public class InterpreterTest extends AbstractInterpreterTest {
                 this.interpreter.evaluateExpression(assertInstanceOf(Expression.class, this.unit.getStatements().get(0)))
         );
     }
+
+    @Test
+    public void testUnaryOperators() {
+        createAST("-5 == 2 == !true");
+        assertStreamsEmpty();
+
+        assertEquals(
+                new BooleanValue(true),
+                this.interpreter.evaluateExpression(assertInstanceOf(Expression.class, this.unit.getStatements().get(0)))
+        );
+    }
 }

@@ -5,10 +5,10 @@ import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
 public class BinaryExpression extends Expression {
 
-    private final Expression left;
+    private Expression left;
     private Expression right;
 
-    private final Operator operator;
+    private Operator operator;
 
     public BinaryExpression(Expression left, Expression right, Operator operator) {
         this.left = left;
@@ -16,64 +16,8 @@ public class BinaryExpression extends Expression {
         this.operator = operator;
     }
 
-    public enum Operator {
-        OP_POW(0),
-        OP_MULTIPLY(1),
-        OP_DIVIDE(1),
-        OP_ADD(2),
-        OP_SUBTRACT(2),
-        OP_LESS_EQUAL(3),
-        OP_GREATER(3),
-        OP_LESS(3),
-        OP_GREATER_EQUAL(3),
-        OP_EQUAL(4),
-        OP_NOT_EQUAL(4),
-        OP_ASSIGN(5);
-
-        private final int precedence;
-
-        Operator(int precedence) {
-            this.precedence = precedence;
-        }
-
-        public int getPrecedence() {
-            return this.precedence;
-        }
-
-        public static Operator fromTokenType(TokenType type) {
-            return switch (type) {
-                case POW -> Operator.OP_POW;
-                case MULTIPLY -> Operator.OP_MULTIPLY;
-                case DIVIDE -> Operator.OP_DIVIDE;
-                case PLUS -> Operator.OP_ADD;
-                case MINUS -> Operator.OP_SUBTRACT;
-                case LESS -> Operator.OP_LESS;
-                case LESS_EQUAL -> Operator.OP_LESS_EQUAL;
-                case GREATER -> Operator.OP_GREATER;
-                case GREATER_EQUAL -> Operator.OP_GREATER_EQUAL;
-                case EQUAL_EQUAL -> Operator.OP_EQUAL;
-                case NOT_EQUAL -> Operator.OP_NOT_EQUAL;
-                case EQUAL -> Operator.OP_ASSIGN;
-                default -> null;
-            };
-        }
-
-        public String asString() {
-            return switch (this) {
-                case OP_POW -> "^";
-                case OP_MULTIPLY -> "*";
-                case OP_DIVIDE -> "/";
-                case OP_ADD -> "+";
-                case OP_SUBTRACT -> "-";
-                case OP_LESS -> "<";
-                case OP_LESS_EQUAL -> "<=";
-                case OP_GREATER -> ">";
-                case OP_GREATER_EQUAL -> ">=";
-                case OP_EQUAL -> "==";
-                case OP_NOT_EQUAL -> "!=";
-                case OP_ASSIGN -> "=";
-            };
-        }
+    public void setLeft(Expression left) {
+        this.left = left;
     }
 
     public Expression getLeft() {
@@ -86,6 +30,10 @@ public class BinaryExpression extends Expression {
 
     public Expression getRight() {
         return this.right;
+    }
+
+    public void setOperator(Operator operator) {
+        this.operator = operator;
     }
 
     public Operator getOperator() {
@@ -137,4 +85,67 @@ public class BinaryExpression extends Expression {
     public String toString() {
         return dumpToString();
     }
+
+    public enum Operator {
+        OP_POW(0),
+        OP_MULTIPLY(1),
+        OP_DIVIDE(1),
+        OP_ADD(2),
+        OP_SUBTRACT(2),
+        OP_LESS(3),
+        OP_LESS_EQUAL(3),
+        OP_GREATER(3),
+        OP_GREATER_EQUAL(3),
+        OP_EQUAL(4),
+        OP_NOT_EQUAL(4),
+        OP_ASSIGN(5);
+
+        private final int precedence;
+
+        Operator(int precedence) {
+            this.precedence = precedence;
+        }
+
+        public int getPrecedence() {
+            return this.precedence;
+        }
+
+        public static Operator fromTokenType(TokenType type) {
+            return switch (type) {
+                case POW -> Operator.OP_POW;
+                case MULTIPLY -> Operator.OP_MULTIPLY;
+                case DIVIDE -> Operator.OP_DIVIDE;
+                case PLUS -> Operator.OP_ADD;
+                case MINUS -> Operator.OP_SUBTRACT;
+                case LESS -> Operator.OP_LESS;
+                case LESS_EQUAL -> Operator.OP_LESS_EQUAL;
+                case GREATER -> Operator.OP_GREATER;
+                case GREATER_EQUAL -> Operator.OP_GREATER_EQUAL;
+                case EQUAL_EQUAL -> Operator.OP_EQUAL;
+                case NOT_EQUAL -> Operator.OP_NOT_EQUAL;
+                case EQUAL -> Operator.OP_ASSIGN;
+                default -> null;
+            };
+        }
+
+        public String asString() {
+            return switch (this) {
+                case OP_POW -> "^";
+                case OP_MULTIPLY -> "*";
+                case OP_DIVIDE -> "/";
+                case OP_ADD -> "+";
+                case OP_SUBTRACT -> "-";
+                case OP_LESS -> "<";
+                case OP_LESS_EQUAL -> "<=";
+                case OP_GREATER -> ">";
+                case OP_GREATER_EQUAL -> ">=";
+                case OP_EQUAL -> "==";
+                case OP_NOT_EQUAL -> "!=";
+                case OP_ASSIGN -> "=";
+            };
+        }
+    }
+
 }
+
+

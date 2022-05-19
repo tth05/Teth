@@ -143,10 +143,18 @@ public class Parser {
 
             this.stream.consume();
 
-            if (current instanceof BinaryExpression old && operator.getPrecedence() <= old.getOperator().getPrecedence()) {
-                var newRight = new BinaryExpression(old.getRight(), parsePrimaryExpression(), operator);
-                old.setRight(newRight);
-                current = newRight;
+            var pre = operator.getPrecedence();
+            if (current instanceof BinaryExpression old) {
+                if (pre < old.getOperator().getPrecedence()) {
+                    var newRight = new BinaryExpression(old.getRight(), parsePrimaryExpression(), operator);
+                    old.setRight(newRight);
+                    current = newRight;
+                } else {
+                    var newCurrent = new BinaryExpression(old.getLeft(), old.getRight(), old.getOperator());
+                    old.setLeft(newCurrent);
+                    old.setRight(parsePrimaryExpression());
+                    old.setOperator(operator);
+                }
             } else { // Convert head into binary expression
                 head = new BinaryExpression(head, parsePrimaryExpression(), operator);
                 current = head;
@@ -209,9 +217,12 @@ public class Parser {
         var token = this.stream.peek();
 
         return switch (token.type()) {
-            case NUMBER_LITERAL -> new LongLiteralExpression(Long.parseLong(this.stream.consumeType(TokenType.NUMBER_LITERAL).value()));
-            case STRING_LITERAL -> new StringLiteralExpression(this.stream.consumeType(TokenType.STRING_LITERAL).value());
-            case BOOLEAN_LITERAL -> new BooleanLiteralExpression(Boolean.parseBoolean(this.stream.consumeType(TokenType.BOOLEAN_LITERAL).value()));
+            case NUMBER_LITERAL ->
+                    new LongLiteralExpression(Long.parseLong(this.stream.consumeType(TokenType.NUMBER_LITERAL).value()));
+            case STRING_LITERAL ->
+                    new StringLiteralExpression(this.stream.consumeType(TokenType.STRING_LITERAL).value());
+            case BOOLEAN_LITERAL ->
+                    new BooleanLiteralExpression(Boolean.parseBoolean(this.stream.consumeType(TokenType.BOOLEAN_LITERAL).value()));
             case IDENTIFIER -> new IdentifierExpression(this.stream.consumeType(TokenType.IDENTIFIER).value());
             default -> throw new UnexpectedTokenException(token);
         };
