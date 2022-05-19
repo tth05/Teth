@@ -1,4 +1,4 @@
-package com.github.tth05.teth.lang.ast;
+package com.github.tth05.teth.lang.parser.ast;
 
 import com.github.tth05.teth.lang.lexer.TokenType;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
@@ -17,18 +17,18 @@ public class BinaryExpression extends Expression {
     }
 
     public enum Operator {
-        OP_EQUAL(0),
-        OP_NOT_EQUAL(0),
-        OP_LESS(0),
-        OP_LESS_EQUAL(0),
-        OP_GREATER(0),
-        OP_GREATER_EQUAL(0),
-        OP_POW(1),
-        OP_MULTIPLY(2),
-        OP_DIVIDE(2),
-        OP_ADD(3),
-        OP_SUBTRACT(3),
-        OP_ASSIGN(4);
+        OP_POW(0),
+        OP_MULTIPLY(1),
+        OP_DIVIDE(1),
+        OP_ADD(2),
+        OP_SUBTRACT(2),
+        OP_LESS_EQUAL(3),
+        OP_GREATER(3),
+        OP_LESS(3),
+        OP_GREATER_EQUAL(3),
+        OP_EQUAL(4),
+        OP_NOT_EQUAL(4),
+        OP_ASSIGN(5);
 
         private final int precedence;
 
@@ -42,17 +42,17 @@ public class BinaryExpression extends Expression {
 
         public static Operator fromTokenType(TokenType type) {
             return switch (type) {
-                case EQUAL_EQUAL -> Operator.OP_EQUAL;
-                case NOT_EQUAL -> Operator.OP_NOT_EQUAL;
-                case LESS -> Operator.OP_LESS;
-                case LESS_EQUAL -> Operator.OP_LESS_EQUAL;
-                case GREATER -> Operator.OP_GREATER;
-                case GREATER_EQUAL -> Operator.OP_GREATER_EQUAL;
                 case POW -> Operator.OP_POW;
                 case MULTIPLY -> Operator.OP_MULTIPLY;
                 case DIVIDE -> Operator.OP_DIVIDE;
                 case PLUS -> Operator.OP_ADD;
                 case MINUS -> Operator.OP_SUBTRACT;
+                case LESS -> Operator.OP_LESS;
+                case LESS_EQUAL -> Operator.OP_LESS_EQUAL;
+                case GREATER -> Operator.OP_GREATER;
+                case GREATER_EQUAL -> Operator.OP_GREATER_EQUAL;
+                case EQUAL_EQUAL -> Operator.OP_EQUAL;
+                case NOT_EQUAL -> Operator.OP_NOT_EQUAL;
                 case EQUAL -> Operator.OP_ASSIGN;
                 default -> null;
             };
@@ -60,17 +60,17 @@ public class BinaryExpression extends Expression {
 
         public String asString() {
             return switch (this) {
-                case OP_EQUAL -> "==";
-                case OP_NOT_EQUAL -> "!=";
-                case OP_LESS -> "<";
-                case OP_LESS_EQUAL -> "<=";
-                case OP_GREATER -> ">";
-                case OP_GREATER_EQUAL -> ">=";
                 case OP_POW -> "^";
                 case OP_MULTIPLY -> "*";
                 case OP_DIVIDE -> "/";
                 case OP_ADD -> "+";
                 case OP_SUBTRACT -> "-";
+                case OP_LESS -> "<";
+                case OP_LESS_EQUAL -> "<=";
+                case OP_GREATER -> ">";
+                case OP_GREATER_EQUAL -> ">=";
+                case OP_EQUAL -> "==";
+                case OP_NOT_EQUAL -> "!=";
                 case OP_ASSIGN -> "=";
             };
         }

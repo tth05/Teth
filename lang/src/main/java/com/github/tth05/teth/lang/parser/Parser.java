@@ -3,7 +3,7 @@ package com.github.tth05.teth.lang.parser;
 import com.github.tth05.teth.lang.lexer.Token;
 import com.github.tth05.teth.lang.lexer.TokenStream;
 import com.github.tth05.teth.lang.lexer.TokenType;
-import com.github.tth05.teth.lang.ast.*;
+import com.github.tth05.teth.lang.parser.ast.*;
 
 import java.util.ArrayList;
 import java.util.function.Predicate;
@@ -209,8 +209,9 @@ public class Parser {
         var token = this.stream.peek();
 
         return switch (token.type()) {
-            case NUMBER -> new LongLiteralExpression(Long.parseLong(this.stream.consumeType(TokenType.NUMBER).value()));
-            case STRING -> new StringLiteralExpression(this.stream.consumeType(TokenType.STRING).value());
+            case NUMBER_LITERAL -> new LongLiteralExpression(Long.parseLong(this.stream.consumeType(TokenType.NUMBER_LITERAL).value()));
+            case STRING_LITERAL -> new StringLiteralExpression(this.stream.consumeType(TokenType.STRING_LITERAL).value());
+            case BOOLEAN_LITERAL -> new BooleanLiteralExpression(Boolean.parseBoolean(this.stream.consumeType(TokenType.BOOLEAN_LITERAL).value()));
             case IDENTIFIER -> new IdentifierExpression(this.stream.consumeType(TokenType.IDENTIFIER).value());
             default -> throw new UnexpectedTokenException(token);
         };

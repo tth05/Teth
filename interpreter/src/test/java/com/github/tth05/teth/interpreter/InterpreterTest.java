@@ -1,6 +1,6 @@
 package com.github.tth05.teth.interpreter;
 
-import com.github.tth05.teth.lang.ast.Expression;
+import com.github.tth05.teth.lang.parser.ast.Expression;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

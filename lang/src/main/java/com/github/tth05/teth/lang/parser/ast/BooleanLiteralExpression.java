@@ -1,16 +1,16 @@
-package com.github.tth05.teth.lang.ast;
+package com.github.tth05.teth.lang.parser.ast;
 
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
-public class StringLiteralExpression extends Expression {
+public class BooleanLiteralExpression extends Expression {
 
-    private final String value;
+    private final boolean value;
 
-    public StringLiteralExpression(String value) {
+    public BooleanLiteralExpression(boolean value) {
         this.value = value;
     }
 
-    public String getValue() {
+    public boolean getValue() {
         return this.value;
     }
 
@@ -21,19 +21,19 @@ public class StringLiteralExpression extends Expression {
         if (o == null || getClass() != o.getClass())
             return false;
 
-        StringLiteralExpression that = (StringLiteralExpression) o;
+        BooleanLiteralExpression that = (BooleanLiteralExpression) o;
 
-        return this.value.equals(that.value);
+        return this.value == that.value;
     }
 
     @Override
     public void dump(ASTDumpBuilder builder) {
-        builder.append("\"").append(this.value).append("\"");
+        builder.append(this.value + "");
     }
 
     @Override
     public int hashCode() {
-        return this.value.hashCode();
+        return Boolean.hashCode(this.value);
     }
 
     @Override

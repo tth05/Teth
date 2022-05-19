@@ -1,4 +1,4 @@
-package com.github.tth05.teth.lang.ast;
+package com.github.tth05.teth.lang.parser.ast;
 
 import com.github.tth05.teth.lang.parser.ExpressionList;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
@@ -23,7 +23,7 @@ public class FunctionInvocationExpression extends Expression {
 
     @Override
     public void dump(ASTDumpBuilder builder) {
-        builder.append("FunctionInvocationExpression {").startBlock();
+        builder.append("FunctionInvocationExpression {").startBlock().newLine();
         builder.appendAttribute("target");
         this.target.dump(builder);
         builder.newLine().appendAttribute("parameters");

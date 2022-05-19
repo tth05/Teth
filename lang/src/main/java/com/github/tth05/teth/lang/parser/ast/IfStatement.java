@@ -1,4 +1,4 @@
-package com.github.tth05.teth.lang.ast;
+package com.github.tth05.teth.lang.parser.ast;
 
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
@@ -14,6 +14,18 @@ public class IfStatement extends Statement {
         this.condition = condition;
         this.body = body;
         this.elseStatement = elseStatement;
+    }
+
+    public Expression getCondition() {
+        return this.condition;
+    }
+
+    public BlockStatement getBody() {
+        return this.body;
+    }
+
+    public Statement getElseStatement() {
+        return this.elseStatement;
     }
 
     @Override

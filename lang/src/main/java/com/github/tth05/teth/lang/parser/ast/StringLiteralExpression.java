@@ -1,15 +1,12 @@
-package com.github.tth05.teth.lang.ast;
+package com.github.tth05.teth.lang.parser.ast;
 
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
-import java.util.Objects;
-
-
-public class IdentifierExpression extends Expression {
+public class StringLiteralExpression extends Expression {
 
     private final String value;
 
-    public IdentifierExpression(String value) {
+    public StringLiteralExpression(String value) {
         this.value = value;
     }
 
@@ -24,19 +21,19 @@ public class IdentifierExpression extends Expression {
         if (o == null || getClass() != o.getClass())
             return false;
 
-        return Objects.equals(this.value, ((IdentifierExpression) o).value);
-    }
+        StringLiteralExpression that = (StringLiteralExpression) o;
 
-    @Override
-    public int hashCode() {
-        int result = super.hashCode();
-        result = 31 * result + this.value.hashCode();
-        return result;
+        return this.value.equals(that.value);
     }
 
     @Override
     public void dump(ASTDumpBuilder builder) {
-        builder.append(this.value);
+        builder.append("\"").append(this.value).append("\"");
+    }
+
+    @Override
+    public int hashCode() {
+        return this.value.hashCode();
     }
 
     @Override

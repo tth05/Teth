@@ -2,7 +2,7 @@ package com.github.tth05.teth.interpreter;
 
 import com.github.tth05.teth.lang.parser.SourceFileUnit;
 import com.github.tth05.teth.lang.parser.StatementList;
-import com.github.tth05.teth.lang.ast.*;
+import com.github.tth05.teth.lang.parser.ast.*;
 
 public class Interpreter {
 
@@ -15,12 +15,10 @@ public class Interpreter {
     }
 
     private void executeStatementList(StatementList statements) {
-        for (Statement statement : statements) {
-            switch (statement) {
-                case Expression expression -> {
-                    evaluateExpression(expression);
-                }
-                default -> throw new InterpreterException("Unsupported statement: " + statement);
+        for (Statement s : statements) {
+            switch (s) {
+                case Expression expression -> evaluateExpression(expression);
+                case Statement statement -> executeStatement(statement);
             }
         }
     }
@@ -32,6 +30,9 @@ public class Interpreter {
             }
             case LongLiteralExpression longLiteralExpression -> {
                 return new NumberValue(longLiteralExpression.getValue());
+            }
+            case BooleanLiteralExpression booleanLiteralExpression -> {
+                return new BooleanValue(booleanLiteralExpression.getValue());
             }
             case IdentifierExpression identifierExpression -> {
                 if (IntrinsicFunctionValue.isIntrinsicFunction(identifierExpression.getValue())) {
@@ -51,6 +52,23 @@ public class Interpreter {
                 return invokable.invokeOperator(binaryExpression.getOperator(), right);
             }
             default -> throw new InterpreterException("Unsupported expression: " + expression);
+        }
+    }
+
+    public void executeStatement(Statement statement) {
+        switch (statement) {
+            case BlockStatement blockStatement -> executeStatementList(blockStatement.getStatements());
+            case IfStatement ifStatement -> {
+                IValue condition = evaluateExpression(ifStatement.getCondition());
+                if (!(condition instanceof BooleanValue booleanValue))
+                    throw new InterpreterException("Condition did not evaluate to boolean: " + condition);
+
+                if (booleanValue.getValue())
+                    executeStatement(ifStatement.getBody());
+                else if (ifStatement.getElseStatement() != null)
+                    executeStatement(ifStatement.getElseStatement());
+            }
+            default -> throw new InterpreterException("Unsupported statement: " + statement);
         }
     }
 

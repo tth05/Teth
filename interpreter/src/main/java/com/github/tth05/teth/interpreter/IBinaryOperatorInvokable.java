@@ -1,6 +1,6 @@
 package com.github.tth05.teth.interpreter;
 
-import com.github.tth05.teth.lang.ast.BinaryExpression;
+import com.github.tth05.teth.lang.parser.ast.BinaryExpression;
 
 public interface IBinaryOperatorInvokable {
 

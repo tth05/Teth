@@ -27,6 +27,8 @@ public class Tokenizer {
                 var ident = parseIdentifier();
                 if (isKeyword(ident.value()))
                     ident = new Token(ident.value(), TokenType.KEYWORD);
+                else if (isBooleanLiteral(ident.value()))
+                    ident = new Token(ident.value(), TokenType.BOOLEAN_LITERAL);
                 emit(ident);
             } else if (isOperator(c)) {
                 emit(parseOperator());
@@ -75,7 +77,7 @@ public class Tokenizer {
         while (true) {
             var next = this.stream.peek();
             if (next == 0 || isLineBreak(next))
-                throw new UnexpectedCharException(next, TokenType.STRING);
+                throw new UnexpectedCharException(next, TokenType.STRING_LITERAL);
             if (isQuote(next))
                 break;
 
@@ -84,7 +86,7 @@ public class Tokenizer {
         }
         this.stream.consume(); //Suffix
 
-        return new Token(string.toString(), TokenType.STRING);
+        return new Token(string.toString(), TokenType.STRING_LITERAL);
     }
 
     private Token parseNumber() {
@@ -92,12 +94,12 @@ public class Tokenizer {
         do {
             char c = this.stream.consume();
             if (!isNumber(c))
-                throw new UnexpectedCharException(c, TokenType.NUMBER);
+                throw new UnexpectedCharException(c, TokenType.NUMBER_LITERAL);
 
             number.append(c);
         } while (!isSeparator(this.stream.peek()));
 
-        return new Token(number.toString(), TokenType.NUMBER);
+        return new Token(number.toString(), TokenType.NUMBER_LITERAL);
     }
 
     private Token parseOperator() {
@@ -157,6 +159,10 @@ public class Tokenizer {
 
     private static boolean isKeyword(String value) {
         return value.equals("if") || value.equals("else") || value.equals("fn");
+    }
+
+    private static boolean isBooleanLiteral(String value) {
+        return value.equals("true") || value.equals("false");
     }
 
     private static boolean isIdentifierChar(char c) {

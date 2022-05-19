@@ -1,4 +1,4 @@
-package com.github.tth05.teth.lang.ast;
+package com.github.tth05.teth.lang.parser.ast;
 
 import com.github.tth05.teth.lang.parser.StatementList;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
@@ -19,7 +19,7 @@ public class BlockStatement extends Statement {
         builder.endBlock().newLine().append("}");
     }
 
-    StatementList getStatements() {
+    public StatementList getStatements() {
         return this.statements;
     }
 

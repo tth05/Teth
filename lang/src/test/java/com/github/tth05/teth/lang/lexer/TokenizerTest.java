@@ -15,7 +15,7 @@ public class TokenizerTest extends AbstractTokenizerTest {
     @Test
     public void testPositiveNumber() {
         createStreams("12345");
-        assertIterableEquals(tokenList(new Token("12345", TokenType.NUMBER)), tokensIntoList());
+        assertIterableEquals(tokenList(new Token("12345", TokenType.NUMBER_LITERAL)), tokensIntoList());
         assertStreamsEmpty();
     }
 
@@ -24,7 +24,7 @@ public class TokenizerTest extends AbstractTokenizerTest {
         createStreams("-12345");
         assertIterableEquals(tokenList(
                 new Token("-", TokenType.MINUS),
-                new Token("12345", TokenType.NUMBER)
+                new Token("12345", TokenType.NUMBER_LITERAL)
         ), tokensIntoList());
         assertStreamsEmpty();
     }
@@ -37,11 +37,11 @@ public class TokenizerTest extends AbstractTokenizerTest {
     @Test
     public void testSimpleString() {
         createStreams("\"a cool string\"");
-        assertIterableEquals(tokenList(new Token("a cool string", TokenType.STRING)), tokensIntoList());
+        assertIterableEquals(tokenList(new Token("a cool string", TokenType.STRING_LITERAL)), tokensIntoList());
         assertStreamsEmpty();
 
         createStreams("\"teth_is_great!\"");
-        assertIterableEquals(tokenList(new Token("teth_is_great!", TokenType.STRING)), tokensIntoList());
+        assertIterableEquals(tokenList(new Token("teth_is_great!", TokenType.STRING_LITERAL)), tokensIntoList());
         assertStreamsEmpty();
     }
 
@@ -49,6 +49,17 @@ public class TokenizerTest extends AbstractTokenizerTest {
     public void testUnclosedString() {
         assertThrows(UnexpectedCharException.class, () -> createStreams("\"123anIdentifier"));
         assertThrows(UnexpectedCharException.class, () -> createStreams("\"123anIdentifier\n"));
+    }
+
+    @Test
+    public void testBoolean() {
+        createStreams("true");
+        assertIterableEquals(tokenList(new Token("true", TokenType.BOOLEAN_LITERAL)), tokensIntoList());
+        assertStreamsEmpty();
+
+        createStreams("false");
+        assertIterableEquals(tokenList(new Token("false", TokenType.BOOLEAN_LITERAL)), tokensIntoList());
+        assertStreamsEmpty();
     }
 
     @Test
@@ -77,7 +88,7 @@ public class TokenizerTest extends AbstractTokenizerTest {
                 new Token("type", TokenType.IDENTIFIER),
                 new Token("anIdentifier", TokenType.IDENTIFIER),
                 new Token("=", TokenType.EQUAL),
-                new Token("56", TokenType.NUMBER)
+                new Token("56", TokenType.NUMBER_LITERAL)
         ), tokensIntoList());
         assertStreamsEmpty();
     }
@@ -91,7 +102,7 @@ public class TokenizerTest extends AbstractTokenizerTest {
                 new Token("\n", TokenType.LINE_BREAK),
                 new Token("=", TokenType.EQUAL),
                 new Token("\n", TokenType.LINE_BREAK),
-                new Token("56", TokenType.NUMBER)
+                new Token("56", TokenType.NUMBER_LITERAL)
         ), tokensIntoList());
         assertStreamsEmpty();
     }
@@ -100,19 +111,19 @@ public class TokenizerTest extends AbstractTokenizerTest {
     public void testMathExpression() {
         createStreams("5*(1^2-45)/10+1");
         assertIterableEquals(tokenList(
-                new Token("5", TokenType.NUMBER),
+                new Token("5", TokenType.NUMBER_LITERAL),
                 new Token("*", TokenType.MULTIPLY),
                 new Token("(", TokenType.L_PAREN),
-                new Token("1", TokenType.NUMBER),
+                new Token("1", TokenType.NUMBER_LITERAL),
                 new Token("^", TokenType.POW),
-                new Token("2", TokenType.NUMBER),
+                new Token("2", TokenType.NUMBER_LITERAL),
                 new Token("-", TokenType.MINUS),
-                new Token("45", TokenType.NUMBER),
+                new Token("45", TokenType.NUMBER_LITERAL),
                 new Token(")", TokenType.R_PAREN),
                 new Token("/", TokenType.DIVIDE),
-                new Token("10", TokenType.NUMBER),
+                new Token("10", TokenType.NUMBER_LITERAL),
                 new Token("+", TokenType.PLUS),
-                new Token("1", TokenType.NUMBER)
+                new Token("1", TokenType.NUMBER_LITERAL)
         ), tokensIntoList());
         assertStreamsEmpty();
     }
@@ -123,12 +134,12 @@ public class TokenizerTest extends AbstractTokenizerTest {
         assertIterableEquals(tokenList(
                 new Token("if", TokenType.KEYWORD),
                 new Token("(", TokenType.L_PAREN),
-                new Token("1", TokenType.NUMBER),
+                new Token("1", TokenType.NUMBER_LITERAL),
                 new Token("==", TokenType.EQUAL_EQUAL),
-                new Token("2", TokenType.NUMBER),
+                new Token("2", TokenType.NUMBER_LITERAL),
                 new Token(")", TokenType.R_PAREN),
                 new Token("{", TokenType.L_CURLY_PAREN),
-                new Token("3", TokenType.NUMBER),
+                new Token("3", TokenType.NUMBER_LITERAL),
                 new Token("}", TokenType.R_CURLY_PAREN)
         ), tokensIntoList());
         assertStreamsEmpty();
@@ -137,17 +148,17 @@ public class TokenizerTest extends AbstractTokenizerTest {
         assertIterableEquals(tokenList(
                 new Token("if", TokenType.KEYWORD),
                 new Token("(", TokenType.L_PAREN),
-                new Token("1", TokenType.NUMBER),
+                new Token("1", TokenType.NUMBER_LITERAL),
                 new Token("==", TokenType.EQUAL_EQUAL),
-                new Token("2", TokenType.NUMBER),
+                new Token("2", TokenType.NUMBER_LITERAL),
                 new Token(")", TokenType.R_PAREN),
                 new Token("{", TokenType.L_CURLY_PAREN),
-                new Token("3", TokenType.NUMBER),
+                new Token("3", TokenType.NUMBER_LITERAL),
                 new Token("}", TokenType.R_CURLY_PAREN),
                 new Token("else", TokenType.KEYWORD),
-                new Token("5", TokenType.NUMBER),
+                new Token("5", TokenType.NUMBER_LITERAL),
                 new Token("==", TokenType.EQUAL_EQUAL),
-                new Token("5", TokenType.NUMBER)
+                new Token("5", TokenType.NUMBER_LITERAL)
         ), tokensIntoList());
         assertStreamsEmpty();
 
@@ -155,17 +166,17 @@ public class TokenizerTest extends AbstractTokenizerTest {
         assertIterableEquals(tokenList(
                 new Token("if", TokenType.KEYWORD),
                 new Token("(", TokenType.L_PAREN),
-                new Token("1", TokenType.NUMBER),
+                new Token("1", TokenType.NUMBER_LITERAL),
                 new Token("==", TokenType.EQUAL_EQUAL),
-                new Token("2", TokenType.NUMBER),
+                new Token("2", TokenType.NUMBER_LITERAL),
                 new Token(")", TokenType.R_PAREN),
-                new Token("3", TokenType.NUMBER),
+                new Token("3", TokenType.NUMBER_LITERAL),
                 new Token("else", TokenType.KEYWORD),
                 new Token("if", TokenType.KEYWORD),
                 new Token("(", TokenType.L_PAREN),
                 new Token("a", TokenType.IDENTIFIER),
                 new Token(")", TokenType.R_PAREN),
-                new Token("5", TokenType.NUMBER)
+                new Token("5", TokenType.NUMBER_LITERAL)
         ), tokensIntoList());
         assertStreamsEmpty();
     }
