@@ -73,7 +73,7 @@ public class ParserTest extends AbstractParserTest {
 
     @Test
     public void testParseBinaryExpression() {
-        createAST("1+1-1*1/1==1<1<=1>1>=1!=1^(1=1)");
+        createAST("1+1-1*1/1==1<1<=1>1>=1!=1^(a=1)");
         assertEquals(new SourceFileUnit(
                 List.of(
                         new BinaryExpression(
@@ -112,10 +112,9 @@ public class ParserTest extends AbstractParserTest {
                                                 ),
                                                 new BinaryExpression(
                                                         new LongLiteralExpression(1),
-                                                        new BinaryExpression(
-                                                                new LongLiteralExpression(1),
-                                                                new LongLiteralExpression(1),
-                                                                BinaryExpression.Operator.OP_ASSIGN
+                                                        new VariableAssignmentExpression(
+                                                                "a",
+                                                                new LongLiteralExpression(1)
                                                         ),
                                                         BinaryExpression.Operator.OP_POW
                                                 ),
@@ -205,19 +204,17 @@ public class ParserTest extends AbstractParserTest {
                                                                 new IdentifierExpression("b"),
                                                                 new BlockStatement(
                                                                         StatementList.of(
-                                                                                new BinaryExpression(
-                                                                                        new IdentifierExpression("c"),
-                                                                                        new LongLiteralExpression(2),
-                                                                                        BinaryExpression.Operator.OP_ASSIGN
+                                                                                new VariableAssignmentExpression(
+                                                                                        "c",
+                                                                                        new LongLiteralExpression(2)
                                                                                 )
                                                                         )
                                                                 ),
                                                                 new BlockStatement(
                                                                         StatementList.of(
-                                                                                new BinaryExpression(
-                                                                                        new IdentifierExpression("c"),
-                                                                                        new LongLiteralExpression(5),
-                                                                                        BinaryExpression.Operator.OP_ASSIGN
+                                                                                new VariableAssignmentExpression(
+                                                                                        "c",
+                                                                                        new LongLiteralExpression(5)
                                                                                 )
                                                                         )
                                                                 )
@@ -251,7 +248,7 @@ public class ParserTest extends AbstractParserTest {
                 new SourceFileUnit(
                         List.of(
                                 new VariableDeclaration(
-                                        "double",
+                                        Type.fromString("double"),
                                         "d",
                                         new LongLiteralExpression(25)
                                 )

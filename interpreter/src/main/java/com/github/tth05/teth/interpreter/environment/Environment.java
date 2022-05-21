@@ -14,8 +14,9 @@ public class Environment {
     private final Map<String, List<IFunction>> topLevelFunctions = new HashMap<>();
     {
         addTopLevelFunction("print", IntrinsicFunction.create("print", (parameters) -> {
-            for (IValue parameter : parameters)
-                System.out.print(parameter.getDebugString() + " ");
+            for (int i = 0; i < parameters.length; i++) {
+                System.out.print(parameters[i].getDebugString() + (i < parameters.length - 1 ? " " : ""));
+            }
             System.out.println();
             return null;
         }, true, Type.ANY));

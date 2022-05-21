@@ -16,4 +16,8 @@ public class Scope {
     public IValue getLocalVariable(String name) {
         return this.localVariables.get(name);
     }
+
+    public boolean hasLocalVariable(String name) {
+        return this.localVariables.containsKey(name);
+    }
 }

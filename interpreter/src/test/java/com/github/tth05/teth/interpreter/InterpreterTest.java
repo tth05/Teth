@@ -6,6 +6,9 @@ import com.github.tth05.teth.lang.parser.ast.Expression;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 public class InterpreterTest extends AbstractInterpreterTest {
@@ -66,5 +69,22 @@ public class InterpreterTest extends AbstractInterpreterTest {
         assertStreamsEmpty();
 
         this.interpreter.execute(this.unit);
+        assertLinesMatch(List.of("6", "4"), Arrays.asList(getSystemOutput().split(System.lineSeparator())));
+    }
+
+    @Test
+    public void testVariableAssignment() {
+        createAST("""
+                long x = 5 + 2
+                print(x)
+                long y = x + 1
+                x = 1
+                y = 1 + -y
+                print(x, y)
+                """);
+        assertStreamsEmpty();
+
+        this.interpreter.execute(this.unit);
+        assertLinesMatch(List.of("7", "1 -7"), Arrays.asList(getSystemOutput().split(System.lineSeparator())));
     }
 }

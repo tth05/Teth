@@ -97,8 +97,7 @@ public class BinaryExpression extends Expression {
         OP_GREATER(3),
         OP_GREATER_EQUAL(3),
         OP_EQUAL(4),
-        OP_NOT_EQUAL(4),
-        OP_ASSIGN(5);
+        OP_NOT_EQUAL(4);
 
         private final int precedence;
 
@@ -123,7 +122,6 @@ public class BinaryExpression extends Expression {
                 case GREATER_EQUAL -> Operator.OP_GREATER_EQUAL;
                 case EQUAL_EQUAL -> Operator.OP_EQUAL;
                 case NOT_EQUAL -> Operator.OP_NOT_EQUAL;
-                case EQUAL -> Operator.OP_ASSIGN;
                 default -> null;
             };
         }
@@ -141,7 +139,6 @@ public class BinaryExpression extends Expression {
                 case OP_GREATER_EQUAL -> ">=";
                 case OP_EQUAL -> "==";
                 case OP_NOT_EQUAL -> "!=";
-                case OP_ASSIGN -> "=";
             };
         }
     }

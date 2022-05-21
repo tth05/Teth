@@ -23,6 +23,8 @@ public class Interpreter {
             switch (s) {
                 case FunctionDeclaration functionDeclaration ->
                         this.environment.currentScope().setLocalVariable(functionDeclaration.getName(), new FunctionDeclarationValue(functionDeclaration));
+                case VariableDeclaration localVariableDeclaration ->
+                        this.environment.currentScope().setLocalVariable(localVariableDeclaration.getName(), evaluateExpression(localVariableDeclaration.getExpression()).copy());
                 case Expression expression -> evaluateExpression(expression);
                 case Statement statement -> executeStatement(statement);
             }
@@ -33,6 +35,14 @@ public class Interpreter {
         switch (expression) {
             case FunctionInvocationExpression functionInvocationExpression -> {
                 return evaluateFunctionInvocationExpression(functionInvocationExpression);
+            }
+            case VariableAssignmentExpression variableAssignmentExpression -> {
+                if (!this.environment.currentScope().hasLocalVariable(variableAssignmentExpression.getTarget()))
+                    throw new InterpreterException("Variable " + variableAssignmentExpression.getTarget() + " is not defined");
+
+                IValue value = evaluateExpression(variableAssignmentExpression.getExpr());
+                this.environment.currentScope().setLocalVariable(variableAssignmentExpression.getTarget(), value);
+                return value.copy();
             }
             case LongLiteralExpression longLiteralExpression -> {
                 return new LongValue(longLiteralExpression.getValue());

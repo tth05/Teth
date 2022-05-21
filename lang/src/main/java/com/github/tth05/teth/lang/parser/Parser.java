@@ -105,7 +105,7 @@ public class Parser {
             assignment = parseExpression();
         }
 
-        return new VariableDeclaration(type.value(), name.value(), assignment);
+        return new VariableDeclaration(Type.fromString(type.value()), name.value(), assignment);
     }
 
     private FunctionDeclaration parseFunctionDeclaration() {
@@ -183,6 +183,12 @@ public class Parser {
         currentType = this.stream.peek().type();
         if (currentType == TokenType.L_PAREN) {
             expr = parseFunctionInvocation(expr);
+        } else if (currentType == TokenType.EQUAL) {
+            if (!(expr instanceof IdentifierExpression ident))
+                throw new RuntimeException("Cannot assign to non-identifier");
+            // Consume the equal sign
+            this.stream.consume();
+            expr = new VariableAssignmentExpression(ident.getValue(), parseExpression());
         }
 
         return expr;

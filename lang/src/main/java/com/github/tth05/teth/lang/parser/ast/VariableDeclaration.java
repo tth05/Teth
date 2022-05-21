@@ -1,24 +1,37 @@
 package com.github.tth05.teth.lang.parser.ast;
 
+import com.github.tth05.teth.lang.parser.Type;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
 import java.util.Objects;
 
 public class VariableDeclaration extends Statement {
 
-    private final String type;
+    private final Type type;
     private final String name;
 
     private final Expression expression;
 
-    public VariableDeclaration(String type, String name) {
+    public VariableDeclaration(Type type, String name) {
         this(type, name, null);
     }
 
-    public VariableDeclaration(String type, String name, Expression expression) {
+    public VariableDeclaration(Type type, String name, Expression expression) {
         this.type = type;
         this.name = name;
         this.expression = expression;
+    }
+
+    public String getName() {
+        return this.name;
+    }
+
+    public Type getType() {
+        return this.type;
+    }
+
+    public Expression getExpression() {
+        return this.expression;
     }
 
     @Override
@@ -49,7 +62,7 @@ public class VariableDeclaration extends Statement {
     public void dump(ASTDumpBuilder builder) {
         builder.append("VariableDeclaration {").newLine();
         builder.startBlock();
-        builder.appendAttribute("type", this.type).newLine();
+        builder.appendAttribute("type", this.type.toString()).newLine();
         builder.appendAttribute("name", this.name).newLine();
         builder.appendAttribute("expression");
         this.expression.dump(builder);
