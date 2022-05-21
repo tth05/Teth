@@ -1,10 +1,14 @@
 package com.github.tth05.teth.interpreter;
 
+import com.github.tth05.teth.interpreter.environment.Environment;
+import com.github.tth05.teth.interpreter.values.*;
 import com.github.tth05.teth.lang.parser.SourceFileUnit;
 import com.github.tth05.teth.lang.parser.StatementList;
 import com.github.tth05.teth.lang.parser.ast.*;
 
 public class Interpreter {
+
+    private final Environment environment = new Environment();
 
     public void execute(SourceFileUnit ast) {
         try {
@@ -17,6 +21,8 @@ public class Interpreter {
     private void executeStatementList(StatementList statements) {
         for (Statement s : statements) {
             switch (s) {
+                case FunctionDeclaration functionDeclaration ->
+                        this.environment.currentScope().setLocalVariable(functionDeclaration.getName(), new FunctionDeclarationValue(functionDeclaration));
                 case Expression expression -> evaluateExpression(expression);
                 case Statement statement -> executeStatement(statement);
             }
@@ -29,15 +35,15 @@ public class Interpreter {
                 return evaluateFunctionInvocationExpression(functionInvocationExpression);
             }
             case LongLiteralExpression longLiteralExpression -> {
-                return new NumberValue(longLiteralExpression.getValue());
+                return new LongValue(longLiteralExpression.getValue());
             }
             case BooleanLiteralExpression booleanLiteralExpression -> {
                 return new BooleanValue(booleanLiteralExpression.getValue());
             }
             case IdentifierExpression identifierExpression -> {
-                if (IntrinsicFunctionValue.isIntrinsicFunction(identifierExpression.getValue())) {
-                    return new IntrinsicFunctionValue(identifierExpression.getValue());
-                }
+                var local = this.environment.currentScope().getLocalVariable(identifierExpression.getValue());
+                if (local != null)
+                    return local;
 
                 //TODO: Resolve into variable, etc.
                 throw new InterpreterException("Unresolved identifier expression: " + identifierExpression);
@@ -80,14 +86,41 @@ public class Interpreter {
         }
     }
 
-    private IValue evaluateFunctionInvocationExpression(FunctionInvocationExpression expr) {
-        IValue target = evaluateExpression(expr.getTarget());
-        var parameters = expr.getParameters().stream().map(this::evaluateExpression).toArray(IValue[]::new);
-
-        switch (target) {
-            case IFunction targetFunction -> targetFunction.invoke(parameters);
-            default -> throw new InterpreterException("Unsupported target: " + target);
-        }
+    public IValue callFunction(FunctionDeclaration functionDeclaration, IValue[] arguments) {
+        //TODO varargs
+        this.environment.enterScope();
+        var parameters = functionDeclaration.getParameters();
+        for (int i = 0; i < parameters.size(); i++)
+            this.environment.currentScope().setLocalVariable(parameters.get(i).name(), arguments[i]);
+        //TODO: return value
+        executeStatement(functionDeclaration.getBody());
+        this.environment.exitScope();
         return null;
+    }
+
+    private IValue evaluateFunctionInvocationExpression(FunctionInvocationExpression expr) {
+        var parameters = expr.getParameters().stream().map(p -> evaluateExpression(p).copy()).toArray(IValue[]::new);
+        IFunction target = evaluateFunctionInvocationTargetExpression(expr.getTarget(), parameters);
+
+        return target.invoke(this, parameters);
+    }
+
+    private IFunction evaluateFunctionInvocationTargetExpression(Expression target, IValue[] parameters) {
+        switch (target) {
+            case IdentifierExpression identifierExpression -> {
+                var local = this.environment.lookupFunction(identifierExpression.getValue(), parameters);
+                if (local != null)
+                    return local;
+
+                throw new InterpreterException("Unresolved identifier: " + identifierExpression.getValue());
+            }
+            case FunctionInvocationExpression functionInvocationExpression -> {
+                var value = evaluateFunctionInvocationExpression(functionInvocationExpression);
+                if (!(value instanceof IFunction f))
+                    throw new InterpreterException("Function invocation did not evaluate to a function: " + value);
+                return f;
+            }
+            default -> throw new InterpreterException("Function invocation target is not a function: " + target);
+        }
     }
 }

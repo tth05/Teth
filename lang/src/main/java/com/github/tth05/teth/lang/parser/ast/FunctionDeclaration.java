@@ -1,6 +1,7 @@
 package com.github.tth05.teth.lang.parser.ast;
 
 import com.github.tth05.teth.lang.parser.IDumpable;
+import com.github.tth05.teth.lang.parser.Type;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
 import java.util.Collections;
@@ -69,11 +70,11 @@ public class FunctionDeclaration extends Statement {
         return result;
     }
 
-    public record Parameter(String type, String name) implements IDumpable {
+    public record Parameter(Type type, String name) implements IDumpable {
 
         @Override
         public void dump(ASTDumpBuilder builder) {
-            builder.append(this.type).append(" ").append(this.name);
+            builder.append(this.type.toString()).append(" ").append(this.name);
         }
     }
 }

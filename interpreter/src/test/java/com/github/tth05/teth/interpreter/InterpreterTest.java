@@ -1,5 +1,7 @@
 package com.github.tth05.teth.interpreter;
 
+import com.github.tth05.teth.interpreter.values.BooleanValue;
+import com.github.tth05.teth.interpreter.values.LongValue;
 import com.github.tth05.teth.lang.parser.ast.Expression;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,7 +23,7 @@ public class InterpreterTest extends AbstractInterpreterTest {
         assertStreamsEmpty();
 
         assertEquals(
-                new NumberValue(1.5),
+                new LongValue(1),
                 this.interpreter.evaluateExpression(assertInstanceOf(Expression.class, this.unit.getStatements().get(0)))
         );
     }
@@ -46,5 +48,23 @@ public class InterpreterTest extends AbstractInterpreterTest {
                 new BooleanValue(true),
                 this.interpreter.evaluateExpression(assertInstanceOf(Expression.class, this.unit.getStatements().get(0)))
         );
+    }
+
+    @Test
+    public void testFunctionCall() {
+        createAST("""
+                fn foo(long x) {
+                        fn foo2(long x, bool b) {
+                                if(b) print(x+1) else print(x-1)
+                        }
+                        foo2(x, true)
+                        foo2(x, false)
+                }
+                                
+                foo(5)
+                """);
+        assertStreamsEmpty();
+
+        this.interpreter.execute(this.unit);
     }
 }

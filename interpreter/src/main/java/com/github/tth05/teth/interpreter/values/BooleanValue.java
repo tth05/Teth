@@ -1,5 +1,7 @@
-package com.github.tth05.teth.interpreter;
+package com.github.tth05.teth.interpreter.values;
 
+import com.github.tth05.teth.interpreter.InterpreterException;
+import com.github.tth05.teth.lang.parser.Type;
 import com.github.tth05.teth.lang.parser.ast.BinaryExpression;
 import com.github.tth05.teth.lang.parser.ast.UnaryExpression;
 
@@ -35,6 +37,16 @@ public class BooleanValue implements IValue, IBinaryOperatorInvokable, IUnaryOpe
             case OP_NOT_EQUAL -> new BooleanValue(this.value != other.value);
             default -> throw new InterpreterException("Unknown intrinsic operation");
         };
+    }
+
+    @Override
+    public IValue copy() {
+        return new BooleanValue(this.value);
+    }
+
+    @Override
+    public Type getType() {
+        return Type.BOOLEAN;
     }
 
     @Override

@@ -121,7 +121,7 @@ public class Parser {
                 this.stream.consumeType(TokenType.COMMA);
 
             parameters.add(new FunctionDeclaration.Parameter(
-                    this.stream.consumeType(TokenType.IDENTIFIER).value(),
+                    Type.fromString(this.stream.consumeType(TokenType.IDENTIFIER).value()),
                     this.stream.consumeType(TokenType.IDENTIFIER).value())
             );
         }
@@ -143,9 +143,8 @@ public class Parser {
 
             this.stream.consume();
 
-            var pre = operator.getPrecedence();
             if (current instanceof BinaryExpression old) {
-                if (pre < old.getOperator().getPrecedence()) {
+                if (operator.getPrecedence() < old.getOperator().getPrecedence()) {
                     var newRight = new BinaryExpression(old.getRight(), parsePrimaryExpression(), operator);
                     old.setRight(newRight);
                     current = newRight;

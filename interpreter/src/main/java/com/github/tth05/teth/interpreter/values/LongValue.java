@@ -1,13 +1,15 @@
-package com.github.tth05.teth.interpreter;
+package com.github.tth05.teth.interpreter.values;
 
+import com.github.tth05.teth.interpreter.InterpreterException;
+import com.github.tth05.teth.lang.parser.Type;
 import com.github.tth05.teth.lang.parser.ast.BinaryExpression;
 import com.github.tth05.teth.lang.parser.ast.UnaryExpression;
 
-public class NumberValue implements IValue, IBinaryOperatorInvokable, IUnaryOperatorInvokable {
+public class LongValue implements IValue, IBinaryOperatorInvokable, IUnaryOperatorInvokable {
 
-    private double value;
+    private long value;
 
-    public NumberValue(double value) {
+    public LongValue(long value) {
         this.value = value;
     }
 
@@ -23,11 +25,11 @@ public class NumberValue implements IValue, IBinaryOperatorInvokable, IUnaryOper
 
     @Override
     public IValue invokeBinaryOperator(BinaryExpression.Operator operator, IValue arg) {
-        if (!(arg instanceof NumberValue other))
+        if (!(arg instanceof LongValue other))
             throw new InterpreterException("Invalid arguments for intrinsic operation");
 
         switch (operator) {
-            case OP_POW -> this.value = Math.pow(this.value, other.value);
+            case OP_POW -> this.value = (long) Math.pow(this.value, other.value);
             case OP_MULTIPLY -> this.value *= other.value;
             case OP_DIVIDE -> this.value /= other.value;
             case OP_ADD -> this.value += other.value;
@@ -49,21 +51,30 @@ public class NumberValue implements IValue, IBinaryOperatorInvokable, IUnaryOper
     }
 
     @Override
+    public IValue copy() {
+        return new LongValue(this.value);
+    }
+
+    @Override
+    public Type getType() {
+        return Type.LONG;
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o)
             return true;
         if (o == null || getClass() != o.getClass())
             return false;
 
-        NumberValue that = (NumberValue) o;
+        LongValue longValue = (LongValue) o;
 
-        return Double.compare(that.value, this.value) == 0;
+        return this.value == longValue.value;
     }
 
     @Override
     public int hashCode() {
-        long temp = Double.doubleToLongBits(this.value);
-        return (int) (temp ^ (temp >>> 32));
+        return (int) (this.value ^ (this.value >>> 32));
     }
 
     @Override
