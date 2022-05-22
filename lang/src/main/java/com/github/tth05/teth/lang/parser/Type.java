@@ -4,6 +4,7 @@ public class Type {
 
     public static final Type ANY = new Type("any");
     public static final Type LONG = new Type("long");
+    public static final Type STRING = new Type("string");
     public static final Type DOUBLE = new Type("double");
     public static final Type BOOLEAN = new Type("bool");
     public static final Type FUNCTION = new Type("function");
@@ -36,6 +37,7 @@ public class Type {
             case "long" -> Type.LONG;
             case "double" -> Type.DOUBLE;
             case "bool" -> Type.BOOLEAN;
+            case "string" -> Type.STRING;
             case "function" -> Type.FUNCTION;
             default -> new Type(type);
         };

@@ -45,6 +45,7 @@ public class Interpreter {
             }
             case LongLiteralExpression longLiteralExpression -> new LongValue(longLiteralExpression.getValue());
             case DoubleLiteralExpression doubleLiteralExpression -> new DoubleValue(doubleLiteralExpression.getValue());
+            case StringLiteralExpression stringLiteralExpression -> new StringValue(stringLiteralExpression.getValue());
             case BooleanLiteralExpression booleanLiteralExpression ->
                     new BooleanValue(booleanLiteralExpression.getValue());
             case IdentifierExpression identifierExpression -> {
