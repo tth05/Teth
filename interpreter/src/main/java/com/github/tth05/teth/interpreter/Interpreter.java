@@ -6,6 +6,9 @@ import com.github.tth05.teth.lang.parser.SourceFileUnit;
 import com.github.tth05.teth.lang.parser.StatementList;
 import com.github.tth05.teth.lang.parser.ast.*;
 
+import java.util.Arrays;
+import java.util.stream.Stream;
+
 public class Interpreter {
 
     private final Environment environment = new Environment();
@@ -35,6 +38,12 @@ public class Interpreter {
         return switch (expression) {
             case FunctionInvocationExpression functionInvocationExpression ->
                     evaluateFunctionInvocationExpression(functionInvocationExpression);
+            case MemberAccessExpression memberAccessExpression -> {
+                IValue target = evaluateExpression(memberAccessExpression.getTarget());
+                var memberName = memberAccessExpression.getMemberName();
+
+                yield extractMember(target, memberName);
+            }
             case VariableAssignmentExpression variableAssignmentExpression -> {
                 if (!this.environment.currentScope().hasLocalVariable(variableAssignmentExpression.getTarget()))
                     throw new InterpreterException("Variable " + variableAssignmentExpression.getTarget() + " is not defined");
@@ -49,9 +58,9 @@ public class Interpreter {
             case BooleanLiteralExpression booleanLiteralExpression ->
                     new BooleanValue(booleanLiteralExpression.getValue());
             case IdentifierExpression identifierExpression -> {
-                var local = this.environment.currentScope().getLocalVariable(identifierExpression.getValue());
-                if (local != null)
-                    yield local;
+                var value = this.environment.lookupIdentifier(identifierExpression.getValue());
+                if (value != null)
+                    yield value;
 
                 //TODO: Resolve into variable, etc.
                 throw new InterpreterException("Unresolved identifier expression: " + identifierExpression);
@@ -108,27 +117,34 @@ public class Interpreter {
 
     private IValue evaluateFunctionInvocationExpression(FunctionInvocationExpression expr) {
         var parameters = expr.getParameters().stream().map(p -> evaluateExpression(p).copy()).toArray(IValue[]::new);
-        IFunction target = evaluateFunctionInvocationTargetExpression(expr.getTarget(), parameters);
+        var targetExpr = expr.getTarget();
 
-        return target.invoke(this, parameters);
+        IValue target;
+        if (targetExpr instanceof MemberAccessExpression memberAccessExpression) {
+            var self = evaluateExpression(memberAccessExpression.getTarget());
+            target = extractMember(self, memberAccessExpression.getMemberName());
+            // :^)
+            parameters = Stream.concat(Stream.of(self), Stream.of(parameters)).toArray(IValue[]::new);
+        } else {
+            target = evaluateExpression(targetExpr);
+        }
+
+        if (!(target instanceof IFunction invokable))
+            throw new InterpreterException("Target is not a function: " + target);
+        if (!invokable.isApplicable(parameters))
+            throw new InterpreterException("Target " + target + " is not applicable to: " + Arrays.toString(parameters));
+
+        return invokable.invoke(this, parameters);
     }
 
-    private IFunction evaluateFunctionInvocationTargetExpression(Expression target, IValue[] parameters) {
-        switch (target) {
-            case IdentifierExpression identifierExpression -> {
-                var local = this.environment.lookupFunction(identifierExpression.getValue(), parameters);
-                if (local != null)
-                    return local;
+    private IValue extractMember(IValue target, String memberName) {
+        if (!(target instanceof IHasMembers hasMembers))
+            throw new InterpreterException("Cannot access member of: " + target);
 
-                throw new InterpreterException("Unresolved identifier: " + identifierExpression.getValue());
-            }
-            case FunctionInvocationExpression functionInvocationExpression -> {
-                var value = evaluateFunctionInvocationExpression(functionInvocationExpression);
-                if (!(value instanceof IFunction f))
-                    throw new InterpreterException("Function invocation did not evaluate to a function: " + value);
-                return f;
-            }
-            default -> throw new InterpreterException("Function invocation target is not a function: " + target);
-        }
+        var member = hasMembers.getMember(this.environment, memberName);
+        if (member == null)
+            throw new InterpreterException("Member " + memberName + " not found in " + target);
+
+        return member;
     }
 }

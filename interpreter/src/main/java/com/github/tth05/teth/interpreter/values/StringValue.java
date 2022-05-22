@@ -1,17 +1,22 @@
 package com.github.tth05.teth.interpreter.values;
 
 import com.github.tth05.teth.interpreter.InterpreterException;
+import com.github.tth05.teth.interpreter.environment.Environment;
 import com.github.tth05.teth.lang.parser.Type;
 import com.github.tth05.teth.lang.parser.ast.BinaryExpression;
 
 import java.util.Objects;
 
-public class StringValue implements IValue, IBinaryOperatorInvokable {
+public class StringValue implements IValue, IBinaryOperatorInvokable, IHasMembers {
 
     private String value;
 
     public StringValue(String value) {
         this.value = value;
+    }
+
+    public String getValue() {
+        return this.value;
     }
 
     @Override
@@ -26,6 +31,16 @@ public class StringValue implements IValue, IBinaryOperatorInvokable {
         }
 
         return this;
+    }
+
+    @Override
+    public boolean hasMember(String name) {
+        return name.equals("length");
+    }
+
+    @Override
+    public IValue getMember(Environment environment, String name) {
+        return new FunctionValue(environment.getTopLevelFunction("__string_length"));
     }
 
     @Override

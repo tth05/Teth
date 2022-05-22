@@ -1,9 +1,7 @@
 package com.github.tth05.teth.interpreter.environment;
 
 import com.github.tth05.teth.interpreter.Interpreter;
-import com.github.tth05.teth.interpreter.values.AbstractFunction;
-import com.github.tth05.teth.interpreter.values.IFunction;
-import com.github.tth05.teth.interpreter.values.IValue;
+import com.github.tth05.teth.interpreter.values.*;
 import com.github.tth05.teth.lang.parser.Type;
 
 import java.util.*;
@@ -11,7 +9,7 @@ import java.util.function.Function;
 
 public class Environment {
 
-    private final Map<String, List<IFunction>> topLevelFunctions = new HashMap<>();
+    private final Map<String, IFunction> topLevelFunctions = new HashMap<>();
     {
         addTopLevelFunction("print", IntrinsicFunction.create("print", (parameters) -> {
             for (int i = 0; i < parameters.length; i++) {
@@ -20,6 +18,24 @@ public class Environment {
             System.out.println();
             return null;
         }, true, Type.ANY));
+        addTopLevelFunction("__long_toString", IntrinsicFunction.create(
+                "__long_toString",
+                (parameters) -> new StringValue(((LongValue) parameters[0]).getValue() + ""),
+                false,
+                Type.LONG
+        ));
+        addTopLevelFunction("__long_toBinaryString", IntrinsicFunction.create(
+                "__long_toBinaryString",
+                (parameters) -> new StringValue(Long.toBinaryString(((LongValue) parameters[0]).getValue())),
+                false,
+                Type.LONG
+        ));
+        addTopLevelFunction("__string_length", IntrinsicFunction.create(
+                "__string_length",
+                (parameters) -> new LongValue(((StringValue) parameters[0]).getValue().length()),
+                false,
+                Type.STRING
+        ));
     }
     private final Deque<Scope> scopeStack = new ArrayDeque<>();
     {
@@ -27,24 +43,19 @@ public class Environment {
     }
 
     public void addTopLevelFunction(String name, IFunction function) {
-        this.topLevelFunctions.computeIfAbsent(name, (key) -> new ArrayList<>()).add(function);
+        this.topLevelFunctions.put(name, function);
     }
 
-    public IFunction lookupFunction(String name, IValue[] parameters) {
+    public IValue lookupIdentifier(String name) {
         var local = currentScope().getLocalVariable(name);
-        if (local instanceof IFunction f && f.isApplicable(parameters))
-            return f;
+        if (local != null)
+            return local;
 
         var global = this.topLevelFunctions.get(name);
         if (global == null)
             return null;
 
-        for (var f : global) {
-            if (f.isApplicable(parameters))
-                return f;
-        }
-
-        return null;
+        return new FunctionValue(global);
     }
 
     public void enterScope() {
@@ -60,6 +71,14 @@ public class Environment {
 
     public Scope currentScope() {
         return this.scopeStack.getLast();
+    }
+
+    public IFunction getTopLevelFunction(String name) {
+        var function = this.topLevelFunctions.get(name);
+        if (function == null)
+            throw new IllegalArgumentException("No top level function with name " + name + " found");
+
+        return function;
     }
 
     private static final class IntrinsicFunction extends AbstractFunction {

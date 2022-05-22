@@ -97,4 +97,17 @@ public class InterpreterTest extends AbstractInterpreterTest {
         this.interpreter.execute(this.unit);
         assertLinesMatch(List.of("7", "1 -7 0.655"), Arrays.asList(getSystemOutput().split(System.lineSeparator())));
     }
+    @Test
+    public void testMemberAccessAndFunctionVariables() {
+        createAST("""
+                function x = print
+                long y = 5
+                function b = __long_toBinaryString
+                x(b(y) + " " + y.toBinaryString().length().toString())
+                """);
+        assertStreamsEmpty();
+
+        this.interpreter.execute(this.unit);
+        assertLinesMatch(List.of("101 3"), Arrays.asList(getSystemOutput().split(System.lineSeparator())));
+    }
 }

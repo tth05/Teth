@@ -1,16 +1,21 @@
 package com.github.tth05.teth.interpreter.values;
 
 import com.github.tth05.teth.interpreter.InterpreterException;
+import com.github.tth05.teth.interpreter.environment.Environment;
 import com.github.tth05.teth.lang.parser.Type;
 import com.github.tth05.teth.lang.parser.ast.BinaryExpression;
 import com.github.tth05.teth.lang.parser.ast.UnaryExpression;
 
-public class LongValue implements IValue, IBinaryOperatorInvokable, IUnaryOperatorInvokable {
+public class LongValue implements IValue, IBinaryOperatorInvokable, IUnaryOperatorInvokable, IHasMembers {
 
     private long value;
 
     public LongValue(long value) {
         this.value = value;
+    }
+
+    public long getValue() {
+        return this.value;
     }
 
     @Override
@@ -48,6 +53,20 @@ public class LongValue implements IValue, IBinaryOperatorInvokable, IUnaryOperat
         }
 
         return this;
+    }
+
+    @Override
+    public boolean hasMember(String name) {
+        return name.equals("toBinaryString") || name.equals("toString");
+    }
+
+    @Override
+    public IValue getMember(Environment environment, String name) {
+        return switch (name) {
+            case "toString" -> new FunctionValue(environment.getTopLevelFunction("__long_toString"));
+            case "toBinaryString" -> new FunctionValue(environment.getTopLevelFunction("__long_toBinaryString"));
+            default -> throw new IllegalStateException("Unexpected value: " + name);
+        };
     }
 
     @Override
