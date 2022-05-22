@@ -180,16 +180,21 @@ public class Parser {
             expr = parseLiteralExpression();
         }
 
-        currentType = this.stream.peek().type();
-        if (currentType == TokenType.L_PAREN) {
-            expr = parseFunctionInvocation(expr);
-        } else if (currentType == TokenType.EQUAL) {
-            if (!(expr instanceof IdentifierExpression ident))
-                throw new RuntimeException("Cannot assign to non-identifier");
-            // Consume the equal sign
-            this.stream.consume();
-            expr = new VariableAssignmentExpression(ident.getValue(), parseExpression());
+        while (true) {
+            currentType = this.stream.peek().type();
+            if (currentType == TokenType.L_PAREN) {
+                expr = parseFunctionInvocation(expr);
+            } else if (currentType == TokenType.EQUAL) {
+                if (!(expr instanceof IdentifierExpression ident))
+                    throw new RuntimeException("Cannot assign to non-identifier");
+                // Consume the equal sign
+                this.stream.consume();
+                expr = new VariableAssignmentExpression(ident.getValue(), parseExpression());
+            } else {
+                break;
+            }
         }
+
 
         return expr;
     }

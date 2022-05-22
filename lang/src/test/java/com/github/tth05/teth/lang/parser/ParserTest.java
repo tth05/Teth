@@ -304,6 +304,7 @@ public class ParserTest extends AbstractParserTest {
     public void testParseFunctionInvocation() {
         createAST("""
                 1 + (foo(1, 2))("hello world")
+                bar()()
                 """);
         assertEquals(
                 new SourceFileUnit(
@@ -323,6 +324,13 @@ public class ParserTest extends AbstractParserTest {
                                                 )
                                         ),
                                         BinaryExpression.Operator.OP_ADD
+                                ),
+                                new FunctionInvocationExpression(
+                                        new FunctionInvocationExpression(
+                                                new IdentifierExpression("bar"),
+                                                ExpressionList.of()
+                                        ),
+                                        ExpressionList.of()
                                 )
                         )
                 ),
