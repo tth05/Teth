@@ -338,4 +338,35 @@ public class ParserTest extends AbstractParserTest {
         );
         assertStreamsEmpty();
     }
+
+    @Test
+    public void testParseMemberAccess() {
+        createAST("""
+                a.b().c().d
+                """);
+        assertEquals(
+                new SourceFileUnit(
+                        List.of(
+                                new MemberAccessExpression(
+                                        "d",
+                                        new FunctionInvocationExpression(
+                                                new MemberAccessExpression(
+                                                        "c",
+                                                        new FunctionInvocationExpression(
+                                                                new MemberAccessExpression(
+                                                                        "b",
+                                                                        new IdentifierExpression("a")
+                                                                ),
+                                                                ExpressionList.of()
+                                                        )
+                                                ),
+                                                ExpressionList.of()
+                                        )
+                                )
+                        )
+                ),
+                this.unit
+        );
+        assertStreamsEmpty();
+    }
 }

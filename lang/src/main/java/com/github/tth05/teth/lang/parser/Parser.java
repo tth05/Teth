@@ -190,6 +190,13 @@ public class Parser {
                 // Consume the equal sign
                 this.stream.consume();
                 expr = new VariableAssignmentExpression(ident.getValue(), parseExpression());
+            } else if (currentType == TokenType.DOT) {
+                this.stream.consume();
+                var target = parseLiteralExpression();
+                if (!(target instanceof IdentifierExpression ident))
+                    throw new RuntimeException("Cannot access non-identifier");
+
+                expr = new MemberAccessExpression(ident.getValue(), expr);
             } else {
                 break;
             }

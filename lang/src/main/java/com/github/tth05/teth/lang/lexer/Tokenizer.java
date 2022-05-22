@@ -69,7 +69,7 @@ public class Tokenizer {
                 throw new UnexpectedCharException(c, TokenType.IDENTIFIER);
 
             ident.append(c);
-        } while (!isSeparator(this.stream.peek()));
+        } while (!isSeparator(this.stream.peek()) && !isDot(this.stream.peek()));
 
         return new Token(ident.toString(), TokenType.IDENTIFIER);
     }
