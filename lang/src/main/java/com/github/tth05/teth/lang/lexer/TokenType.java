@@ -4,10 +4,12 @@ public enum TokenType {
 
     IDENTIFIER,
     KEYWORD,
-    NUMBER_LITERAL,
+    LONG_LITERAL,
+    DOUBLE_LITERAL,
     STRING_LITERAL,
     BOOLEAN_LITERAL,
     COMMA,
+    DOT,
     EQUAL,
     NOT,
     EQUAL_EQUAL,

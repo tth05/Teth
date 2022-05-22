@@ -1,6 +1,7 @@
 package com.github.tth05.teth.interpreter;
 
 import com.github.tth05.teth.interpreter.values.BooleanValue;
+import com.github.tth05.teth.interpreter.values.DoubleValue;
 import com.github.tth05.teth.interpreter.values.LongValue;
 import com.github.tth05.teth.lang.parser.ast.Expression;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,6 +30,13 @@ public class InterpreterTest extends AbstractInterpreterTest {
                 new LongValue(1),
                 this.interpreter.evaluateExpression(assertInstanceOf(Expression.class, this.unit.getStatements().get(0)))
         );
+
+        createAST("1.1/2.5+2.25*2.25-3.123");
+        assertStreamsEmpty();
+
+        var result = this.interpreter.evaluateExpression(assertInstanceOf(Expression.class, this.unit.getStatements().get(0)));
+        var val = assertInstanceOf(DoubleValue.class, result);
+        assertEquals(2.3795, val.getValue(), 0.000001);
     }
 
     @Test
@@ -80,11 +88,13 @@ public class InterpreterTest extends AbstractInterpreterTest {
                 long y = x + 1
                 x = 1
                 y = 1 + -y
-                print(x, y)
+                double z = 0.555
+                z = z+0.1
+                print(x, y, z)
                 """);
         assertStreamsEmpty();
 
         this.interpreter.execute(this.unit);
-        assertLinesMatch(List.of("7", "1 -7"), Arrays.asList(getSystemOutput().split(System.lineSeparator())));
+        assertLinesMatch(List.of("7", "1 -7 0.655"), Arrays.asList(getSystemOutput().split(System.lineSeparator())));
     }
 }

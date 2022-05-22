@@ -222,8 +222,8 @@ public class Parser {
         var token = this.stream.peek();
 
         return switch (token.type()) {
-            case NUMBER_LITERAL ->
-                    new LongLiteralExpression(Long.parseLong(this.stream.consumeType(TokenType.NUMBER_LITERAL).value()));
+            case LONG_LITERAL -> new LongLiteralExpression(Long.parseLong(this.stream.consume().value()));
+            case DOUBLE_LITERAL -> new DoubleLiteralExpression(Double.parseDouble(this.stream.consume().value()));
             case STRING_LITERAL ->
                     new StringLiteralExpression(this.stream.consumeType(TokenType.STRING_LITERAL).value());
             case BOOLEAN_LITERAL ->

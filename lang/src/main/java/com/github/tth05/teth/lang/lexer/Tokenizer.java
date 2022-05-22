@@ -42,6 +42,9 @@ public class Tokenizer {
             } else if (isComma(c)) {
                 this.stream.consume();
                 emit(new Token(",", TokenType.COMMA));
+            } else if (isDot(c)) {
+                this.stream.consume();
+                emit(new Token(".", TokenType.DOT));
             } else {
                 throw new UnexpectedCharException(c);
             }
@@ -90,16 +93,27 @@ public class Tokenizer {
     }
 
     private Token parseNumber() {
+        boolean isDouble = false;
         StringBuilder number = new StringBuilder(2);
         do {
             char c = this.stream.consume();
+
+            if (c == '.') {
+                if (isDouble)
+                    throw new UnexpectedCharException(c, TokenType.LONG_LITERAL);
+                isDouble = true;
+                number.append('.');
+                continue;
+            }
+
             if (!isNumber(c))
-                throw new UnexpectedCharException(c, TokenType.NUMBER_LITERAL);
+                throw new UnexpectedCharException(c, TokenType.LONG_LITERAL);
 
             number.append(c);
         } while (!isSeparator(this.stream.peek()));
 
-        return new Token(number.toString(), TokenType.NUMBER_LITERAL);
+
+        return isDouble ? new Token(number.toString(), TokenType.DOUBLE_LITERAL) : new Token(number.toString(), TokenType.LONG_LITERAL);
     }
 
     private Token parseOperator() {
@@ -191,6 +205,10 @@ public class Tokenizer {
 
     private static boolean isComma(char c) {
         return c == ',';
+    }
+
+    private static boolean isDot(char c) {
+        return c == '.';
     }
 
     private static boolean isSeparator(char c) {

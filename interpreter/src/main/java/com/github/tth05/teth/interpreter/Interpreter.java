@@ -32,28 +32,25 @@ public class Interpreter {
     }
 
     public IValue evaluateExpression(Expression expression) {
-        switch (expression) {
-            case FunctionInvocationExpression functionInvocationExpression -> {
-                return evaluateFunctionInvocationExpression(functionInvocationExpression);
-            }
+        return switch (expression) {
+            case FunctionInvocationExpression functionInvocationExpression ->
+                    evaluateFunctionInvocationExpression(functionInvocationExpression);
             case VariableAssignmentExpression variableAssignmentExpression -> {
                 if (!this.environment.currentScope().hasLocalVariable(variableAssignmentExpression.getTarget()))
                     throw new InterpreterException("Variable " + variableAssignmentExpression.getTarget() + " is not defined");
 
                 IValue value = evaluateExpression(variableAssignmentExpression.getExpr());
                 this.environment.currentScope().setLocalVariable(variableAssignmentExpression.getTarget(), value);
-                return value.copy();
+                yield value.copy();
             }
-            case LongLiteralExpression longLiteralExpression -> {
-                return new LongValue(longLiteralExpression.getValue());
-            }
-            case BooleanLiteralExpression booleanLiteralExpression -> {
-                return new BooleanValue(booleanLiteralExpression.getValue());
-            }
+            case LongLiteralExpression longLiteralExpression -> new LongValue(longLiteralExpression.getValue());
+            case DoubleLiteralExpression doubleLiteralExpression -> new DoubleValue(doubleLiteralExpression.getValue());
+            case BooleanLiteralExpression booleanLiteralExpression ->
+                    new BooleanValue(booleanLiteralExpression.getValue());
             case IdentifierExpression identifierExpression -> {
                 var local = this.environment.currentScope().getLocalVariable(identifierExpression.getValue());
                 if (local != null)
-                    return local;
+                    yield local;
 
                 //TODO: Resolve into variable, etc.
                 throw new InterpreterException("Unresolved identifier expression: " + identifierExpression);
@@ -65,7 +62,7 @@ public class Interpreter {
                 if (!(left instanceof IBinaryOperatorInvokable invokable))
                     throw new InterpreterException("Left operand is not invokable: " + left);
 
-                return invokable.invokeBinaryOperator(binaryExpression.getOperator(), right);
+                yield invokable.invokeBinaryOperator(binaryExpression.getOperator(), right);
             }
             case UnaryExpression unaryExpression -> {
                 IValue operand = evaluateExpression(unaryExpression.getExpression());
@@ -73,10 +70,10 @@ public class Interpreter {
                 if (!(operand instanceof IUnaryOperatorInvokable invokable))
                     throw new InterpreterException("Operand is not invokable: " + operand);
 
-                return invokable.invokeUnaryOperator(unaryExpression.getOperator());
+                yield invokable.invokeUnaryOperator(unaryExpression.getOperator());
             }
             default -> throw new InterpreterException("Unsupported expression: " + expression);
-        }
+        };
     }
 
     public void executeStatement(Statement statement) {

@@ -67,6 +67,11 @@ public class BooleanValue implements IValue, IBinaryOperatorInvokable, IUnaryOpe
     }
 
     @Override
+    public String toString() {
+        return getDebugString();
+    }
+
+    @Override
     public String getDebugString() {
         return this.value + "";
     }
