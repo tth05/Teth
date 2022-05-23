@@ -42,7 +42,10 @@ public abstract class AbstractInterpreterTest {
 
     private void createStreams(String str) {
         this.charStream = CharStream.fromString(str);
-        this.tokenStream = Tokenizer.streamOf(this.charStream);
+        var tokenizerResult = Tokenizer.streamOf(this.charStream);
+        if (tokenizerResult.getProblems() != null)
+            throw new RuntimeException("Tokenizer failed");
+        this.tokenStream = tokenizerResult.getTokenStream();
     }
 
     protected void assertStreamsEmpty() {

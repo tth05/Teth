@@ -1,6 +1,7 @@
 package com.github.tth05.teth.lang.lexer;
 
 import com.github.tth05.teth.lang.diagnostics.Problem;
+import com.github.tth05.teth.lang.span.ISpan;
 import com.github.tth05.teth.lang.stream.CharStream;
 
 import java.util.List;
@@ -19,36 +20,37 @@ public class Tokenizer {
             while (true) {
                 char c = this.stream.peek();
                 if (c == 0) {
-                    emit(new Token("", TokenType.EOF));
+                    emit("", TokenType.EOF);
                     break;
                 }
 
                 if (isNumber(c)) {
-                    emit(parseNumber());
+                    emitNumber();
                 } else if (isQuote(c)) {
-                    emit(parseString());
+                    emitString();
                 } else if (isIdentifierChar(c)) {
                     var ident = parseIdentifier();
                     if (isKeyword(ident.value()))
-                        ident = new Token(ident.value(), TokenType.KEYWORD);
+                        emit(new Token(ident.span(), ident.value(), TokenType.KEYWORD));
                     else if (isBooleanLiteral(ident.value()))
-                        ident = new Token(ident.value(), TokenType.BOOLEAN_LITERAL);
-                    emit(ident);
+                        emit(new Token(ident.span(), ident.value(), TokenType.BOOLEAN_LITERAL));
+                    else
+                        emit(ident);
                 } else if (isOperator(c)) {
-                    emit(parseOperator());
+                    emitOperator();
                 } else if (isParen(c)) {
-                    emit(parseParen());
+                    emitParen();
                 } else if (isLineBreak(c)) {
+                    emit("\n", TokenType.LINE_BREAK);
                     this.stream.consume();
-                    emit(new Token("\n", TokenType.LINE_BREAK));
                 } else if (isWhitespace(c)) {
                     this.stream.consume();
                 } else if (isComma(c)) {
+                    emit(",", TokenType.COMMA);
                     this.stream.consume();
-                    emit(new Token(",", TokenType.COMMA));
                 } else if (isDot(c)) {
+                    emit(".", TokenType.DOT);
                     this.stream.consume();
-                    emit(new Token(".", TokenType.DOT));
                 } else {
                     throw new UnexpectedCharException(this.stream.getSpan(), c);
                 }
@@ -64,7 +66,16 @@ public class Tokenizer {
         this.tokenStream.push(token);
     }
 
+    private void emit(String value, TokenType type) {
+        this.tokenStream.push(new Token(this.stream.getSpan(), value, type));
+    }
+
+    private void emit(ISpan span, String value, TokenType type) {
+        this.tokenStream.push(new Token(span, value, type));
+    }
+
     private Token parseIdentifier() {
+        var span = this.stream.getSpan();
         StringBuilder ident = new StringBuilder(8);
         do {
             char c = this.stream.consume();
@@ -74,10 +85,11 @@ public class Tokenizer {
             ident.append(c);
         } while (!isSeparator(this.stream.peek()) && !isDot(this.stream.peek()));
 
-        return new Token(ident.toString(), TokenType.IDENTIFIER);
+        return new Token(span, ident.toString(), TokenType.IDENTIFIER);
     }
 
-    private Token parseString() {
+    private void emitString() {
+        var span = this.stream.getSpan();
         StringBuilder string = new StringBuilder(5);
         this.stream.consume(); //Prefix
         while (true) {
@@ -92,10 +104,11 @@ public class Tokenizer {
         }
         this.stream.consume(); //Suffix
 
-        return new Token(string.toString(), TokenType.STRING_LITERAL);
+        emit(span, string.toString(), TokenType.STRING_LITERAL);
     }
 
-    private Token parseNumber() {
+    private void emitNumber() {
+        var span = this.stream.getSpan();
         boolean isDouble = false;
         StringBuilder number = new StringBuilder(2);
         do {
@@ -116,56 +129,62 @@ public class Tokenizer {
         } while (!isSeparator(this.stream.peek()));
 
 
-        return isDouble ? new Token(number.toString(), TokenType.DOUBLE_LITERAL) : new Token(number.toString(), TokenType.LONG_LITERAL);
+        if (isDouble)
+            emit(span, number.toString(), TokenType.DOUBLE_LITERAL);
+        else
+            emit(span, number.toString(), TokenType.LONG_LITERAL);
     }
 
-    private Token parseOperator() {
-        var op = this.stream.consume();
-        return switch (op) {
+    private void emitOperator() {
+        var op = this.stream.peek();
+        switch (op) {
             case '=' -> {
-                if (this.stream.peek() == '=') {
+                if (this.stream.peek(1) == '=') {
+                    emit("==", TokenType.EQUAL_EQUAL);
                     this.stream.consume();
-                    yield new Token("==", TokenType.EQUAL_EQUAL);
+                } else {
+                    emit("=", TokenType.EQUAL);
                 }
-
-                yield new Token("=", TokenType.EQUAL);
             }
             case '!' -> {
-                if (this.stream.peek() == '=') {
+                if (this.stream.peek(1) == '=') {
+                    emit("!=", TokenType.NOT_EQUAL);
                     this.stream.consume();
-                    yield new Token("!=", TokenType.NOT_EQUAL);
+                } else {
+                    emit("!", TokenType.NOT);
                 }
-
-                yield new Token("!", TokenType.NOT);
             }
             case '<' -> {
-                if (this.stream.peek() == '=') {
+                if (this.stream.peek(1) == '=') {
+                    emit("<=", TokenType.LESS_EQUAL);
                     this.stream.consume();
-                    yield new Token("<=", TokenType.LESS_EQUAL);
+                } else {
+                    emit("<", TokenType.LESS);
                 }
-
-                yield new Token("<", TokenType.LESS);
             }
             case '>' -> {
-                if (this.stream.peek() == '=') {
+                if (this.stream.peek(1) == '=') {
+                    emit(">=", TokenType.GREATER_EQUAL);
                     this.stream.consume();
-                    yield new Token(">=", TokenType.GREATER_EQUAL);
+                } else {
+                    emit(">", TokenType.GREATER);
                 }
-
-                yield new Token(">", TokenType.GREATER);
             }
-            case '+' -> new Token("+", TokenType.PLUS);
-            case '-' -> new Token("-", TokenType.MINUS);
-            case '*' -> new Token("*", TokenType.MULTIPLY);
-            case '/' -> new Token("/", TokenType.DIVIDE);
-            case '^' -> new Token("^", TokenType.POW);
+            case '+' -> emit("+", TokenType.PLUS);
+            case '-' -> emit("-", TokenType.MINUS);
+            case '*' -> emit("*", TokenType.MULTIPLY);
+            case '/' -> emit("/", TokenType.DIVIDE);
+            case '^' -> emit("^", TokenType.POW);
             default -> throw new IllegalStateException("Unreachable");
-        };
+        }
+
+        this.stream.consume();
     }
 
-    private Token parseParen() {
+    private void emitParen() {
+        var span = this.stream.getSpan();
         var c = this.stream.consume();
-        return new Token("" + c, switch (c) {
+        emit(span, "" + c, switch (c) {
             case '(' -> TokenType.L_PAREN;
             case ')' -> TokenType.R_PAREN;
             case '{' -> TokenType.L_CURLY_PAREN;

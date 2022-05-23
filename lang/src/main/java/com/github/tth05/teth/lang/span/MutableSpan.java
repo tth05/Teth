@@ -1,6 +1,6 @@
 package com.github.tth05.teth.lang.span;
 
-public class MutableSpan implements ISpan {
+public final class MutableSpan implements ISpan {
 
     private final char[] source;
 

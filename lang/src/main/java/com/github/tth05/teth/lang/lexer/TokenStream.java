@@ -9,7 +9,7 @@ import java.util.function.Predicate;
 
 public class TokenStream {
 
-    private static final Token EOF = new Token("", TokenType.EOF);
+    private static final Token EOF = new Token(null, "", TokenType.EOF);
 
     private final LinkedList<Token> tokens = new LinkedList<>();
 

@@ -1,6 +1,7 @@
 package com.github.tth05.teth.lang.diagnostics;
 
 import com.github.tth05.teth.lang.span.ISpan;
+import com.github.tth05.teth.lang.util.CharArrayUtils;
 
 import java.util.Arrays;
 
@@ -31,8 +32,8 @@ public class Problem {
         sb.append(" | ")
                 .append(new String(Arrays.copyOfRange(
                         source,
-                        findLineStart(source, offset),
-                        findLineEnd(source, offset)))
+                        CharArrayUtils.findLineStart(source, offset),
+                        CharArrayUtils.findLineEnd(source, offset)))
                 );
 
         sb.append("\n");
@@ -46,21 +47,5 @@ public class Problem {
         ));
         sb.append(this.message);
         return sb.toString();
-    }
-
-    private static int findLineStart(char[] source, int index) {
-        int lineStart = index;
-        while (lineStart > 0 && source[lineStart - 1] != '\n') {
-            lineStart--;
-        }
-        return lineStart;
-    }
-
-    private static int findLineEnd(char[] source, int index) {
-        int lineEnd = index;
-        while (lineEnd < source.length && source[lineEnd] != '\n') {
-            lineEnd++;
-        }
-        return lineEnd;
     }
 }
