@@ -21,7 +21,7 @@ public class Interpreter {
         }
     }
 
-    private void executeStatementList(StatementList statements) {
+    private IValue executeStatementList(StatementList statements) {
         for (Statement s : statements) {
             switch (s) {
                 case FunctionDeclaration functionDeclaration ->
@@ -29,9 +29,15 @@ public class Interpreter {
                 case VariableDeclaration localVariableDeclaration ->
                         this.environment.currentScope().setLocalVariable(localVariableDeclaration.getName(), evaluateExpression(localVariableDeclaration.getExpression()).copy());
                 case Expression expression -> evaluateExpression(expression);
-                case Statement statement -> executeStatement(statement);
+                case Statement statement -> {
+                    var functionReturnValue = executeStatement(statement);
+                    if (functionReturnValue != null)
+                        return functionReturnValue;
+                }
             }
         }
+
+        return null;
     }
 
     public IValue evaluateExpression(Expression expression) {
@@ -86,21 +92,28 @@ public class Interpreter {
         };
     }
 
-    public void executeStatement(Statement statement) {
+    public IValue executeStatement(Statement statement) {
         switch (statement) {
-            case BlockStatement blockStatement -> executeStatementList(blockStatement.getStatements());
+            case BlockStatement blockStatement -> {
+                return executeStatementList(blockStatement.getStatements());
+            }
             case IfStatement ifStatement -> {
                 IValue condition = evaluateExpression(ifStatement.getCondition());
                 if (!(condition instanceof BooleanValue booleanValue))
                     throw new InterpreterException("Condition did not evaluate to boolean: " + condition);
 
                 if (booleanValue.getValue())
-                    executeStatement(ifStatement.getBody());
+                    return executeStatement(ifStatement.getBody());
                 else if (ifStatement.getElseStatement() != null)
-                    executeStatement(ifStatement.getElseStatement());
+                    return executeStatement(ifStatement.getElseStatement());
+            }
+            case ReturnStatement returnStatement -> {
+                return evaluateExpression(returnStatement.getValueExpr());
             }
             default -> throw new InterpreterException("Unsupported statement: " + statement);
         }
+
+        return null;
     }
 
     public IValue callFunction(FunctionDeclaration functionDeclaration, IValue[] arguments) {
@@ -109,10 +122,9 @@ public class Interpreter {
         var parameters = functionDeclaration.getParameters();
         for (int i = 0; i < parameters.size(); i++)
             this.environment.currentScope().setLocalVariable(parameters.get(i).name(), arguments[i]);
-        //TODO: return value
-        executeStatement(functionDeclaration.getBody());
+        var returnValue = executeStatement(functionDeclaration.getBody());
         this.environment.exitScope();
-        return null;
+        return returnValue;
     }
 
     private IValue evaluateFunctionInvocationExpression(FunctionInvocationExpression expr) {
