@@ -31,8 +31,11 @@ public class RunCommand implements Runnable {
     @Override
     public void run() {
         try {
-            var ast = Parser.from(Tokenizer.streamOf(CharStream.fromString(Files.readString(this.filePath))));
-            new Interpreter().execute(ast);
+            var tokenizerResult = Tokenizer.streamOf(CharStream.fromString(Files.readString(this.filePath)));
+            if (tokenizerResult.logProblems())
+                return;
+
+            new Interpreter().execute(Parser.from(tokenizerResult.getTokenStream()));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

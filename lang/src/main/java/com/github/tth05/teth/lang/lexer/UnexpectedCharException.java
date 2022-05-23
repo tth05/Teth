@@ -1,12 +1,15 @@
 package com.github.tth05.teth.lang.lexer;
 
-public class UnexpectedCharException extends RuntimeException {
+import com.github.tth05.teth.lang.span.ISpan;
+import com.github.tth05.teth.lang.span.SpanAwareException;
 
-    public UnexpectedCharException(char c) {
-        super("Unexpected character '" + c + "'");
+public class UnexpectedCharException extends SpanAwareException {
+
+    public UnexpectedCharException(ISpan span, char c) {
+        super(span, "Unexpected character '" + c + "'");
     }
 
-    public UnexpectedCharException(char c, TokenType currentType) {
-        super("Unexpected character '" + c + "' while tokenizing " + currentType);
+    public UnexpectedCharException(ISpan span, char c, TokenType currentType) {
+        super(span, "Unexpected character '" + c + "' while tokenizing " + currentType);
     }
 }

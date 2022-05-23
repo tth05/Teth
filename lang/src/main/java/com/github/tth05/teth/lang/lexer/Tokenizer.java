@@ -1,6 +1,9 @@
 package com.github.tth05.teth.lang.lexer;
 
+import com.github.tth05.teth.lang.diagnostics.Problem;
 import com.github.tth05.teth.lang.stream.CharStream;
+
+import java.util.List;
 
 public class Tokenizer {
 
@@ -11,50 +14,50 @@ public class Tokenizer {
         this.stream = stream;
     }
 
-    public TokenStream tokenize() {
-        while (true) {
-            char c = this.stream.peek();
-            if (c == 0) {
-                emit(new Token("", TokenType.EOF));
-                break;
-            }
+    public TokenizerResult tokenize() {
+        try {
+            while (true) {
+                char c = this.stream.peek();
+                if (c == 0) {
+                    emit(new Token("", TokenType.EOF));
+                    break;
+                }
 
-            if (isNumber(c)) {
-                emit(parseNumber());
-            } else if (isQuote(c)) {
-                emit(parseString());
-            } else if (isIdentifierChar(c)) {
-                var ident = parseIdentifier();
-                if (isKeyword(ident.value()))
-                    ident = new Token(ident.value(), TokenType.KEYWORD);
-                else if (isBooleanLiteral(ident.value()))
-                    ident = new Token(ident.value(), TokenType.BOOLEAN_LITERAL);
-                emit(ident);
-            } else if (isOperator(c)) {
-                emit(parseOperator());
-            } else if (isParen(c)) {
-                emit(parseParen());
-            } else if (isLineBreak(c)) {
-                this.stream.consume();
-                emit(new Token("\n", TokenType.LINE_BREAK));
-            } else if (isWhitespace(c)) {
-                this.stream.consume();
-            } else if (isComma(c)) {
-                this.stream.consume();
-                emit(new Token(",", TokenType.COMMA));
-            } else if (isDot(c)) {
-                this.stream.consume();
-                emit(new Token(".", TokenType.DOT));
-            } else {
-                throw new UnexpectedCharException(c);
+                if (isNumber(c)) {
+                    emit(parseNumber());
+                } else if (isQuote(c)) {
+                    emit(parseString());
+                } else if (isIdentifierChar(c)) {
+                    var ident = parseIdentifier();
+                    if (isKeyword(ident.value()))
+                        ident = new Token(ident.value(), TokenType.KEYWORD);
+                    else if (isBooleanLiteral(ident.value()))
+                        ident = new Token(ident.value(), TokenType.BOOLEAN_LITERAL);
+                    emit(ident);
+                } else if (isOperator(c)) {
+                    emit(parseOperator());
+                } else if (isParen(c)) {
+                    emit(parseParen());
+                } else if (isLineBreak(c)) {
+                    this.stream.consume();
+                    emit(new Token("\n", TokenType.LINE_BREAK));
+                } else if (isWhitespace(c)) {
+                    this.stream.consume();
+                } else if (isComma(c)) {
+                    this.stream.consume();
+                    emit(new Token(",", TokenType.COMMA));
+                } else if (isDot(c)) {
+                    this.stream.consume();
+                    emit(new Token(".", TokenType.DOT));
+                } else {
+                    throw new UnexpectedCharException(this.stream.getSpan(), c);
+                }
             }
+        } catch (UnexpectedCharException e) {
+            return new TokenizerResult(this.tokenStream, List.of(new Problem(e.getSpan(), e.getMessage())));
         }
 
-        return this.tokenStream;
-    }
-
-    public TokenStream getTokenStream() {
-        return this.tokenStream;
+        return new TokenizerResult(this.tokenStream);
     }
 
     private void emit(Token token) {
@@ -66,7 +69,7 @@ public class Tokenizer {
         do {
             char c = this.stream.consume();
             if (!isIdentifierChar(c))
-                throw new UnexpectedCharException(c, TokenType.IDENTIFIER);
+                throw new UnexpectedCharException(this.stream.getSpan(), c, TokenType.IDENTIFIER);
 
             ident.append(c);
         } while (!isSeparator(this.stream.peek()) && !isDot(this.stream.peek()));
@@ -80,7 +83,7 @@ public class Tokenizer {
         while (true) {
             var next = this.stream.peek();
             if (next == 0 || isLineBreak(next))
-                throw new UnexpectedCharException(next, TokenType.STRING_LITERAL);
+                throw new UnexpectedCharException(this.stream.getSpan(), next, TokenType.STRING_LITERAL);
             if (isQuote(next))
                 break;
 
@@ -100,14 +103,14 @@ public class Tokenizer {
 
             if (c == '.') {
                 if (isDouble)
-                    throw new UnexpectedCharException(c, TokenType.LONG_LITERAL);
+                    throw new UnexpectedCharException(this.stream.getSpan(), c, TokenType.LONG_LITERAL);
                 isDouble = true;
                 number.append('.');
                 continue;
             }
 
             if (!isNumber(c))
-                throw new UnexpectedCharException(c, TokenType.LONG_LITERAL);
+                throw new UnexpectedCharException(this.stream.getSpan(), c, TokenType.LONG_LITERAL);
 
             number.append(c);
         } while (!isSeparator(this.stream.peek()));
@@ -223,7 +226,7 @@ public class Tokenizer {
         return c == ' ' || c == '\t';
     }
 
-    public static TokenStream streamOf(CharStream charStream) {
+    public static TokenizerResult streamOf(CharStream charStream) {
         return new Tokenizer(charStream).tokenize();
     }
 }
