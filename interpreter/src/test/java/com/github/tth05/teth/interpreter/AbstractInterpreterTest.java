@@ -10,6 +10,8 @@ import org.junit.jupiter.api.BeforeEach;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.util.Arrays;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -50,5 +52,9 @@ public abstract class AbstractInterpreterTest {
 
     protected String getSystemOutput() {
         return this.tempOutputStream.toString();
+    }
+
+    protected List<String> getSystemOutputLines() {
+        return Arrays.asList(getSystemOutput().split(System.lineSeparator()));
     }
 }

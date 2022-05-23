@@ -172,7 +172,7 @@ public class Tokenizer {
     }
 
     private static boolean isKeyword(String value) {
-        return value.equals("if") || value.equals("else") || value.equals("fn");
+        return value.equals("if") || value.equals("else") || value.equals("fn") || value.equals("return");
     }
 
     private static boolean isBooleanLiteral(String value) {

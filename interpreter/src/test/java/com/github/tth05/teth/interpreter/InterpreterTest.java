@@ -7,7 +7,6 @@ import com.github.tth05.teth.lang.parser.ast.Expression;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -64,7 +63,8 @@ public class InterpreterTest extends AbstractInterpreterTest {
     @Test
     public void testFunctionCall() {
         createAST("""
-                fn foo(long x) {
+                fn foo(long x)
+                {
                         fn foo2(long x, bool b) {
                                 if(b) print(x+1) else print(x-1)
                         }
@@ -77,7 +77,7 @@ public class InterpreterTest extends AbstractInterpreterTest {
         assertStreamsEmpty();
 
         this.interpreter.execute(this.unit);
-        assertLinesMatch(List.of("6", "4"), Arrays.asList(getSystemOutput().split(System.lineSeparator())));
+        assertLinesMatch(List.of("6", "4"), getSystemOutputLines());
     }
 
     @Test
@@ -95,19 +95,19 @@ public class InterpreterTest extends AbstractInterpreterTest {
         assertStreamsEmpty();
 
         this.interpreter.execute(this.unit);
-        assertLinesMatch(List.of("7", "1 -7 0.655"), Arrays.asList(getSystemOutput().split(System.lineSeparator())));
+        assertLinesMatch(List.of("7", "1 -7 0.655"), getSystemOutputLines());
     }
     @Test
     public void testMemberAccessAndFunctionVariables() {
         createAST("""
                 function x = print
                 long y = 5
-                function b = __long_toBinaryString
+                function b = y.toBinaryString
                 x(b(y) + " " + y.toBinaryString().length().toString())
                 """);
         assertStreamsEmpty();
 
         this.interpreter.execute(this.unit);
-        assertLinesMatch(List.of("101 3"), Arrays.asList(getSystemOutput().split(System.lineSeparator())));
+        assertLinesMatch(List.of("101 3"), getSystemOutputLines());
     }
 }

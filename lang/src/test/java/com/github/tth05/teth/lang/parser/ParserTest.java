@@ -264,7 +264,7 @@ public class ParserTest extends AbstractParserTest {
         createAST("""
                 fn foo(type a, long b) {
                     fn bar() {
-                        "hello"
+                        return "hello"
                     }
                     a
                 }
@@ -285,7 +285,7 @@ public class ParserTest extends AbstractParserTest {
                                                                 List.of(),
                                                                 new BlockStatement(
                                                                         StatementList.of(
-                                                                                new StringLiteralExpression("hello")
+                                                                                new ReturnStatement(new StringLiteralExpression("hello"))
                                                                         )
                                                                 )
                                                         ),

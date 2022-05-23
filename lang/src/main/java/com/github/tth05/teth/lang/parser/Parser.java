@@ -49,18 +49,23 @@ public class Parser {
         if (current.is(TokenType.IDENTIFIER) && next.is(TokenType.IDENTIFIER)) {
             return parseVariableDeclaration();
         } else if (current.is(TokenType.KEYWORD)) { // Keyword statement
-            if (current.value().equals("if")) {
-                return parseIfStatement();
-            } else if (current.value().equals("fn")) {
-                return parseFunctionDeclaration();
-            }
-
-            throw new UnexpectedTokenException(current);
+            var keyword = current.value();
+            return switch (keyword) {
+                case "if" -> parseIfStatement();
+                case "fn" -> parseFunctionDeclaration();
+                case "return" -> parseReturnStatement();
+                default -> throw new UnexpectedTokenException(current);
+            };
         } else if (current.is(TokenType.L_CURLY_PAREN)) { // Block statement
             return parseBlock();
         } else { // Expression statement which does nothing
             return parseExpression();
         }
+    }
+
+    private Statement parseReturnStatement() {
+        this.stream.consumeType(TokenType.KEYWORD);
+        return new ReturnStatement(parseExpression());
     }
 
     private IfStatement parseIfStatement() {
