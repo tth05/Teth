@@ -1,9 +1,13 @@
 package com.github.tth05.teth.lang.parser;
 
+import com.github.tth05.teth.lang.diagnostics.Problem;
+import com.github.tth05.teth.lang.diagnostics.ProblemList;
 import com.github.tth05.teth.lang.lexer.Token;
 import com.github.tth05.teth.lang.lexer.TokenStream;
 import com.github.tth05.teth.lang.lexer.TokenType;
+import com.github.tth05.teth.lang.lexer.Tokenizer;
 import com.github.tth05.teth.lang.parser.ast.*;
+import com.github.tth05.teth.lang.stream.CharStream;
 
 import java.util.ArrayList;
 import java.util.function.Predicate;
@@ -17,10 +21,14 @@ public class Parser {
         this.stream = stream;
     }
 
-    public SourceFileUnit parse() {
-        var unit = new SourceFileUnit(parseStatementList(t -> t.is(TokenType.EOF)));
-        this.stream.consumeType(TokenType.EOF);
-        return unit;
+    public ParserResult parse() {
+        try {
+            var unit = new SourceFileUnit(parseStatementList(t -> t.is(TokenType.EOF)));
+            this.stream.consumeType(TokenType.EOF);
+            return new ParserResult(unit);
+        } catch (UnexpectedTokenException e) {
+            return new ParserResult(null, ProblemList.of(new Problem(e.getSpan(), e.getMessage())));
+        }
     }
 
     private StatementList parseStatementList(Predicate<Token> terminatorPredicate) {
@@ -54,7 +62,7 @@ public class Parser {
                 case "if" -> parseIfStatement();
                 case "fn" -> parseFunctionDeclaration();
                 case "return" -> parseReturnStatement();
-                default -> throw new UnexpectedTokenException(current);
+                default -> throw new UnexpectedTokenException(current.span(), "Keyword '%s' not allowed here", keyword);
             };
         } else if (current.is(TokenType.L_CURLY_PAREN)) { // Block statement
             return parseBlock();
@@ -191,6 +199,7 @@ public class Parser {
                 expr = parseFunctionInvocation(expr);
             } else if (currentType == TokenType.EQUAL) {
                 if (!(expr instanceof IdentifierExpression ident))
+                    //TODO: Allow spans to be multi-line and then add spans to each AST node
                     throw new RuntimeException("Cannot assign to non-identifier");
                 // Consume the equal sign
                 this.stream.consume();
@@ -246,11 +255,18 @@ public class Parser {
             case BOOLEAN_LITERAL ->
                     new BooleanLiteralExpression(Boolean.parseBoolean(this.stream.consumeType(TokenType.BOOLEAN_LITERAL).value()));
             case IDENTIFIER -> new IdentifierExpression(this.stream.consumeType(TokenType.IDENTIFIER).value());
-            default -> throw new UnexpectedTokenException(token);
+            default -> throw new UnexpectedTokenException(token.span(), "Expected a literal");
         };
     }
 
-    public static SourceFileUnit from(TokenStream stream) {
+    public static ParserResult fromString(String source) {
+        var tokenizerResult = Tokenizer.streamOf(CharStream.fromString(source));
+        if (tokenizerResult.hasProblems())
+            return new ParserResult(null, tokenizerResult.getProblems());
+        return new Parser(tokenizerResult.getTokenStream()).parse();
+    }
+
+    public static ParserResult from(TokenStream stream) {
         return new Parser(stream).parse();
     }
 }

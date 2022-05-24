@@ -37,7 +37,10 @@ public abstract class AbstractInterpreterTest {
 
     protected void createAST(String str) {
         createStreams(str);
-        this.unit = Parser.from(this.tokenStream);
+        var parserResult = Parser.from(this.tokenStream);
+        if (parserResult.hasProblems())
+            throw new RuntimeException("Parser failed\n" + parserResult.getProblems().prettyPrint(true));
+        this.unit = parserResult.getUnit();
     }
 
     private void createStreams(String str) {

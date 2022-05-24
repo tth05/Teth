@@ -29,7 +29,7 @@ public class TokenStream {
     }
 
     public Token consumeType(TokenType expectedType) {
-        return consumeTypeOrElse(expectedType, () -> {throw new UnexpectedTokenException(peek(), expectedType);});
+        return consumeTypeOrElse(expectedType, () -> {throw new UnexpectedTokenException(peek().span(), "Expected token '%s'", expectedType.getText());});
     }
 
     public Token consumeTypeOrElse(TokenType expectedType, Runnable orElse) {

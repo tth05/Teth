@@ -1,9 +1,7 @@
 package com.github.tth05.teth.cli.commands;
 
 import com.github.tth05.teth.cli.commands.converters.String2ExistingFileConverter;
-import com.github.tth05.teth.lang.lexer.Tokenizer;
 import com.github.tth05.teth.lang.parser.Parser;
-import com.github.tth05.teth.lang.stream.CharStream;
 import picocli.CommandLine;
 
 import java.io.IOException;
@@ -30,11 +28,11 @@ public class ASTCommand implements Runnable {
     @Override
     public void run() {
         try {
-            var tokenizerResult = Tokenizer.streamOf(CharStream.fromString(Files.readString(this.filePath)));
-            if (tokenizerResult.logProblems(System.out, true))
+            var parserResult = Parser.fromString(Files.readString(this.filePath));
+            if (parserResult.logProblems(System.out, true))
                 return;
 
-            System.out.println(Parser.from(tokenizerResult.getTokenStream()).dumpToString());
+            System.out.println(parserResult.getUnit().dumpToString());
         } catch (IOException e) {
             e.printStackTrace();
         }

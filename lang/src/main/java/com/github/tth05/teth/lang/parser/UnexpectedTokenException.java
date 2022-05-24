@@ -1,17 +1,11 @@
 package com.github.tth05.teth.lang.parser;
 
-import com.github.tth05.teth.lang.lexer.Token;
-import com.github.tth05.teth.lang.lexer.TokenType;
+import com.github.tth05.teth.lang.span.ISpan;
+import com.github.tth05.teth.lang.span.SpanAwareException;
 
-import java.util.Arrays;
+public class UnexpectedTokenException extends SpanAwareException {
 
-public class UnexpectedTokenException extends RuntimeException {
-
-    public UnexpectedTokenException(Token token) {
-        super("Unexpected token '" + token + "'");
-    }
-
-    public UnexpectedTokenException(Token token, TokenType... expectedTokens) {
-        super("Unexpected token '" + token + "', expected one of " + Arrays.toString(expectedTokens));
+    public UnexpectedTokenException(ISpan span, String fmt, Object... args) {
+        super(span, String.format(fmt, args));
     }
 }
