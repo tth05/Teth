@@ -1,5 +1,7 @@
 package com.github.tth05.teth.lang.util;
 
+import java.util.Arrays;
+
 public class CharArrayUtils {
 
     public static int findLineStart(char[] source, int index) {
@@ -16,5 +18,13 @@ public class CharArrayUtils {
             lineEnd++;
         }
         return lineEnd;
+    }
+
+    public static String getLineContents(char[] source, int offset) {
+        return new String(Arrays.copyOfRange(
+                source,
+                CharArrayUtils.findLineStart(source, offset),
+                CharArrayUtils.findLineEnd(source, offset))
+        );
     }
 }

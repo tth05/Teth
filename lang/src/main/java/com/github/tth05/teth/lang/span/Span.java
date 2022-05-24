@@ -4,12 +4,14 @@ public final class Span implements ISpan {
 
     private final char[] source;
     private final int offset;
+    private final int offsetEnd;
     private final int line;
     private final int column;
 
-    public Span(char[] source, int offset, int line, int column) {
+    public Span(char[] source, int offset, int offsetEnd, int line, int column) {
         this.source = source;
         this.offset = offset;
+        this.offsetEnd = offsetEnd;
         this.line = line;
         this.column = column;
     }
@@ -17,6 +19,11 @@ public final class Span implements ISpan {
     @Override
     public int getOffset() {
         return this.offset;
+    }
+
+    @Override
+    public int getOffsetEnd() {
+        return this.offsetEnd;
     }
 
     @Override
@@ -60,6 +67,6 @@ public final class Span implements ISpan {
 
     @Override
     public String toString() {
-        return "Span(" + this.offset + ", " + this.line + ", " + this.column + ")";
+        return "Span(" + this.offset  + ", " + this.offsetEnd + ", " + this.line + ", " + this.column + ")";
     }
 }

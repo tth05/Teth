@@ -43,8 +43,8 @@ public abstract class AbstractInterpreterTest {
     private void createStreams(String str) {
         this.charStream = CharStream.fromString(str);
         var tokenizerResult = Tokenizer.streamOf(this.charStream);
-        if (tokenizerResult.getProblems() != null)
-            throw new RuntimeException("Tokenizer failed");
+        if (tokenizerResult.hasProblems())
+            throw new RuntimeException("Tokenizer failed\n" + tokenizerResult.getProblems().prettyPrint(true));
         this.tokenStream = tokenizerResult.getTokenStream();
     }
 

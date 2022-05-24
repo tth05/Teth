@@ -21,8 +21,8 @@ public abstract class AbstractTokenizerTest {
         this.source = str.toCharArray();
         this.charStream = CharStream.fromString(str);
         var tokenizerResult = Tokenizer.streamOf(this.charStream);
-        if (tokenizerResult.getProblems() != null)
-            throw new RuntimeException("Tokenizer failed");
+        if (tokenizerResult.hasProblems())
+            throw new RuntimeException("Tokenizer failed\n" + tokenizerResult.getProblems().prettyPrint(false));
         this.tokenStream = tokenizerResult.getTokenStream();
     }
 
@@ -34,8 +34,8 @@ public abstract class AbstractTokenizerTest {
         return tokens;
     }
 
-    protected Span makeSpan(int offset, int line, int column) {
-        return new Span(this.source, offset, line, column);
+    protected Span makeSpan(int offset, int offsetEnd, int line, int column) {
+        return new Span(this.source, offset, offsetEnd, line, column);
     }
 
     public void assertStreamsEmpty() {

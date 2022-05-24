@@ -31,7 +31,7 @@ public class ASTCommand implements Runnable {
     public void run() {
         try {
             var tokenizerResult = Tokenizer.streamOf(CharStream.fromString(Files.readString(this.filePath)));
-            if (tokenizerResult.logProblems())
+            if (tokenizerResult.logProblems(System.out, true))
                 return;
 
             System.out.println(Parser.from(tokenizerResult.getTokenStream()).dumpToString());

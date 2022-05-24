@@ -1,18 +1,19 @@
 package com.github.tth05.teth.lang.stream;
 
 import com.github.tth05.teth.lang.span.ISpan;
-import com.github.tth05.teth.lang.span.MutableSpan;
+import com.github.tth05.teth.lang.span.MarkerSpan;
+import com.github.tth05.teth.lang.span.Span;
 
 public class CharStream {
 
-    private final MutableSpan span;
+    private final MarkerSpan span;
     private final char[] chars;
 
     private int index;
 
     private CharStream(String source) {
         this.chars = source.toCharArray();
-        this.span = new MutableSpan(this.chars);
+        this.span = new MarkerSpan(this.chars);
     }
 
     public char consume() {
@@ -23,8 +24,14 @@ public class CharStream {
         if (c == '\n')
             this.span.advanceLine();
         else
-            this.span.advanceColumn();
+            this.span.advance();
         return c;
+    }
+
+    public ISpan consumeKnownSingle() {
+        var span = createSingleCharSpan();
+        consume();
+        return span;
     }
 
     public char peek() {
@@ -46,8 +53,19 @@ public class CharStream {
         return this.index + offset < this.chars.length;
     }
 
-    public ISpan getSpan() {
-        return this.span.toImmutable();
+    public void markSpan() {
+        this.span.mark();
+    }
+
+    public ISpan createMarkedSpan() {
+        return this.span.createMarkedSpan();
+    }
+
+    public ISpan createSingleCharSpan() {
+        var column = this.span.getOffset() < this.index ?
+                this.span.getColumn() + (this.index - this.span.getOffset()) :
+                this.span.getColumn();
+        return new Span(this.chars, this.index, this.index + 1, this.span.getLine(), column);
     }
 
     public static CharStream fromString(String source) {

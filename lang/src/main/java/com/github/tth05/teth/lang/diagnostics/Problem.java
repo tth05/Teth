@@ -3,49 +3,67 @@ package com.github.tth05.teth.lang.diagnostics;
 import com.github.tth05.teth.lang.span.ISpan;
 import com.github.tth05.teth.lang.util.CharArrayUtils;
 
-import java.util.Arrays;
+public record Problem(ISpan span, String message) {
 
-public class Problem {
-
-    private final ISpan span;
-    private final String message;
-
-    public Problem(ISpan span, String message) {
-        this.span = span;
-        this.message = message;
-    }
-
-    public ISpan getSpan() {
-        return this.span;
-    }
-
-    public String getMessage() {
-        return this.message;
-    }
-
-    public String prettyPrint() {
+    public String prettyPrint(boolean useAnsiColors) {
         StringBuilder sb = new StringBuilder();
-        var source = this.getSpan().getSource();
-        var offset = this.getSpan().getOffset();
-        sb.append(this.span.getLine()).append(":").append(this.span.getColumn());
-        var lineStartLength = sb.length();
-        sb.append(" | ")
-                .append(new String(Arrays.copyOfRange(
-                        source,
-                        CharArrayUtils.findLineStart(source, offset),
-                        CharArrayUtils.findLineEnd(source, offset)))
-                );
+        var source = this.span().getSource();
+        var offset = this.span().getOffset();
+        var line = this.span.getLine();
 
+        // Append previous line
+        if (line != 0) {
+            appendLine(sb, source, CharArrayUtils.findLineStart(source, offset) - 1, line - 1 + 1, useAnsiColors);
+            sb.append("\n");
+        }
+
+        // Append current line
+        if (useAnsiColors)
+            appendLineWithHighlight(sb, source, offset, line + 1, this.span.getColumn(), this.span.getColumnEnd(), 31);
+        else
+            appendLine(sb, source, offset, line + 1, useAnsiColors);
+
+        var lineStartLength = ((line + 1) + "").length();
+
+        // Append error message
         sb.append("\n");
-        sb.append(" ".repeat(lineStartLength)).append(" | ");
-        sb.append(" ".repeat(this.span.getColumn() - 1)).append("^");
-        sb.append("\n");
-        sb.append(" ".repeat(lineStartLength)).append(" | ");
-        // Center the message below the roof symbol
-        sb.append(" ".repeat(
-                Math.max(0, this.span.getColumn() - 1 - this.message.length() / 2)
-        ));
-        sb.append(this.message);
+        appendLinePrefix(sb, " ".repeat(lineStartLength), useAnsiColors);
+        sb.append(" ".repeat(this.span.getColumn()));
+        sb.append(addAnsiHighlight("^ " + this.message, 0, this.message.length() + 2, 31));
+
+        // Append next line
+        var currentLineEnd = CharArrayUtils.findLineEnd(source, offset);
+        if (currentLineEnd < source.length - 1 /* NULL */ - 1) {
+            sb.append("\n");
+            appendLine(sb, source, currentLineEnd + 1, line + 1 + 1, useAnsiColors);
+        }
         return sb.toString();
+    }
+
+    private static void appendLinePrefix(StringBuilder sb, String lineNumber, boolean useAnsiColors) {
+        if (useAnsiColors)
+            sb.append("\u001b[0;36m");
+        sb.append(lineNumber).append(" | ");
+        if (useAnsiColors)
+            sb.append("\u001b[0m");
+    }
+
+    private static void appendLine(StringBuilder sb, char[] source, int offset, int lineNumber, boolean useAnsiColors) {
+        appendLinePrefix(sb, lineNumber + "", useAnsiColors);
+        sb.append(CharArrayUtils.getLineContents(source, offset));
+    }
+
+    private static void appendLineWithHighlight(StringBuilder sb, char[] source, int offset, int lineNumber,
+                                                int highlightStart, int highlightEnd, int ansiColor) {
+        appendLinePrefix(sb, lineNumber + "", true);
+        sb.append(addAnsiHighlight(CharArrayUtils.getLineContents(source, offset), highlightStart, highlightEnd, ansiColor));
+    }
+
+    private static StringBuilder addAnsiHighlight(String str, int highlightStart, int highlightEnd, int ansiColor) {
+        var lineContents = new StringBuilder(str);
+
+        lineContents.insert(Math.min(lineContents.length(), highlightEnd), "\u001b[0m");
+        lineContents.insert(highlightStart, "\u001b[0;" + ansiColor + "m");
+        return lineContents;
     }
 }

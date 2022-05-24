@@ -1,42 +1,40 @@
 package com.github.tth05.teth.lang.lexer;
 
-import com.github.tth05.teth.lang.diagnostics.Problem;
+import com.github.tth05.teth.lang.diagnostics.ProblemList;
 
-import java.util.List;
+import java.io.PrintStream;
 
 public class TokenizerResult {
 
     private final TokenStream stream;
-    private final List<Problem> problems;
+    private final ProblemList problems;
 
     public TokenizerResult(TokenStream stream) {
-        this(stream, null);
+        this(stream, ProblemList.of());
     }
 
-    public TokenizerResult(TokenStream stream, List<Problem> problems) {
+    public TokenizerResult(TokenStream stream, ProblemList problems) {
         this.stream = stream;
         this.problems = problems;
+    }
+
+    public boolean logProblems(PrintStream out, boolean useAnsiColors) {
+        if (!hasProblems())
+            return false;
+
+        out.append(this.problems.prettyPrint(useAnsiColors));
+        return true;
     }
 
     public TokenStream getTokenStream() {
         return this.stream;
     }
 
-    public List<Problem> getProblems() {
-        return this.problems;
+    public boolean hasProblems() {
+        return !this.problems.isEmpty();
     }
 
-    public boolean logProblems() {
-        var problems = getProblems();
-        if (problems == null)
-            return false;
-
-        System.err.println("Tokenizer problems:");
-        for (var problem : problems) {
-            System.out.println(problem.prettyPrint());
-        }
-
-        return true;
-
+    public ProblemList getProblems() {
+        return this.problems;
     }
 }

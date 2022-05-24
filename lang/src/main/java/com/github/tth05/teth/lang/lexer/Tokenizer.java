@@ -1,10 +1,9 @@
 package com.github.tth05.teth.lang.lexer;
 
 import com.github.tth05.teth.lang.diagnostics.Problem;
+import com.github.tth05.teth.lang.diagnostics.ProblemList;
 import com.github.tth05.teth.lang.span.ISpan;
 import com.github.tth05.teth.lang.stream.CharStream;
-
-import java.util.List;
 
 public class Tokenizer {
 
@@ -20,6 +19,7 @@ public class Tokenizer {
             while (true) {
                 char c = this.stream.peek();
                 if (c == 0) {
+                    this.stream.markSpan();
                     emit("", TokenType.EOF);
                     break;
                 }
@@ -41,22 +41,19 @@ public class Tokenizer {
                 } else if (isParen(c)) {
                     emitParen();
                 } else if (isLineBreak(c)) {
-                    emit("\n", TokenType.LINE_BREAK);
-                    this.stream.consume();
+                    emit(this.stream.consumeKnownSingle(), "\n", TokenType.LINE_BREAK);
                 } else if (isWhitespace(c)) {
                     this.stream.consume();
                 } else if (isComma(c)) {
-                    emit(",", TokenType.COMMA);
-                    this.stream.consume();
+                    emit(this.stream.consumeKnownSingle(), ",", TokenType.COMMA);
                 } else if (isDot(c)) {
-                    emit(".", TokenType.DOT);
-                    this.stream.consume();
+                    emit(this.stream.consumeKnownSingle(), ".", TokenType.DOT);
                 } else {
-                    throw new UnexpectedCharException(this.stream.getSpan(), c);
+                    throw new UnexpectedCharException(this.stream.createSingleCharSpan(), "Invalid character '%s'", c);
                 }
             }
         } catch (UnexpectedCharException e) {
-            return new TokenizerResult(this.tokenStream, List.of(new Problem(e.getSpan(), e.getMessage())));
+            return new TokenizerResult(this.tokenStream, ProblemList.of(new Problem(e.getSpan(), e.getMessage())));
         }
 
         return new TokenizerResult(this.tokenStream);
@@ -67,7 +64,7 @@ public class Tokenizer {
     }
 
     private void emit(String value, TokenType type) {
-        this.tokenStream.push(new Token(this.stream.getSpan(), value, type));
+        this.tokenStream.push(new Token(this.stream.createMarkedSpan(), value, type));
     }
 
     private void emit(ISpan span, String value, TokenType type) {
@@ -75,27 +72,28 @@ public class Tokenizer {
     }
 
     private Token parseIdentifier() {
-        var span = this.stream.getSpan();
+        this.stream.markSpan();
         StringBuilder ident = new StringBuilder(8);
         do {
-            char c = this.stream.consume();
+            char c = this.stream.peek();
             if (!isIdentifierChar(c))
-                throw new UnexpectedCharException(this.stream.getSpan(), c, TokenType.IDENTIFIER);
+                throw new UnexpectedCharException(this.stream.createSingleCharSpan(), "Invalid character '%s' in identifier", c);
 
-            ident.append(c);
+            ident.append(this.stream.consume());
         } while (!isSeparator(this.stream.peek()) && !isDot(this.stream.peek()));
 
-        return new Token(span, ident.toString(), TokenType.IDENTIFIER);
+        return new Token(this.stream.createMarkedSpan(), ident.toString(), TokenType.IDENTIFIER);
     }
 
     private void emitString() {
-        var span = this.stream.getSpan();
+        this.stream.markSpan();
+
         StringBuilder string = new StringBuilder(5);
         this.stream.consume(); //Prefix
         while (true) {
             var next = this.stream.peek();
             if (next == 0 || isLineBreak(next))
-                throw new UnexpectedCharException(this.stream.getSpan(), next, TokenType.STRING_LITERAL);
+                throw new UnexpectedCharException(this.stream.createSingleCharSpan(), "Unclosed string literal");
             if (isQuote(next))
                 break;
 
@@ -104,50 +102,60 @@ public class Tokenizer {
         }
         this.stream.consume(); //Suffix
 
-        emit(span, string.toString(), TokenType.STRING_LITERAL);
+        emit(string.toString(), TokenType.STRING_LITERAL);
     }
 
     private void emitNumber() {
-        var span = this.stream.getSpan();
+        this.stream.markSpan();
+
         boolean isDouble = false;
         StringBuilder number = new StringBuilder(2);
         do {
-            char c = this.stream.consume();
+            char c = this.stream.peek();
 
             if (c == '.') {
+                this.stream.consume();
                 if (isDouble)
-                    throw new UnexpectedCharException(this.stream.getSpan(), c, TokenType.LONG_LITERAL);
+                    throw new UnexpectedCharException(this.stream.createSingleCharSpan(), "Second decimal point in number literal");
                 isDouble = true;
                 number.append('.');
                 continue;
             }
 
             if (!isNumber(c))
-                throw new UnexpectedCharException(this.stream.getSpan(), c, TokenType.LONG_LITERAL);
+                throw new UnexpectedCharException(this.stream.createSingleCharSpan(), "Invalid character '%s' in number literal", c);
 
-            number.append(c);
+            number.append(this.stream.consume());
         } while (!isSeparator(this.stream.peek()));
 
+        var span = this.stream.createMarkedSpan();
+        try {
+            if (isDouble)
+                Double.parseDouble(number.toString());
+            else
+                Long.parseLong(number.toString());
+        } catch (NumberFormatException e) {
+            throw new UnexpectedCharException(span, "Number is too big");
+        }
 
-        if (isDouble)
-            emit(span, number.toString(), TokenType.DOUBLE_LITERAL);
-        else
-            emit(span, number.toString(), TokenType.LONG_LITERAL);
+        emit(span, number.toString(), isDouble ? TokenType.DOUBLE_LITERAL : TokenType.LONG_LITERAL);
     }
 
     private void emitOperator() {
-        var op = this.stream.peek();
+        this.stream.markSpan();
+
+        var op = this.stream.consume();
         switch (op) {
             case '=' -> {
-                if (this.stream.peek(1) == '=') {
-                    emit("==", TokenType.EQUAL_EQUAL);
+                if (this.stream.peek() == '=') {
                     this.stream.consume();
+                    emit("==", TokenType.EQUAL_EQUAL);
                 } else {
                     emit("=", TokenType.EQUAL);
                 }
             }
             case '!' -> {
-                if (this.stream.peek(1) == '=') {
+                if (this.stream.peek() == '=') {
                     emit("!=", TokenType.NOT_EQUAL);
                     this.stream.consume();
                 } else {
@@ -155,17 +163,17 @@ public class Tokenizer {
                 }
             }
             case '<' -> {
-                if (this.stream.peek(1) == '=') {
-                    emit("<=", TokenType.LESS_EQUAL);
+                if (this.stream.peek() == '=') {
                     this.stream.consume();
+                    emit("<=", TokenType.LESS_EQUAL);
                 } else {
                     emit("<", TokenType.LESS);
                 }
             }
             case '>' -> {
-                if (this.stream.peek(1) == '=') {
-                    emit(">=", TokenType.GREATER_EQUAL);
+                if (this.stream.peek() == '=') {
                     this.stream.consume();
+                    emit(">=", TokenType.GREATER_EQUAL);
                 } else {
                     emit(">", TokenType.GREATER);
                 }
@@ -177,12 +185,10 @@ public class Tokenizer {
             case '^' -> emit("^", TokenType.POW);
             default -> throw new IllegalStateException("Unreachable");
         }
-
-        this.stream.consume();
     }
 
     private void emitParen() {
-        var span = this.stream.getSpan();
+        var span = this.stream.createSingleCharSpan();
         var c = this.stream.consume();
         emit(span, "" + c, switch (c) {
             case '(' -> TokenType.L_PAREN;

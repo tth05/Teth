@@ -32,7 +32,7 @@ public class RunCommand implements Runnable {
     public void run() {
         try {
             var tokenizerResult = Tokenizer.streamOf(CharStream.fromString(Files.readString(this.filePath)));
-            if (tokenizerResult.logProblems())
+            if (tokenizerResult.logProblems(System.out, true))
                 return;
 
             new Interpreter().execute(Parser.from(tokenizerResult.getTokenStream()));
