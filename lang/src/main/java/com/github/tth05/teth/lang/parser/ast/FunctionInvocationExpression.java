@@ -1,6 +1,7 @@
 package com.github.tth05.teth.lang.parser.ast;
 
 import com.github.tth05.teth.lang.parser.ExpressionList;
+import com.github.tth05.teth.lang.span.ISpan;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
 public class FunctionInvocationExpression extends Expression {
@@ -8,7 +9,8 @@ public class FunctionInvocationExpression extends Expression {
     private final Expression target;
     private final ExpressionList parameters;
 
-    public FunctionInvocationExpression(Expression target, ExpressionList parameters) {
+    public FunctionInvocationExpression(ISpan span, Expression target, ExpressionList parameters) {
+        super(span);
         this.target = target;
         this.parameters = parameters;
     }

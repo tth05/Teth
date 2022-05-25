@@ -19,8 +19,7 @@ public class Tokenizer {
             while (true) {
                 char c = this.stream.peek();
                 if (c == 0) {
-                    this.stream.markSpan();
-                    emit("", TokenType.EOF);
+                    emit(this.stream.createCurrentIndexSpan(), "", TokenType.EOF);
                     break;
                 }
 
@@ -49,7 +48,7 @@ public class Tokenizer {
                 } else if (isDot(c)) {
                     emit(this.stream.consumeKnownSingle(), ".", TokenType.DOT);
                 } else {
-                    throw new UnexpectedCharException(this.stream.createSingleCharSpan(), "Invalid character '%s'", c);
+                    throw new UnexpectedCharException(this.stream.createCurrentIndexSpan(), "Invalid character '%s'", c);
                 }
             }
         } catch (UnexpectedCharException e) {
@@ -77,7 +76,7 @@ public class Tokenizer {
         do {
             char c = this.stream.peek();
             if (!isIdentifierChar(c))
-                throw new UnexpectedCharException(this.stream.createSingleCharSpan(), "Invalid character '%s' in identifier", c);
+                throw new UnexpectedCharException(this.stream.createCurrentIndexSpan(), "Invalid character '%s' in identifier", c);
 
             ident.append(this.stream.consume());
         } while (!isSeparator(this.stream.peek()) && !isDot(this.stream.peek()));
@@ -93,7 +92,7 @@ public class Tokenizer {
         while (true) {
             var next = this.stream.peek();
             if (next == 0 || isLineBreak(next))
-                throw new UnexpectedCharException(this.stream.createSingleCharSpan(), "Unclosed string literal");
+                throw new UnexpectedCharException(this.stream.createCurrentIndexSpan(), "Unclosed string literal");
             if (isQuote(next))
                 break;
 
@@ -116,14 +115,14 @@ public class Tokenizer {
             if (c == '.') {
                 this.stream.consume();
                 if (isDouble)
-                    throw new UnexpectedCharException(this.stream.createSingleCharSpan(), "Second decimal point in number literal");
+                    throw new UnexpectedCharException(this.stream.createCurrentIndexSpan(), "Second decimal point in number literal");
                 isDouble = true;
                 number.append('.');
                 continue;
             }
 
             if (!isNumber(c))
-                throw new UnexpectedCharException(this.stream.createSingleCharSpan(), "Invalid character '%s' in number literal", c);
+                throw new UnexpectedCharException(this.stream.createCurrentIndexSpan(), "Invalid character '%s' in number literal", c);
 
             number.append(this.stream.consume());
         } while (!isSeparator(this.stream.peek()));
@@ -188,7 +187,7 @@ public class Tokenizer {
     }
 
     private void emitParen() {
-        var span = this.stream.createSingleCharSpan();
+        var span = this.stream.createCurrentIndexSpan();
         var c = this.stream.consume();
         emit(span, "" + c, switch (c) {
             case '(' -> TokenType.L_PAREN;

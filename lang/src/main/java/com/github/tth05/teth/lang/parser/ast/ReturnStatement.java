@@ -1,12 +1,14 @@
 package com.github.tth05.teth.lang.parser.ast;
 
+import com.github.tth05.teth.lang.span.ISpan;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
 public class ReturnStatement extends Statement {
 
     private final Expression valueExpr;
 
-    public ReturnStatement(Expression valueExpr) {
+    public ReturnStatement(ISpan span, Expression valueExpr) {
+        super(span);
         this.valueExpr = valueExpr;
     }
 

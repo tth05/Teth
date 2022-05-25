@@ -34,8 +34,8 @@ public abstract class AbstractTokenizerTest {
         return tokens;
     }
 
-    protected Span makeSpan(int offset, int offsetEnd, int line, int column) {
-        return new Span(this.source, offset, offsetEnd, line, column);
+    protected Span makeSpan(int offset, int offsetEnd) {
+        return new Span(this.source, offset, offsetEnd);
     }
 
     public void assertStreamsEmpty() {

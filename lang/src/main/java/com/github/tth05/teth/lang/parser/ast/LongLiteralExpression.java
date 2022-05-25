@@ -1,12 +1,14 @@
 package com.github.tth05.teth.lang.parser.ast;
 
+import com.github.tth05.teth.lang.span.ISpan;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
 public class LongLiteralExpression extends Expression {
 
     private final long value;
 
-    public LongLiteralExpression(long value) {
+    public LongLiteralExpression(ISpan span, long value) {
+        super(span);
         this.value = value;
     }
 

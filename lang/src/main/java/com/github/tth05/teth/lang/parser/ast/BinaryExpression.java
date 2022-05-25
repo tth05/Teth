@@ -1,6 +1,7 @@
 package com.github.tth05.teth.lang.parser.ast;
 
 import com.github.tth05.teth.lang.lexer.TokenType;
+import com.github.tth05.teth.lang.span.Span;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
 public class BinaryExpression extends Expression {
@@ -11,6 +12,7 @@ public class BinaryExpression extends Expression {
     private Operator operator;
 
     public BinaryExpression(Expression left, Expression right, Operator operator) {
+        super(Span.of(left.getSpan(), right.getSpan()));
         this.left = left;
         this.right = right;
         this.operator = operator;

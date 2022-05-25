@@ -1,35 +1,29 @@
 package com.github.tth05.teth.lang.stream;
 
 import com.github.tth05.teth.lang.span.ISpan;
-import com.github.tth05.teth.lang.span.MarkerSpan;
 import com.github.tth05.teth.lang.span.Span;
 
 public class CharStream {
 
-    private final MarkerSpan span;
     private final char[] chars;
+
+    private int markedIndex = -1;
 
     private int index;
 
     private CharStream(String source) {
         this.chars = source.toCharArray();
-        this.span = new MarkerSpan(this.chars);
     }
 
     public char consume() {
         if (!isValidIndex(0))
             throw new EndOfStreamException();
 
-        var c = this.chars[this.index++];
-        if (c == '\n')
-            this.span.advanceLine();
-        else
-            this.span.advance();
-        return c;
+        return this.chars[this.index++];
     }
 
     public ISpan consumeKnownSingle() {
-        var span = createSingleCharSpan();
+        var span = createCurrentIndexSpan();
         consume();
         return span;
     }
@@ -54,21 +48,23 @@ public class CharStream {
     }
 
     public void markSpan() {
-        this.span.mark();
+        this.markedIndex = this.index;
     }
 
     public ISpan createMarkedSpan() {
-        return this.span.createMarkedSpan();
+        if (this.markedIndex == -1)
+            throw new IllegalStateException("No mark set");
+
+        var span = new Span(this.chars, this.markedIndex, this.index);
+        this.markedIndex = -1;
+        return span;
     }
 
-    public ISpan createSingleCharSpan() {
-        var column = this.span.getOffset() < this.index ?
-                this.span.getColumn() + (this.index - this.span.getOffset()) :
-                this.span.getColumn();
-        return new Span(this.chars, this.index, this.index + 1, this.span.getLine(), column);
+    public ISpan createCurrentIndexSpan() {
+        return new Span(this.chars, this.index, this.index + 1);
     }
 
     public static CharStream fromString(String source) {
-        return new CharStream(source + '\u0000');
+        return new CharStream(source);
     }
 }

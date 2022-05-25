@@ -7,19 +7,20 @@ public record Problem(ISpan span, String message) {
 
     public String prettyPrint(boolean useAnsiColors) {
         StringBuilder sb = new StringBuilder();
-        var source = this.span().getSource();
-        var offset = this.span().getOffset();
-        var line = this.span.getLine();
+        var source = this.span.getSource();
+        var offset = this.span.getOffset();
+        var line = this.span.getStartLine();
+        var startColumn = this.span.getStartColumn();
 
         // Append previous line
         if (line != 0) {
-            appendLine(sb, source, CharArrayUtils.findLineStart(source, offset) - 1, line - 1 + 1, useAnsiColors);
+            appendLine(sb, source, CharArrayUtils.getLineStart(source, offset) - 1, line - 1 + 1, useAnsiColors);
             sb.append("\n");
         }
 
         // Append current line
         if (useAnsiColors)
-            appendLineWithHighlight(sb, source, offset, line + 1, this.span.getColumn(), this.span.getColumnEnd(), 31);
+            appendLineWithHighlight(sb, source, offset, line + 1, startColumn, this.span.getEndColumn(), 31);
         else
             appendLine(sb, source, offset, line + 1, useAnsiColors);
 
@@ -28,11 +29,11 @@ public record Problem(ISpan span, String message) {
         // Append error message
         sb.append("\n");
         appendLinePrefix(sb, " ".repeat(lineStartLength), useAnsiColors);
-        sb.append(" ".repeat(this.span.getColumn()));
+        sb.append(" ".repeat(startColumn));
         sb.append(addAnsiHighlight("^ " + this.message, 0, this.message.length() + 2, 31));
 
         // Append next line
-        var currentLineEnd = CharArrayUtils.findLineEnd(source, offset);
+        var currentLineEnd = CharArrayUtils.getLineEnd(source, offset);
         if (currentLineEnd < source.length - 1 /* NULL */ - 1) {
             sb.append("\n");
             appendLine(sb, source, currentLineEnd + 1, line + 1 + 1, useAnsiColors);

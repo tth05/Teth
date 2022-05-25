@@ -1,5 +1,6 @@
 package com.github.tth05.teth.lang.parser.ast;
 
+import com.github.tth05.teth.lang.span.ISpan;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
 import java.util.Objects;
@@ -10,7 +11,8 @@ public class IfStatement extends Statement {
     private final BlockStatement body;
     private final Statement elseStatement;
 
-    public IfStatement(Expression condition, BlockStatement body, Statement elseStatement) {
+    public IfStatement(ISpan span, Expression condition, BlockStatement body, Statement elseStatement) {
+        super(span);
         this.condition = condition;
         this.body = body;
         this.elseStatement = elseStatement;

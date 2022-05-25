@@ -4,7 +4,16 @@ import java.util.Arrays;
 
 public class CharArrayUtils {
 
-    public static int findLineStart(char[] source, int index) {
+    public static int getLineNumber(char[] source, int offset) {
+        int lineNumber = 0;
+        for (int i = 0; i < offset; i++) {
+            if (source[i] == '\n')
+                lineNumber++;
+        }
+        return lineNumber;
+    }
+
+    public static int getLineStart(char[] source, int index) {
         int lineStart = index;
         while (lineStart > 0 && source[lineStart - 1] != '\n') {
             lineStart--;
@@ -12,7 +21,7 @@ public class CharArrayUtils {
         return lineStart;
     }
 
-    public static int findLineEnd(char[] source, int index) {
+    public static int getLineEnd(char[] source, int index) {
         int lineEnd = index;
         while (lineEnd < source.length && source[lineEnd] != '\n') {
             lineEnd++;
@@ -23,8 +32,8 @@ public class CharArrayUtils {
     public static String getLineContents(char[] source, int offset) {
         return new String(Arrays.copyOfRange(
                 source,
-                CharArrayUtils.findLineStart(source, offset),
-                CharArrayUtils.findLineEnd(source, offset))
+                CharArrayUtils.getLineStart(source, offset),
+                CharArrayUtils.getLineEnd(source, offset))
         );
     }
 }

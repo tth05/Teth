@@ -1,5 +1,6 @@
 package com.github.tth05.teth.lang.parser.ast;
 
+import com.github.tth05.teth.lang.span.ISpan;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
 public class VariableAssignmentExpression extends Expression {
@@ -7,7 +8,8 @@ public class VariableAssignmentExpression extends Expression {
     private final String target;
     private final Expression expr;
 
-    public VariableAssignmentExpression(String target, Expression expr) {
+    public VariableAssignmentExpression(ISpan span, String target, Expression expr) {
+        super(span);
         this.target = target;
         this.expr = expr;
     }

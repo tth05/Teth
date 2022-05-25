@@ -1,12 +1,14 @@
 package com.github.tth05.teth.lang.parser.ast;
 
+import com.github.tth05.teth.lang.span.ISpan;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
 public class DoubleLiteralExpression extends Expression {
 
     private final double value;
 
-    public DoubleLiteralExpression(double value) {
+    public DoubleLiteralExpression(ISpan span, double value) {
+        super(span);
         this.value = value;
     }
 

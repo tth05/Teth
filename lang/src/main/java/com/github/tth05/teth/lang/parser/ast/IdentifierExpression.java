@@ -1,5 +1,6 @@
 package com.github.tth05.teth.lang.parser.ast;
 
+import com.github.tth05.teth.lang.span.ISpan;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
 import java.util.Objects;
@@ -9,7 +10,8 @@ public class IdentifierExpression extends Expression {
 
     private final String value;
 
-    public IdentifierExpression(String value) {
+    public IdentifierExpression(ISpan span, String value) {
+        super(span);
         this.value = value;
     }
 

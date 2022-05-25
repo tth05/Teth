@@ -1,19 +1,17 @@
 package com.github.tth05.teth.lang.span;
 
+import java.util.Arrays;
+
 public final class Span implements ISpan {
 
     private final char[] source;
     private final int offset;
     private final int offsetEnd;
-    private final int line;
-    private final int column;
 
-    public Span(char[] source, int offset, int offsetEnd, int line, int column) {
+    public Span(char[] source, int offset, int offsetEnd) {
         this.source = source;
         this.offset = offset;
         this.offsetEnd = offsetEnd;
-        this.line = line;
-        this.column = column;
     }
 
     @Override
@@ -24,16 +22,6 @@ public final class Span implements ISpan {
     @Override
     public int getOffsetEnd() {
         return this.offsetEnd;
-    }
-
-    @Override
-    public int getLine() {
-        return this.line;
-    }
-
-    @Override
-    public int getColumn() {
-        return this.column;
     }
 
     @Override
@@ -52,21 +40,25 @@ public final class Span implements ISpan {
 
         if (this.offset != span.offset)
             return false;
-        if (this.line != span.line)
+        if (this.offsetEnd != span.offsetEnd)
             return false;
-        return this.column == span.column;
+        return Arrays.equals(this.source, span.source);
     }
 
     @Override
     public int hashCode() {
-        int result = this.offset;
-        result = 31 * result + this.line;
-        result = 31 * result + this.column;
+        int result = Arrays.hashCode(this.source);
+        result = 31 * result + this.offset;
+        result = 31 * result + this.offsetEnd;
         return result;
     }
 
     @Override
     public String toString() {
-        return "Span(" + this.offset  + ", " + this.offsetEnd + ", " + this.line + ", " + this.column + ")";
+        return "Span(" + this.offset  + ", " + this.offsetEnd + ", " + getStartLine() + ", " + getStartColumn() + ")";
+    }
+
+    public static Span of(ISpan first, ISpan last) {
+        return new Span(first.getSource(), first.getOffset(), last.getOffsetEnd());
     }
 }

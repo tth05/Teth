@@ -2,6 +2,7 @@ package com.github.tth05.teth.lang.parser.ast;
 
 import com.github.tth05.teth.lang.parser.IDumpable;
 import com.github.tth05.teth.lang.parser.Type;
+import com.github.tth05.teth.lang.span.ISpan;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
 import java.util.Collections;
@@ -13,7 +14,8 @@ public class FunctionDeclaration extends Statement {
     private final List<Parameter> parameters;
     private final BlockStatement body;
 
-    public FunctionDeclaration(String name, List<Parameter> parameters, BlockStatement body) {
+    public FunctionDeclaration(ISpan span, String name, List<Parameter> parameters, BlockStatement body) {
+        super(span);
         this.name = name;
         this.parameters = parameters;
         this.body = body;

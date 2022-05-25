@@ -1,13 +1,15 @@
 package com.github.tth05.teth.lang.parser.ast;
 
 import com.github.tth05.teth.lang.parser.StatementList;
+import com.github.tth05.teth.lang.span.ISpan;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
 public class BlockStatement extends Statement {
 
     protected final StatementList statements;
 
-    public BlockStatement(StatementList statements) {
+    public BlockStatement(ISpan span, StatementList statements) {
+        super(span);
         this.statements = statements;
     }
 

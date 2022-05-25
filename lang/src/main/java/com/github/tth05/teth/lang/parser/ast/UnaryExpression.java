@@ -1,6 +1,7 @@
 package com.github.tth05.teth.lang.parser.ast;
 
 import com.github.tth05.teth.lang.lexer.TokenType;
+import com.github.tth05.teth.lang.span.ISpan;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
 public class UnaryExpression extends Expression {
@@ -9,7 +10,8 @@ public class UnaryExpression extends Expression {
 
     private final Operator operator;
 
-    public UnaryExpression(Expression expression, Operator operator) {
+    public UnaryExpression(ISpan span, Expression expression, Operator operator) {
+        super(span);
         this.expression = expression;
         this.operator = operator;
     }

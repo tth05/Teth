@@ -1,12 +1,14 @@
 package com.github.tth05.teth.lang.parser.ast;
 
+import com.github.tth05.teth.lang.span.ISpan;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
 public class BooleanLiteralExpression extends Expression {
 
     private final boolean value;
 
-    public BooleanLiteralExpression(boolean value) {
+    public BooleanLiteralExpression(ISpan span, boolean value) {
+        super(span);
         this.value = value;
     }
 

@@ -1,12 +1,14 @@
 package com.github.tth05.teth.lang.parser.ast;
 
+import com.github.tth05.teth.lang.span.ISpan;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
 public class StringLiteralExpression extends Expression {
 
     private final String value;
 
-    public StringLiteralExpression(String value) {
+    public StringLiteralExpression(ISpan span, String value) {
+        super(span);
         this.value = value;
     }
 

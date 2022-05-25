@@ -1,6 +1,7 @@
 package com.github.tth05.teth.lang.parser.ast;
 
 import com.github.tth05.teth.lang.parser.Type;
+import com.github.tth05.teth.lang.span.ISpan;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
 import java.util.Objects;
@@ -12,11 +13,12 @@ public class VariableDeclaration extends Statement {
 
     private final Expression expression;
 
-    public VariableDeclaration(Type type, String name) {
-        this(type, name, null);
+    public VariableDeclaration(ISpan span, Type type, String name) {
+        this(span, type, name, null);
     }
 
-    public VariableDeclaration(Type type, String name, Expression expression) {
+    public VariableDeclaration(ISpan span, Type type, String name, Expression expression) {
+        super(span);
         this.type = type;
         this.name = name;
         this.expression = expression;
