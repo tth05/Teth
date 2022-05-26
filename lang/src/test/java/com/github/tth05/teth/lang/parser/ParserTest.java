@@ -131,7 +131,7 @@ public class ParserTest extends AbstractParserTest {
                                                         new LongLiteralExpression(null, 1),
                                                         new VariableAssignmentExpression(
                                                                 null,
-                                                                "a",
+                                                                new IdentifierExpression(null, "a"),
                                                                 new LongLiteralExpression(null, 1)
                                                         ),
                                                         BinaryExpression.Operator.OP_POW
@@ -239,7 +239,7 @@ public class ParserTest extends AbstractParserTest {
                                                                         StatementList.of(
                                                                                 new VariableAssignmentExpression(
                                                                                         null,
-                                                                                        "c",
+                                                                                        new IdentifierExpression(null, "c"),
                                                                                         new LongLiteralExpression(null, 2)
                                                                                 )
                                                                         )
@@ -249,7 +249,7 @@ public class ParserTest extends AbstractParserTest {
                                                                         StatementList.of(
                                                                                 new VariableAssignmentExpression(
                                                                                         null,
-                                                                                        "c",
+                                                                                        new IdentifierExpression(null, "c"),
                                                                                         new LongLiteralExpression(null, 5)
                                                                                 )
                                                                         )
@@ -289,7 +289,7 @@ public class ParserTest extends AbstractParserTest {
                                 new VariableDeclaration(
                                         null,
                                         Type.fromString("double"),
-                                        "d",
+                                        new IdentifierExpression(null, "d"),
                                         new LongLiteralExpression(null, 25)
                                 )
                         )
@@ -314,7 +314,7 @@ public class ParserTest extends AbstractParserTest {
                         List.of(
                                 new FunctionDeclaration(
                                         null,
-                                        "foo",
+                                        new IdentifierExpression(null, "foo"),
                                         List.of(
                                                 new FunctionDeclaration.Parameter(Type.fromString("type"), "a"),
                                                 new FunctionDeclaration.Parameter(Type.fromString("long"), "b")
@@ -324,7 +324,7 @@ public class ParserTest extends AbstractParserTest {
                                                 StatementList.of(
                                                         new FunctionDeclaration(
                                                                 null,
-                                                                "bar",
+                                                                new IdentifierExpression(null, "bar"),
                                                                 List.of(),
                                                                 new BlockStatement(
                                                                         null,
@@ -398,17 +398,17 @@ public class ParserTest extends AbstractParserTest {
                         List.of(
                                 new MemberAccessExpression(
                                         null,
-                                        "d",
+                                        new IdentifierExpression(null, "d"),
                                         new FunctionInvocationExpression(
                                                 null,
                                                 new MemberAccessExpression(
                                                         null,
-                                                        "c",
+                                                        new IdentifierExpression(null, "c"),
                                                         new FunctionInvocationExpression(
                                                                 null,
                                                                 new MemberAccessExpression(
                                                                         null,
-                                                                        "b",
+                                                                        new IdentifierExpression(null, "b"),
                                                                         new IdentifierExpression(null, "a")
                                                                 ),
                                                                 ExpressionList.of()

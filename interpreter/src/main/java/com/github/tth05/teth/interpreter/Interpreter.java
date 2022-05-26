@@ -5,7 +5,6 @@ import com.github.tth05.teth.interpreter.values.*;
 import com.github.tth05.teth.lang.parser.SourceFileUnit;
 import com.github.tth05.teth.lang.parser.StatementList;
 import com.github.tth05.teth.lang.parser.ast.*;
-import com.github.tth05.teth.lang.span.ISpan;
 
 import java.util.Arrays;
 import java.util.stream.Stream;
@@ -39,16 +38,17 @@ public class Interpreter {
                     evaluateFunctionInvocationExpression(functionInvocationExpression);
             case MemberAccessExpression memberAccessExpression -> {
                 IValue target = evaluateExpression(memberAccessExpression.getTarget());
-                var memberName = memberAccessExpression.getMemberName();
+                var memberName = memberAccessExpression.getMemberNameExpr();
 
-                yield extractMember(memberAccessExpression.getTarget().getSpan(), target, memberName);
+                yield extractMember(target, memberName);
             }
             case VariableAssignmentExpression variableAssignmentExpression -> {
-                if (!this.environment.currentScope().hasLocalVariable(variableAssignmentExpression.getTarget()))
-                    throw new InterpreterException(variableAssignmentExpression.getSpan(), "Variable " + variableAssignmentExpression.getTarget() + " is not defined");
+                var nameExpr = variableAssignmentExpression.getTargetNameExpr();
+                if (!this.environment.currentScope().hasLocalVariable(nameExpr.getValue()))
+                    throw new InterpreterException(nameExpr.getSpan(), "Variable " + nameExpr.getValue() + " is not defined");
 
                 IValue value = evaluateExpression(variableAssignmentExpression.getExpr());
-                this.environment.currentScope().setLocalVariable(variableAssignmentExpression.getTarget(), value);
+                this.environment.currentScope().setLocalVariable(nameExpr.getValue(), value);
                 yield value.copy();
             }
             case LongLiteralExpression longLiteralExpression -> new LongValue(longLiteralExpression.getValue());
@@ -87,9 +87,9 @@ public class Interpreter {
     public IValue executeStatement(Statement statement) {
         switch (statement) {
             case FunctionDeclaration functionDeclaration ->
-                    this.environment.currentScope().setLocalVariable(functionDeclaration.getName(), new FunctionDeclarationValue(functionDeclaration));
+                    this.environment.currentScope().setLocalVariable(functionDeclaration.getNameExpr().getValue(), new FunctionDeclarationValue(functionDeclaration));
             case VariableDeclaration localVariableDeclaration ->
-                    this.environment.currentScope().setLocalVariable(localVariableDeclaration.getName(), evaluateExpression(localVariableDeclaration.getExpression()).copy());
+                    this.environment.currentScope().setLocalVariable(localVariableDeclaration.getNameExpr().getValue(), evaluateExpression(localVariableDeclaration.getExpression()).copy());
             case BlockStatement blockStatement -> {
                 return executeStatementList(blockStatement.getStatements());
             }
@@ -130,7 +130,7 @@ public class Interpreter {
         IValue target;
         if (targetExpr instanceof MemberAccessExpression memberAccessExpression) {
             var self = evaluateExpression(memberAccessExpression.getTarget());
-            target = extractMember(memberAccessExpression.getTarget().getSpan(), self, memberAccessExpression.getMemberName());
+            target = extractMember(self, memberAccessExpression.getMemberNameExpr());
             // :^)
             parameters = Stream.concat(Stream.of(self), Stream.of(parameters)).toArray(IValue[]::new);
         } else {
@@ -138,20 +138,21 @@ public class Interpreter {
         }
 
         if (!(target instanceof IFunction invokable))
-            throw new InterpreterException(targetExpr.getSpan(), "Target did not evaluate to function: " + target.getDebugString());
+            throw new InterpreterException(targetExpr.getSpan(), "Target did not evaluate to function: '" + target.getDebugString() + "'");
         if (!invokable.isApplicable(parameters))
-            throw new InterpreterException(targetExpr.getSpan(), "Target " + target.getDebugString() + " is not applicable to: " + Arrays.toString(parameters));
+            throw new InterpreterException(targetExpr.getSpan(), "Target '" + target.getDebugString() + "' is not applicable to: " + Arrays.toString(parameters));
 
         return invokable.invoke(this, parameters);
     }
 
-    private IValue extractMember(ISpan memberNameSpan, IValue target, String memberName) {
-        if (!(target instanceof IHasMembers hasMembers) || !hasMembers.hasMember(memberName))
-            throw new InterpreterException(memberNameSpan, "Member with name '" + memberName + "' not found on: " + target);
+    private IValue extractMember(IValue target, IdentifierExpression memberName) {
+        var targetName = memberName.getValue();
+        if (!(target instanceof IHasMembers hasMembers) || !hasMembers.hasMember(targetName))
+            throw new InterpreterException(memberName.getSpan(), "Member with name '" + memberName + "' not found on: " + target);
 
-        var member = hasMembers.getMember(this.environment, memberName);
+        var member = hasMembers.getMember(this.environment, targetName);
         if (member == null)
-            throw new InterpreterException(memberNameSpan, "Member with name '" + memberName + "' not found on: " + target);
+            throw new InterpreterException(memberName.getSpan(), "Member with name '" + memberName + "' not found on: " + target);
 
         return member;
     }

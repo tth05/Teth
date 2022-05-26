@@ -9,23 +9,23 @@ import java.util.Objects;
 public class VariableDeclaration extends Statement {
 
     private final Type type;
-    private final String name;
+    private final IdentifierExpression nameExpr;
 
     private final Expression expression;
 
-    public VariableDeclaration(ISpan span, Type type, String name) {
-        this(span, type, name, null);
+    public VariableDeclaration(ISpan span, Type type, IdentifierExpression nameExpr) {
+        this(span, type, nameExpr, null);
     }
 
-    public VariableDeclaration(ISpan span, Type type, String name, Expression expression) {
+    public VariableDeclaration(ISpan span, Type type, IdentifierExpression nameExpr, Expression expression) {
         super(span);
         this.type = type;
-        this.name = name;
+        this.nameExpr = nameExpr;
         this.expression = expression;
     }
 
-    public String getName() {
-        return this.name;
+    public IdentifierExpression getNameExpr() {
+        return this.nameExpr;
     }
 
     public Type getType() {
@@ -47,7 +47,7 @@ public class VariableDeclaration extends Statement {
 
         if (!this.type.equals(that.type))
             return false;
-        if (!this.name.equals(that.name))
+        if (!this.nameExpr.equals(that.nameExpr))
             return false;
         return Objects.equals(this.expression, that.expression);
     }
@@ -55,7 +55,7 @@ public class VariableDeclaration extends Statement {
     @Override
     public int hashCode() {
         int result = this.type.hashCode();
-        result = 31 * result + this.name.hashCode();
+        result = 31 * result + this.nameExpr.hashCode();
         result = 31 * result + (this.expression != null ? this.expression.hashCode() : 0);
         return result;
     }
@@ -65,8 +65,9 @@ public class VariableDeclaration extends Statement {
         builder.append("VariableDeclaration {").newLine();
         builder.startBlock();
         builder.appendAttribute("type", this.type.toString()).newLine();
-        builder.appendAttribute("name", this.name).newLine();
-        builder.appendAttribute("expression");
+        builder.appendAttribute("name");
+        this.nameExpr.dump(builder);
+        builder.newLine().appendAttribute("expression");
         this.expression.dump(builder);
         builder.endBlock().newLine().append("}");
     }

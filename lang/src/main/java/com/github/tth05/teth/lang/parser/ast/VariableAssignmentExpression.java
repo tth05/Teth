@@ -5,17 +5,17 @@ import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
 public class VariableAssignmentExpression extends Expression {
 
-    private final String target;
+    private final IdentifierExpression targetNameExpr;
     private final Expression expr;
 
-    public VariableAssignmentExpression(ISpan span, String target, Expression expr) {
+    public VariableAssignmentExpression(ISpan span, IdentifierExpression targetNameExpr, Expression expr) {
         super(span);
-        this.target = target;
+        this.targetNameExpr = targetNameExpr;
         this.expr = expr;
     }
 
-    public String getTarget() {
-        return this.target;
+    public IdentifierExpression getTargetNameExpr() {
+        return this.targetNameExpr;
     }
 
     public Expression getExpr() {
@@ -31,14 +31,14 @@ public class VariableAssignmentExpression extends Expression {
 
         VariableAssignmentExpression that = (VariableAssignmentExpression) o;
 
-        if (!this.target.equals(that.target))
+        if (!this.targetNameExpr.equals(that.targetNameExpr))
             return false;
         return this.expr.equals(that.expr);
     }
 
     @Override
     public int hashCode() {
-        int result = this.target.hashCode();
+        int result = this.targetNameExpr.hashCode();
         result = 31 * result + this.expr.hashCode();
         return result;
     }
@@ -47,8 +47,9 @@ public class VariableAssignmentExpression extends Expression {
     public void dump(ASTDumpBuilder builder) {
         builder.append("VariableAssignmentExpression {").newLine();
         builder.startBlock();
-        builder.appendAttribute("target", this.target).newLine();
-        builder.appendAttribute("expr");
+        builder.appendAttribute("target");
+        this.targetNameExpr.dump(builder);
+        builder.newLine().appendAttribute("expr");
         this.expr.dump(builder);
         builder.endBlock().newLine().append("}");
     }

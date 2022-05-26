@@ -121,7 +121,7 @@ public class Parser {
 
         return new VariableDeclaration(
                 Span.of(type.span(), assignment != null ? assignment.getSpan() : name.span()),
-                Type.fromString(type.value()), name.value(), assignment
+                Type.fromString(type.value()), new IdentifierExpression(name.span(), name.value()), assignment
         );
     }
 
@@ -145,7 +145,11 @@ public class Parser {
 
         this.stream.consumeType(TokenType.R_PAREN);
         var body = parseBlock();
-        return new FunctionDeclaration(Span.of(firstSpan, body.getSpan()), name.value(), parameters, body);
+        return new FunctionDeclaration(
+                Span.of(firstSpan, body.getSpan()),
+                new IdentifierExpression(name.span(), name.value()),
+                parameters, body
+        );
     }
 
     private Expression parseExpression() {
@@ -210,7 +214,7 @@ public class Parser {
                 var initializerExpression = parseExpression();
                 expr = new VariableAssignmentExpression(
                         Span.of(expr.getSpan(), initializerExpression.getSpan()),
-                        ident.getValue(), initializerExpression
+                        ident, initializerExpression
                 );
             } else if (currentType == TokenType.DOT) {
                 this.stream.consume();
@@ -218,7 +222,7 @@ public class Parser {
                 if (!(target instanceof IdentifierExpression ident))
                     throw new UnexpectedTokenException(target.getSpan(), "Method access name must be an identifier");
 
-                expr = new MemberAccessExpression(Span.of(expr.getSpan(), ident.getSpan()), ident.getValue(), expr);
+                expr = new MemberAccessExpression(Span.of(expr.getSpan(), ident.getSpan()), ident, expr);
             } else {
                 break;
             }

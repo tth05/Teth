@@ -27,14 +27,25 @@ public class RunCommand implements Runnable {
     )
     private Path filePath;
 
+    @CommandLine.Option(
+            names = {"-v", "--verbose"},
+            description = "Verbose execution mode"
+    )
+    private boolean verbose;
+
     @Override
     public void run() {
         try {
+            long startTime = System.nanoTime();
             var parserResult = Parser.fromString(Files.readString(this.filePath));
             if (parserResult.logProblems(System.out, true))
                 return;
 
             new Interpreter().execute(parserResult.getUnit());
+
+            if (this.verbose) {
+                System.out.println("Total time: " + (System.nanoTime() - startTime) / 1000000.0 + "ms");
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         } catch (InterpreterException e) {

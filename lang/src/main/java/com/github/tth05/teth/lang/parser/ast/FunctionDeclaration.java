@@ -10,19 +10,19 @@ import java.util.List;
 
 public class FunctionDeclaration extends Statement {
 
-    private final String name;
+    private final IdentifierExpression nameExpr;
     private final List<Parameter> parameters;
     private final BlockStatement body;
 
-    public FunctionDeclaration(ISpan span, String name, List<Parameter> parameters, BlockStatement body) {
+    public FunctionDeclaration(ISpan span, IdentifierExpression nameExpr, List<Parameter> parameters, BlockStatement body) {
         super(span);
-        this.name = name;
+        this.nameExpr = nameExpr;
         this.parameters = parameters;
         this.body = body;
     }
 
-    public String getName() {
-        return this.name;
+    public IdentifierExpression getNameExpr() {
+        return this.nameExpr;
     }
 
     public List<Parameter> getParameters() {
@@ -37,8 +37,9 @@ public class FunctionDeclaration extends Statement {
     public void dump(ASTDumpBuilder builder) {
         builder.append("FunctionDeclaration {").newLine();
         builder.startBlock();
-        builder.appendAttribute("name", this.name).newLine();
-        builder.appendAttribute("parameters").append("[").newLine().startBlock();
+        builder.appendAttribute("name");
+        this.nameExpr.dump(builder);
+        builder.newLine().appendAttribute("parameters").append("[").newLine().startBlock();
         this.parameters.forEach(p -> {
             p.dump(builder);
             builder.newLine();
@@ -57,7 +58,7 @@ public class FunctionDeclaration extends Statement {
 
         FunctionDeclaration that = (FunctionDeclaration) o;
 
-        if (!this.name.equals(that.name))
+        if (!this.nameExpr.equals(that.nameExpr))
             return false;
         if (!this.parameters.equals(that.parameters))
             return false;
@@ -66,7 +67,7 @@ public class FunctionDeclaration extends Statement {
 
     @Override
     public int hashCode() {
-        int result = this.name.hashCode();
+        int result = this.nameExpr.hashCode();
         result = 31 * result + this.parameters.hashCode();
         result = 31 * result + this.body.hashCode();
         return result;

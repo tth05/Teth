@@ -4,12 +4,14 @@ import com.github.tth05.teth.interpreter.Interpreter;
 import com.github.tth05.teth.lang.parser.Type;
 import com.github.tth05.teth.lang.parser.ast.FunctionDeclaration;
 
+import java.util.stream.Collectors;
+
 public class FunctionDeclarationValue extends AbstractFunction implements IValue {
 
     private final FunctionDeclaration declaration;
 
     public FunctionDeclarationValue(FunctionDeclaration declaration) {
-        super(declaration.getName(), false, declaration.getParameters().stream().map(FunctionDeclaration.Parameter::type).toArray(Type[]::new));
+        super(declaration.getNameExpr().getValue(), false, declaration.getParameters().stream().map(FunctionDeclaration.Parameter::type).toArray(Type[]::new));
         this.declaration = declaration;
     }
 
@@ -26,7 +28,9 @@ public class FunctionDeclarationValue extends AbstractFunction implements IValue
 
     @Override
     public String getDebugString() {
-        return this.declaration.getName() + "()";
+        return this.declaration.getNameExpr().getValue() + "(" +
+               this.declaration.getParameters().stream().map(p -> p.type().toString()).collect(Collectors.joining(", "))
+               + ")";
     }
 
     @Override

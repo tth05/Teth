@@ -5,17 +5,17 @@ import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
 public class MemberAccessExpression extends Expression {
 
-    private final String memberName;
+    private final IdentifierExpression memberNameExpr;
     private final Expression target;
 
-    public MemberAccessExpression(ISpan span, String memberName, Expression target) {
+    public MemberAccessExpression(ISpan span, IdentifierExpression memberNameExpr, Expression target) {
         super(span);
-        this.memberName = memberName;
+        this.memberNameExpr = memberNameExpr;
         this.target = target;
     }
 
-    public String getMemberName() {
-        return this.memberName;
+    public IdentifierExpression getMemberNameExpr() {
+        return this.memberNameExpr;
     }
 
     public Expression getTarget() {
@@ -31,14 +31,14 @@ public class MemberAccessExpression extends Expression {
 
         MemberAccessExpression that = (MemberAccessExpression) o;
 
-        if (!this.memberName.equals(that.memberName))
+        if (!this.memberNameExpr.equals(that.memberNameExpr))
             return false;
         return this.target.equals(that.target);
     }
 
     @Override
     public int hashCode() {
-        int result = this.memberName.hashCode();
+        int result = this.memberNameExpr.hashCode();
         result = 31 * result + this.target.hashCode();
         return result;
     }
@@ -47,8 +47,9 @@ public class MemberAccessExpression extends Expression {
     public void dump(ASTDumpBuilder builder) {
         builder.append("MemberAccessExpression {").newLine();
         builder.startBlock();
-        builder.appendAttribute("memberName", this.memberName).newLine();
-        builder.appendAttribute("target");
+        builder.appendAttribute("memberName");
+        this.memberNameExpr.dump(builder);
+        builder.newLine().appendAttribute("target");
         this.target.dump(builder);
         builder.endBlock().newLine().append("}");
     }
