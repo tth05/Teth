@@ -151,10 +151,12 @@ public class Parser {
         }
 
         this.stream.consumeType(TokenType.R_PAREN);
+        var returnTypeToken = this.stream.consumeType(TokenType.IDENTIFIER);
         var body = parseBlock();
         return new FunctionDeclaration(
                 Span.of(firstSpan, body.getSpan()),
                 new IdentifierExpression(functionName.span(), functionName.value()),
+                new TypeExpression(returnTypeToken.span(), Type.fromString(returnTypeToken.value())),
                 parameters, body
         );
     }

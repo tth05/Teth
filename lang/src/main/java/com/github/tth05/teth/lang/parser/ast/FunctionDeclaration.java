@@ -11,18 +11,24 @@ import java.util.List;
 public class FunctionDeclaration extends Statement {
 
     private final IdentifierExpression nameExpr;
+    private final TypeExpression returnTypeExpr;
     private final List<Parameter> parameters;
     private final BlockStatement body;
 
-    public FunctionDeclaration(ISpan span, IdentifierExpression nameExpr, List<Parameter> parameters, BlockStatement body) {
+    public FunctionDeclaration(ISpan span, IdentifierExpression nameExpr, TypeExpression returnTypeExpr, List<Parameter> parameters, BlockStatement body) {
         super(span);
         this.nameExpr = nameExpr;
+        this.returnTypeExpr = returnTypeExpr;
         this.parameters = parameters;
         this.body = body;
     }
 
     public IdentifierExpression getNameExpr() {
         return this.nameExpr;
+    }
+
+    public TypeExpression getReturnTypeExpr() {
+        return this.returnTypeExpr;
     }
 
     public List<Parameter> getParameters() {

@@ -302,8 +302,8 @@ public class ParserTest extends AbstractParserTest {
     @Test
     public void testParseFunctionDeclaration() {
         createAST("""
-                fn foo(type a, long b) {
-                    fn bar() {
+                fn foo(type a, long b) type {
+                    fn bar() string {
                         return "hello"
                     }
                     a
@@ -315,6 +315,7 @@ public class ParserTest extends AbstractParserTest {
                                 new FunctionDeclaration(
                                         null,
                                         new IdentifierExpression(null, "foo"),
+                                        new TypeExpression(null, Type.fromString("type")),
                                         List.of(
                                                 new FunctionDeclaration.Parameter(Type.fromString("type"), "a"),
                                                 new FunctionDeclaration.Parameter(Type.fromString("long"), "b")
@@ -325,6 +326,7 @@ public class ParserTest extends AbstractParserTest {
                                                         new FunctionDeclaration(
                                                                 null,
                                                                 new IdentifierExpression(null, "bar"),
+                                                                new TypeExpression(null, Type.fromString("string")),
                                                                 List.of(),
                                                                 new BlockStatement(
                                                                         null,
@@ -437,7 +439,7 @@ public class ParserTest extends AbstractParserTest {
                 a
                 (a a,
                  b b
-                 )
+                 ) a
                  {
                  a = 
                  b
