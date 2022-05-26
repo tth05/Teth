@@ -52,6 +52,7 @@ public class Parser {
     }
 
     private Statement parseStatement() {
+        consumeLineBreaks();
         var current = this.stream.peek();
         var next = this.stream.peek(1);
         if (current.is(TokenType.IDENTIFIER) && next.is(TokenType.IDENTIFIER)) {
@@ -92,7 +93,6 @@ public class Parser {
     }
 
     private BlockStatement parseBlock() {
-        consumeLineBreaks();
         if (this.stream.peek().is(TokenType.L_CURLY_PAREN)) {
             var firstSpan = this.stream.consumeType(TokenType.L_CURLY_PAREN).span();
             consumeLineBreaks();
@@ -103,6 +103,7 @@ public class Parser {
             return new BlockStatement(Span.of(firstSpan, secondSpan), statements);
         } else {
             var list = new StatementList();
+            consumeLineBreaks();
             list.add(parseStatement());
             consumeLineBreaks();
             return new BlockStatement(list.get(0).getSpan(), list);
@@ -111,7 +112,9 @@ public class Parser {
 
     private VariableDeclaration parseVariableDeclaration() {
         var type = this.stream.consumeType(TokenType.IDENTIFIER);
+        consumeLineBreaks();
         var name = this.stream.consumeType(TokenType.IDENTIFIER);
+        consumeLineBreaks();
 
         Expression assignment = null;
         if (this.stream.peek().is(TokenType.EQUAL)) {
@@ -127,7 +130,9 @@ public class Parser {
 
     private FunctionDeclaration parseFunctionDeclaration() {
         var firstSpan = this.stream.consumeType(TokenType.KEYWORD).span();
-        var name = this.stream.consumeType(TokenType.IDENTIFIER);
+        consumeLineBreaks();
+        var functionName = this.stream.consumeType(TokenType.IDENTIFIER);
+        consumeLineBreaks();
         this.stream.consumeType(TokenType.L_PAREN);
         var parameters = new ArrayList<FunctionDeclaration.Parameter>();
         while (true) {
@@ -137,17 +142,19 @@ public class Parser {
             if (!parameters.isEmpty())
                 this.stream.consumeType(TokenType.COMMA);
 
-            parameters.add(new FunctionDeclaration.Parameter(
-                    Type.fromString(this.stream.consumeType(TokenType.IDENTIFIER).value()),
-                    this.stream.consumeType(TokenType.IDENTIFIER).value())
-            );
+            consumeLineBreaks();
+            var type = Type.fromString(this.stream.consumeType(TokenType.IDENTIFIER).value());
+            consumeLineBreaks();
+            var parameterName = this.stream.consumeType(TokenType.IDENTIFIER).value();
+            consumeLineBreaks();
+            parameters.add(new FunctionDeclaration.Parameter(type, parameterName));
         }
 
         this.stream.consumeType(TokenType.R_PAREN);
         var body = parseBlock();
         return new FunctionDeclaration(
                 Span.of(firstSpan, body.getSpan()),
-                new IdentifierExpression(name.span(), name.value()),
+                new IdentifierExpression(functionName.span(), functionName.value()),
                 parameters, body
         );
     }
@@ -188,6 +195,7 @@ public class Parser {
      * Literals, variable access, method calls
      */
     private Expression parsePrimaryExpression() {
+        consumeLineBreaks();
         Expression expr;
 
         var currentType = this.stream.peek().type();
@@ -228,12 +236,13 @@ public class Parser {
             }
         }
 
-
+        consumeLineBreaks();
         return expr;
     }
 
     private Expression parseFunctionInvocation(Expression target) {
         var firstSpan = this.stream.consumeType(TokenType.L_PAREN).span();
+        consumeLineBreaks();
         var parameters = new ExpressionList();
         while (true) {
             var token = this.stream.peek();
@@ -250,9 +259,11 @@ public class Parser {
     }
 
     private Expression parseParenthesisedExpression() {
+        consumeLineBreaks();
         this.stream.consumeType(TokenType.L_PAREN);
         var parenExpr = parseExpression();
         this.stream.consumeType(TokenType.R_PAREN);
+        consumeLineBreaks();
         return parenExpr;
     }
 

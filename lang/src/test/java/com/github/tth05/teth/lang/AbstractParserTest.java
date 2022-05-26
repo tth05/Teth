@@ -11,7 +11,7 @@ public class AbstractParserTest extends AbstractTokenizerTest {
         super.createStreams(str);
         var parserResult = Parser.from(this.tokenStream);
         if (parserResult.hasProblems())
-            throw new RuntimeException("Parser failed\n" + parserResult.getProblems().prettyPrint(true));
+            throw new RuntimeException("Parser failed\n" + parserResult.getProblems().prettyPrint(false));
         this.unit = parserResult.getUnit();
     }
 }

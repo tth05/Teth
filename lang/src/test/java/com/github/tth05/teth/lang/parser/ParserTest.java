@@ -423,4 +423,40 @@ public class ParserTest extends AbstractParserTest {
         );
         assertStreamsEmpty();
     }
+
+    @Test
+    public void testAllowNewlines() {
+        createAST("""
+                a
+                +
+                a
+                -
+                b / d 
+                * c ^ d
+                fn 
+                a
+                (a a,
+                 b b
+                 )
+                 {
+                 a = 
+                 b
+                 a.b.c
+                 (a)
+                    if
+                    (test(a,b))
+                    {}else
+                    
+                    {
+                        print
+                        (
+                        a
+                        )
+                        return
+                        a
+                    }
+                 }
+                """);
+        assertStreamsEmpty();
+    }
 }
