@@ -1,6 +1,5 @@
 package com.github.tth05.teth.lang.parser;
 
-import com.github.tth05.teth.lang.diagnostics.Problem;
 import com.github.tth05.teth.lang.diagnostics.ProblemList;
 import com.github.tth05.teth.lang.lexer.Token;
 import com.github.tth05.teth.lang.lexer.TokenStream;
@@ -28,7 +27,7 @@ public class Parser {
             this.stream.consumeType(TokenType.EOF);
             return new ParserResult(unit);
         } catch (UnexpectedTokenException e) {
-            return new ParserResult(null, ProblemList.of(new Problem(e.getSpan(), e.getMessage())));
+            return new ParserResult(null, ProblemList.of(e.asProblem()));
         }
     }
 

@@ -15,7 +15,7 @@ public class ParserTest extends AbstractParserTest {
         createAST("\"A string!\"");
         assertEquals(new SourceFileUnit(
                 List.of(
-                        new StringLiteralExpression("A string!")
+                        new StringLiteralExpression(null, "A string!")
                 )
         ), this.unit);
         assertStreamsEmpty();
@@ -26,7 +26,7 @@ public class ParserTest extends AbstractParserTest {
         createAST("true");
         assertEquals(new SourceFileUnit(
                 List.of(
-                        new BooleanLiteralExpression(true)
+                        new BooleanLiteralExpression(null, true)
                 )
         ), this.unit);
         assertStreamsEmpty();
@@ -34,7 +34,7 @@ public class ParserTest extends AbstractParserTest {
         createAST("false");
         assertEquals(new SourceFileUnit(
                 List.of(
-                        new BooleanLiteralExpression(false)
+                        new BooleanLiteralExpression(null, false)
                 )
         ), this.unit);
         assertStreamsEmpty();
@@ -46,14 +46,19 @@ public class ParserTest extends AbstractParserTest {
         assertEquals(new SourceFileUnit(
                 List.of(
                         new BinaryExpression(
+                                null,
                                 new UnaryExpression(
+                                        null,
                                         new BinaryExpression(
+                                                null,
                                                 new UnaryExpression(
-                                                        new LongLiteralExpression(1),
+                                                        null,
+                                                        new LongLiteralExpression(null, 1),
                                                         UnaryExpression.Operator.OP_NEGATIVE
                                                 ),
                                                 new UnaryExpression(
-                                                        new LongLiteralExpression(2),
+                                                        null,
+                                                        new LongLiteralExpression(null, 2),
                                                         UnaryExpression.Operator.OP_NEGATIVE
                                                 ),
                                                 BinaryExpression.Operator.OP_ADD
@@ -61,7 +66,8 @@ public class ParserTest extends AbstractParserTest {
                                         UnaryExpression.Operator.OP_NEGATIVE
                                 ),
                                 new UnaryExpression(
-                                        new IdentifierExpression("a"),
+                                        null,
+                                        new IdentifierExpression(null, "a"),
                                         UnaryExpression.Operator.OP_NOT
                                 ),
                                 BinaryExpression.Operator.OP_ADD
@@ -77,44 +83,56 @@ public class ParserTest extends AbstractParserTest {
         assertEquals(new SourceFileUnit(
                 List.of(
                         new BinaryExpression(
+                                null,
                                 new BinaryExpression(
-                                        new LongLiteralExpression(1),
-                                        new LongLiteralExpression(1),
+                                        null,
+                                        new LongLiteralExpression(null, 1),
+                                        new LongLiteralExpression(null, 1),
                                         BinaryExpression.Operator.OP_ADD
                                 ),
                                 new BinaryExpression(
+                                        null,
                                         new BinaryExpression(
+                                                null,
                                                 new BinaryExpression(
-                                                        new LongLiteralExpression(1),
-                                                        new LongLiteralExpression(1),
+                                                        null,
+                                                        new LongLiteralExpression(null, 1),
+                                                        new LongLiteralExpression(null, 1),
                                                         BinaryExpression.Operator.OP_MULTIPLY
                                                 ),
-                                                new LongLiteralExpression(1),
+                                                new LongLiteralExpression(null, 1),
                                                 BinaryExpression.Operator.OP_DIVIDE
                                         ),
                                         new BinaryExpression(
+                                                null,
                                                 new BinaryExpression(
+                                                        null,
                                                         new BinaryExpression(
+                                                                null,
                                                                 new BinaryExpression(
+                                                                        null,
                                                                         new BinaryExpression(
-                                                                                new LongLiteralExpression(1),
-                                                                                new LongLiteralExpression(1),
+                                                                                null,
+                                                                                new LongLiteralExpression(null, 1),
+                                                                                new LongLiteralExpression(null, 1),
                                                                                 BinaryExpression.Operator.OP_LESS
                                                                         ),
-                                                                        new LongLiteralExpression(1),
+                                                                        new LongLiteralExpression(null, 1),
                                                                         BinaryExpression.Operator.OP_LESS_EQUAL
                                                                 ),
-                                                                new LongLiteralExpression(1),
+                                                                new LongLiteralExpression(null, 1),
                                                                 BinaryExpression.Operator.OP_GREATER
                                                         ),
-                                                        new LongLiteralExpression(1),
+                                                        new LongLiteralExpression(null, 1),
                                                         BinaryExpression.Operator.OP_GREATER_EQUAL
                                                 ),
                                                 new BinaryExpression(
-                                                        new LongLiteralExpression(1),
+                                                        null,
+                                                        new LongLiteralExpression(null, 1),
                                                         new VariableAssignmentExpression(
+                                                                null,
                                                                 "a",
-                                                                new LongLiteralExpression(1)
+                                                                new LongLiteralExpression(null, 1)
                                                         ),
                                                         BinaryExpression.Operator.OP_POW
                                                 ),
@@ -136,27 +154,35 @@ public class ParserTest extends AbstractParserTest {
                 new SourceFileUnit(
                         List.of(
                                 new BinaryExpression(
+                                        null,
                                         new BinaryExpression(
-                                                new LongLiteralExpression(1),
-                                                new LongLiteralExpression(1),
+                                                null,
+                                                new LongLiteralExpression(null, 1),
+                                                new LongLiteralExpression(null, 1),
                                                 BinaryExpression.Operator.OP_SUBTRACT
                                         ),
                                         new BinaryExpression(
+                                                null,
                                                 new BinaryExpression(
+                                                        null,
                                                         new BinaryExpression(
+                                                                null,
                                                                 new BinaryExpression(
-                                                                        new LongLiteralExpression(5),
-                                                                        new LongLiteralExpression(6),
+                                                                        null,
+                                                                        new LongLiteralExpression(null, 5),
+                                                                        new LongLiteralExpression(null, 6),
                                                                         BinaryExpression.Operator.OP_MULTIPLY
                                                                 ),
-                                                                new LongLiteralExpression(1),
+                                                                new LongLiteralExpression(null, 1),
                                                                 BinaryExpression.Operator.OP_ADD
                                                         ),
                                                         new BinaryExpression(
-                                                                new LongLiteralExpression(3),
+                                                                null,
+                                                                new LongLiteralExpression(null, 3),
                                                                 new BinaryExpression(
-                                                                        new LongLiteralExpression(2),
-                                                                        new LongLiteralExpression(2),
+                                                                        null,
+                                                                        new LongLiteralExpression(null, 2),
+                                                                        new LongLiteralExpression(null, 2),
                                                                         BinaryExpression.Operator.OP_POW
                                                                 ),
                                                                 BinaryExpression.Operator.OP_MULTIPLY
@@ -164,8 +190,9 @@ public class ParserTest extends AbstractParserTest {
                                                         BinaryExpression.Operator.OP_ADD
                                                 ),
                                                 new BinaryExpression(
-                                                        new LongLiteralExpression(100),
-                                                        new LongLiteralExpression(1),
+                                                        null,
+                                                        new LongLiteralExpression(null, 100),
+                                                        new LongLiteralExpression(null, 1),
                                                         BinaryExpression.Operator.OP_ADD
                                                 ),
                                                 BinaryExpression.Operator.OP_POW
@@ -188,33 +215,42 @@ public class ParserTest extends AbstractParserTest {
                 new SourceFileUnit(
                         List.of(
                                 new IfStatement(
+                                        null,
                                         new BinaryExpression(
-                                                new LongLiteralExpression(5),
-                                                new LongLiteralExpression(5),
+                                                null,
+                                                new LongLiteralExpression(null, 5),
+                                                new LongLiteralExpression(null, 5),
                                                 BinaryExpression.Operator.OP_EQUAL
                                         ),
                                         new BlockStatement(
+                                                null,
                                                 StatementList.of(
-                                                        new LongLiteralExpression(1)
+                                                        new LongLiteralExpression(null, 1)
                                                 )
                                         ),
                                         new BlockStatement(
+                                                null,
                                                 StatementList.of(
                                                         new IfStatement(
-                                                                new IdentifierExpression("b"),
+                                                                null,
+                                                                new IdentifierExpression(null, "b"),
                                                                 new BlockStatement(
+                                                                        null,
                                                                         StatementList.of(
                                                                                 new VariableAssignmentExpression(
+                                                                                        null,
                                                                                         "c",
-                                                                                        new LongLiteralExpression(2)
+                                                                                        new LongLiteralExpression(null, 2)
                                                                                 )
                                                                         )
                                                                 ),
                                                                 new BlockStatement(
+                                                                        null,
                                                                         StatementList.of(
                                                                                 new VariableAssignmentExpression(
+                                                                                        null,
                                                                                         "c",
-                                                                                        new LongLiteralExpression(5)
+                                                                                        new LongLiteralExpression(null, 5)
                                                                                 )
                                                                         )
                                                                 )
@@ -223,14 +259,17 @@ public class ParserTest extends AbstractParserTest {
                                         )
                                 ),
                                 new IfStatement(
+                                        null,
                                         new BinaryExpression(
-                                                new IdentifierExpression("c"),
-                                                new LongLiteralExpression(2),
+                                                null,
+                                                new IdentifierExpression(null, "c"),
+                                                new LongLiteralExpression(null, 2),
                                                 BinaryExpression.Operator.OP_EQUAL
                                         ),
                                         new BlockStatement(
+                                                null,
                                                 StatementList.of(
-                                                        new StringLiteralExpression("true")
+                                                        new StringLiteralExpression(null, "true")
                                                 )
                                         ),
                                         null
@@ -248,9 +287,10 @@ public class ParserTest extends AbstractParserTest {
                 new SourceFileUnit(
                         List.of(
                                 new VariableDeclaration(
+                                        null,
                                         Type.fromString("double"),
                                         "d",
-                                        new LongLiteralExpression(25)
+                                        new LongLiteralExpression(null, 25)
                                 )
                         )
                 ),
@@ -273,23 +313,27 @@ public class ParserTest extends AbstractParserTest {
                 new SourceFileUnit(
                         List.of(
                                 new FunctionDeclaration(
+                                        null,
                                         "foo",
                                         List.of(
                                                 new FunctionDeclaration.Parameter(Type.fromString("type"), "a"),
                                                 new FunctionDeclaration.Parameter(Type.fromString("long"), "b")
                                         ),
                                         new BlockStatement(
+                                                null,
                                                 StatementList.of(
                                                         new FunctionDeclaration(
+                                                                null,
                                                                 "bar",
                                                                 List.of(),
                                                                 new BlockStatement(
+                                                                        null,
                                                                         StatementList.of(
-                                                                                new ReturnStatement(new StringLiteralExpression("hello"))
+                                                                                new ReturnStatement(null, new StringLiteralExpression(null, "hello"))
                                                                         )
                                                                 )
                                                         ),
-                                                        new IdentifierExpression("a")
+                                                        new IdentifierExpression(null, "a")
                                                 )
                                         )
                                 )
@@ -310,24 +354,29 @@ public class ParserTest extends AbstractParserTest {
                 new SourceFileUnit(
                         List.of(
                                 new BinaryExpression(
-                                        new LongLiteralExpression(1),
+                                        null,
+                                        new LongLiteralExpression(null, 1),
                                         new FunctionInvocationExpression(
+                                                null,
                                                 new FunctionInvocationExpression(
-                                                        new IdentifierExpression("foo"),
+                                                        null,
+                                                        new IdentifierExpression(null, "foo"),
                                                         ExpressionList.of(
-                                                                new LongLiteralExpression(1),
-                                                                new LongLiteralExpression(2)
+                                                                new LongLiteralExpression(null, 1),
+                                                                new LongLiteralExpression(null, 2)
                                                         )
                                                 ),
                                                 ExpressionList.of(
-                                                        new StringLiteralExpression("hello world")
+                                                        new StringLiteralExpression(null, "hello world")
                                                 )
                                         ),
                                         BinaryExpression.Operator.OP_ADD
                                 ),
                                 new FunctionInvocationExpression(
+                                        null,
                                         new FunctionInvocationExpression(
-                                                new IdentifierExpression("bar"),
+                                                null,
+                                                new IdentifierExpression(null, "bar"),
                                                 ExpressionList.of()
                                         ),
                                         ExpressionList.of()
@@ -348,14 +397,19 @@ public class ParserTest extends AbstractParserTest {
                 new SourceFileUnit(
                         List.of(
                                 new MemberAccessExpression(
+                                        null,
                                         "d",
                                         new FunctionInvocationExpression(
+                                                null,
                                                 new MemberAccessExpression(
+                                                        null,
                                                         "c",
                                                         new FunctionInvocationExpression(
+                                                                null,
                                                                 new MemberAccessExpression(
+                                                                        null,
                                                                         "b",
-                                                                        new IdentifierExpression("a")
+                                                                        new IdentifierExpression(null, "a")
                                                                 ),
                                                                 ExpressionList.of()
                                                         )

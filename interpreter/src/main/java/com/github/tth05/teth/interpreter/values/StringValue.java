@@ -1,6 +1,5 @@
 package com.github.tth05.teth.interpreter.values;
 
-import com.github.tth05.teth.interpreter.InterpreterException;
 import com.github.tth05.teth.interpreter.environment.Environment;
 import com.github.tth05.teth.lang.parser.Type;
 import com.github.tth05.teth.lang.parser.ast.BinaryExpression;
@@ -22,12 +21,12 @@ public class StringValue implements IValue, IBinaryOperatorInvokable, IHasMember
     @Override
     public IValue invokeBinaryOperator(BinaryExpression.Operator operator, IValue arg) {
         if (!(arg instanceof StringValue other))
-            throw new InterpreterException("Invalid arguments for intrinsic operation");
+            throw new RuntimeException("Invalid arguments for intrinsic operation");
 
         if (operator == BinaryExpression.Operator.OP_ADD) {
             this.value += other.value;
         } else {
-            throw new InterpreterException("Unknown intrinsic operation");
+            throw new RuntimeException("Unknown intrinsic operation");
         }
 
         return this;

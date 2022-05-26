@@ -1,6 +1,5 @@
 package com.github.tth05.teth.lang.lexer;
 
-import com.github.tth05.teth.lang.diagnostics.Problem;
 import com.github.tth05.teth.lang.diagnostics.ProblemList;
 import com.github.tth05.teth.lang.span.ISpan;
 import com.github.tth05.teth.lang.stream.CharStream;
@@ -52,7 +51,7 @@ public class Tokenizer {
                 }
             }
         } catch (UnexpectedCharException e) {
-            return new TokenizerResult(this.tokenStream, ProblemList.of(new Problem(e.getSpan(), e.getMessage())));
+            return new TokenizerResult(this.tokenStream, ProblemList.of(e.asProblem()));
         }
 
         return new TokenizerResult(this.tokenStream);

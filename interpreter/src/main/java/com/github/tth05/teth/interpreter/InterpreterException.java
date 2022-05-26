@@ -1,8 +1,11 @@
 package com.github.tth05.teth.interpreter;
 
-public class InterpreterException extends RuntimeException {
+import com.github.tth05.teth.lang.span.ISpan;
+import com.github.tth05.teth.lang.span.SpanAwareException;
 
-    public InterpreterException(String message) {
-        super(message);
+public class InterpreterException extends SpanAwareException {
+
+    public InterpreterException(ISpan span, String message) {
+        super(span, message);
     }
 }

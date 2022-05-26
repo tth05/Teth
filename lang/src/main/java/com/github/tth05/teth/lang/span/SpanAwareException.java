@@ -1,5 +1,7 @@
 package com.github.tth05.teth.lang.span;
 
+import com.github.tth05.teth.lang.diagnostics.Problem;
+
 public class SpanAwareException extends RuntimeException {
 
     private final ISpan span;
@@ -11,5 +13,9 @@ public class SpanAwareException extends RuntimeException {
 
     public ISpan getSpan() {
         return this.span;
+    }
+
+    public Problem asProblem() {
+        return new Problem(this.span, this.getMessage());
     }
 }

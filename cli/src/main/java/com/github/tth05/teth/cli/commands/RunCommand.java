@@ -2,6 +2,7 @@ package com.github.tth05.teth.cli.commands;
 
 import com.github.tth05.teth.cli.commands.converters.String2ExistingFileConverter;
 import com.github.tth05.teth.interpreter.Interpreter;
+import com.github.tth05.teth.interpreter.InterpreterException;
 import com.github.tth05.teth.lang.parser.Parser;
 import picocli.CommandLine;
 
@@ -36,6 +37,9 @@ public class RunCommand implements Runnable {
             new Interpreter().execute(parserResult.getUnit());
         } catch (IOException e) {
             throw new RuntimeException(e);
+        } catch (InterpreterException e) {
+            System.err.println("Interpreter error");
+            System.out.println(e.asProblem().prettyPrint(true));
         }
     }
 }

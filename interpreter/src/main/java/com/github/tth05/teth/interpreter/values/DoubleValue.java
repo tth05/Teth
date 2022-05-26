@@ -21,7 +21,7 @@ public class DoubleValue implements IValue, IBinaryOperatorInvokable, IUnaryOper
     public IValue invokeUnaryOperator(UnaryExpression.Operator operator) {
         switch (operator) {
             case OP_NEGATIVE -> this.value = -this.value;
-            default -> throw new InterpreterException("Unknown intrinsic operation");
+            default -> throw new RuntimeException("Unknown intrinsic operation");
         }
 
         return this;
@@ -30,7 +30,7 @@ public class DoubleValue implements IValue, IBinaryOperatorInvokable, IUnaryOper
     @Override
     public IValue invokeBinaryOperator(BinaryExpression.Operator operator, IValue arg) {
         if (!(arg instanceof DoubleValue other))
-            throw new InterpreterException("Invalid arguments for intrinsic operation");
+            throw new RuntimeException("Invalid arguments for intrinsic operation");
 
         switch (operator) {
             case OP_POW -> this.value = Math.pow(this.value, other.value);
@@ -46,7 +46,7 @@ public class DoubleValue implements IValue, IBinaryOperatorInvokable, IUnaryOper
                     case OP_GREATER_EQUAL -> new BooleanValue(this.value >= other.value);
                     case OP_EQUAL -> new BooleanValue(this.value == other.value);
                     case OP_NOT_EQUAL -> new BooleanValue(this.value != other.value);
-                    default -> throw new InterpreterException("Unknown intrinsic operation");
+                    default -> throw new RuntimeException("Unknown intrinsic operation");
                 };
             }
         }

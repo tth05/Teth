@@ -21,7 +21,7 @@ public class BooleanValue implements IValue, IBinaryOperatorInvokable, IUnaryOpe
     public IValue invokeUnaryOperator(UnaryExpression.Operator operator) {
         switch (operator) {
             case OP_NOT -> this.value = !this.value;
-            default -> throw new InterpreterException("Unknown intrinsic operation");
+            default -> throw new RuntimeException("Unknown intrinsic operation");
         }
 
         return this;
@@ -30,12 +30,12 @@ public class BooleanValue implements IValue, IBinaryOperatorInvokable, IUnaryOpe
     @Override
     public IValue invokeBinaryOperator(BinaryExpression.Operator operator, IValue arg) {
         if (!(arg instanceof BooleanValue other))
-            throw new InterpreterException("Invalid arguments for intrinsic operation");
+            throw new RuntimeException("Invalid arguments for intrinsic operation");
 
         return switch (operator) {
             case OP_EQUAL -> new BooleanValue(this.value == other.value);
             case OP_NOT_EQUAL -> new BooleanValue(this.value != other.value);
-            default -> throw new InterpreterException("Unknown intrinsic operation");
+            default -> throw new RuntimeException("Unknown intrinsic operation");
         };
     }
 

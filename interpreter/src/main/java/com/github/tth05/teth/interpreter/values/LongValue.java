@@ -1,6 +1,5 @@
 package com.github.tth05.teth.interpreter.values;
 
-import com.github.tth05.teth.interpreter.InterpreterException;
 import com.github.tth05.teth.interpreter.environment.Environment;
 import com.github.tth05.teth.lang.parser.Type;
 import com.github.tth05.teth.lang.parser.ast.BinaryExpression;
@@ -22,7 +21,7 @@ public class LongValue implements IValue, IBinaryOperatorInvokable, IUnaryOperat
     public IValue invokeUnaryOperator(UnaryExpression.Operator operator) {
         switch (operator) {
             case OP_NEGATIVE -> this.value = -this.value;
-            default -> throw new InterpreterException("Unknown intrinsic operation");
+            default -> throw new RuntimeException("Unknown intrinsic operation");
         }
 
         return this;
@@ -31,7 +30,7 @@ public class LongValue implements IValue, IBinaryOperatorInvokable, IUnaryOperat
     @Override
     public IValue invokeBinaryOperator(BinaryExpression.Operator operator, IValue arg) {
         if (!(arg instanceof LongValue other))
-            throw new InterpreterException("Invalid arguments for intrinsic operation");
+            throw new RuntimeException("Invalid arguments for intrinsic operation");
 
         switch (operator) {
             case OP_POW -> this.value = (long) Math.pow(this.value, other.value);
@@ -47,7 +46,7 @@ public class LongValue implements IValue, IBinaryOperatorInvokable, IUnaryOperat
                     case OP_GREATER_EQUAL -> new BooleanValue(this.value >= other.value);
                     case OP_EQUAL -> new BooleanValue(this.value == other.value);
                     case OP_NOT_EQUAL -> new BooleanValue(this.value != other.value);
-                    default -> throw new InterpreterException("Unknown intrinsic operation");
+                    default -> throw new RuntimeException("Unknown intrinsic operation");
                 };
             }
         }

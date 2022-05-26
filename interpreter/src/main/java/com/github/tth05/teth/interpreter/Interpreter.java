@@ -5,6 +5,7 @@ import com.github.tth05.teth.interpreter.values.*;
 import com.github.tth05.teth.lang.parser.SourceFileUnit;
 import com.github.tth05.teth.lang.parser.StatementList;
 import com.github.tth05.teth.lang.parser.ast.*;
+import com.github.tth05.teth.lang.span.ISpan;
 
 import java.util.Arrays;
 import java.util.stream.Stream;
@@ -13,21 +14,13 @@ public class Interpreter {
 
     private final Environment environment = new Environment();
 
-    public void execute(SourceFileUnit ast) {
-        try {
-            executeStatementList(ast.getStatements());
-        } catch (InterpreterException e) {
-            System.err.println(e.getMessage());
-        }
+    public void execute(SourceFileUnit ast) throws InterpreterException {
+        executeStatementList(ast.getStatements());
     }
 
     private IValue executeStatementList(StatementList statements) {
         for (Statement s : statements) {
             switch (s) {
-                case FunctionDeclaration functionDeclaration ->
-                        this.environment.currentScope().setLocalVariable(functionDeclaration.getName(), new FunctionDeclarationValue(functionDeclaration));
-                case VariableDeclaration localVariableDeclaration ->
-                        this.environment.currentScope().setLocalVariable(localVariableDeclaration.getName(), evaluateExpression(localVariableDeclaration.getExpression()).copy());
                 case Expression expression -> evaluateExpression(expression);
                 case Statement statement -> {
                     var functionReturnValue = executeStatement(statement);
@@ -40,7 +33,7 @@ public class Interpreter {
         return null;
     }
 
-    public IValue evaluateExpression(Expression expression) {
+    public IValue evaluateExpression(Expression expression) throws InterpreterException {
         return switch (expression) {
             case FunctionInvocationExpression functionInvocationExpression ->
                     evaluateFunctionInvocationExpression(functionInvocationExpression);
@@ -48,11 +41,11 @@ public class Interpreter {
                 IValue target = evaluateExpression(memberAccessExpression.getTarget());
                 var memberName = memberAccessExpression.getMemberName();
 
-                yield extractMember(target, memberName);
+                yield extractMember(memberAccessExpression.getTarget().getSpan(), target, memberName);
             }
             case VariableAssignmentExpression variableAssignmentExpression -> {
                 if (!this.environment.currentScope().hasLocalVariable(variableAssignmentExpression.getTarget()))
-                    throw new InterpreterException("Variable " + variableAssignmentExpression.getTarget() + " is not defined");
+                    throw new InterpreterException(variableAssignmentExpression.getSpan(), "Variable " + variableAssignmentExpression.getTarget() + " is not defined");
 
                 IValue value = evaluateExpression(variableAssignmentExpression.getExpr());
                 this.environment.currentScope().setLocalVariable(variableAssignmentExpression.getTarget(), value);
@@ -68,15 +61,14 @@ public class Interpreter {
                 if (value != null)
                     yield value;
 
-                //TODO: Resolve into variable, etc.
-                throw new InterpreterException("Unresolved identifier expression: " + identifierExpression);
+                throw new InterpreterException(identifierExpression.getSpan(), "Unable to resolve identifier to a value");
             }
             case BinaryExpression binaryExpression -> {
                 IValue left = evaluateExpression(binaryExpression.getLeft());
                 IValue right = evaluateExpression(binaryExpression.getRight());
 
                 if (!(left instanceof IBinaryOperatorInvokable invokable))
-                    throw new InterpreterException("Left operand is not invokable: " + left);
+                    throw new InterpreterException(binaryExpression.getLeft().getSpan(), "Left operand does not support binary operations: " + left);
 
                 yield invokable.invokeBinaryOperator(binaryExpression.getOperator(), right);
             }
@@ -84,23 +76,27 @@ public class Interpreter {
                 IValue operand = evaluateExpression(unaryExpression.getExpression());
 
                 if (!(operand instanceof IUnaryOperatorInvokable invokable))
-                    throw new InterpreterException("Operand is not invokable: " + operand);
+                    throw new InterpreterException(unaryExpression.getSpan(), "Operand does not support unary operations: " + operand);
 
                 yield invokable.invokeUnaryOperator(unaryExpression.getOperator());
             }
-            default -> throw new InterpreterException("Unsupported expression: " + expression);
+            default -> throw new InterpreterException(expression.getSpan(), "Unsupported expression");
         };
     }
 
     public IValue executeStatement(Statement statement) {
         switch (statement) {
+            case FunctionDeclaration functionDeclaration ->
+                    this.environment.currentScope().setLocalVariable(functionDeclaration.getName(), new FunctionDeclarationValue(functionDeclaration));
+            case VariableDeclaration localVariableDeclaration ->
+                    this.environment.currentScope().setLocalVariable(localVariableDeclaration.getName(), evaluateExpression(localVariableDeclaration.getExpression()).copy());
             case BlockStatement blockStatement -> {
                 return executeStatementList(blockStatement.getStatements());
             }
             case IfStatement ifStatement -> {
                 IValue condition = evaluateExpression(ifStatement.getCondition());
                 if (!(condition instanceof BooleanValue booleanValue))
-                    throw new InterpreterException("Condition did not evaluate to boolean: " + condition);
+                    throw new InterpreterException(ifStatement.getCondition().getSpan(), "Condition did not evaluate to boolean: " + condition);
 
                 if (booleanValue.getValue())
                     return executeStatement(ifStatement.getBody());
@@ -110,7 +106,7 @@ public class Interpreter {
             case ReturnStatement returnStatement -> {
                 return evaluateExpression(returnStatement.getValueExpr());
             }
-            default -> throw new InterpreterException("Unsupported statement: " + statement);
+            default -> throw new InterpreterException(statement.getSpan(), "Unsupported statement");
         }
 
         return null;
@@ -134,7 +130,7 @@ public class Interpreter {
         IValue target;
         if (targetExpr instanceof MemberAccessExpression memberAccessExpression) {
             var self = evaluateExpression(memberAccessExpression.getTarget());
-            target = extractMember(self, memberAccessExpression.getMemberName());
+            target = extractMember(memberAccessExpression.getTarget().getSpan(), self, memberAccessExpression.getMemberName());
             // :^)
             parameters = Stream.concat(Stream.of(self), Stream.of(parameters)).toArray(IValue[]::new);
         } else {
@@ -142,20 +138,20 @@ public class Interpreter {
         }
 
         if (!(target instanceof IFunction invokable))
-            throw new InterpreterException("Target is not a function: " + target);
+            throw new InterpreterException(targetExpr.getSpan(), "Target did not evaluate to function: " + target.getDebugString());
         if (!invokable.isApplicable(parameters))
-            throw new InterpreterException("Target " + target + " is not applicable to: " + Arrays.toString(parameters));
+            throw new InterpreterException(targetExpr.getSpan(), "Target " + target.getDebugString() + " is not applicable to: " + Arrays.toString(parameters));
 
         return invokable.invoke(this, parameters);
     }
 
-    private IValue extractMember(IValue target, String memberName) {
-        if (!(target instanceof IHasMembers hasMembers))
-            throw new InterpreterException("Cannot access member of: " + target);
+    private IValue extractMember(ISpan memberNameSpan, IValue target, String memberName) {
+        if (!(target instanceof IHasMembers hasMembers) || !hasMembers.hasMember(memberName))
+            throw new InterpreterException(memberNameSpan, "Member with name '" + memberName + "' not found on: " + target);
 
         var member = hasMembers.getMember(this.environment, memberName);
         if (member == null)
-            throw new InterpreterException("Member " + memberName + " not found in " + target);
+            throw new InterpreterException(memberNameSpan, "Member with name '" + memberName + "' not found on: " + target);
 
         return member;
     }
