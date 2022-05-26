@@ -91,7 +91,10 @@ public class Interpreter {
             case VariableDeclaration localVariableDeclaration ->
                     this.environment.currentScope().setLocalVariable(localVariableDeclaration.getNameExpr().getValue(), evaluateExpression(localVariableDeclaration.getExpression()).copy());
             case BlockStatement blockStatement -> {
-                return executeStatementList(blockStatement.getStatements());
+                this.environment.enterSubScope();
+                var returnValue = executeStatementList(blockStatement.getStatements());
+                this.environment.exitScope();
+                return returnValue;
             }
             case IfStatement ifStatement -> {
                 IValue condition = evaluateExpression(ifStatement.getCondition());

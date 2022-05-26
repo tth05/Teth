@@ -97,6 +97,7 @@ public class InterpreterTest extends AbstractInterpreterTest {
         this.interpreter.execute(this.unit);
         assertLinesMatch(List.of("7", "1 -7 0.655"), getSystemOutputLines());
     }
+
     @Test
     public void testMemberAccessAndFunctionVariables() {
         createAST("""
@@ -109,5 +110,29 @@ public class InterpreterTest extends AbstractInterpreterTest {
 
         this.interpreter.execute(this.unit);
         assertLinesMatch(List.of("101 3"), getSystemOutputLines());
+    }
+
+    @Test
+    public void testVariableScopeLeak() {
+        createAST("""
+                long x = 5
+                {
+                    long y = 1
+                    print(x, y)
+                    if (true) {
+                        long y = 2
+                        print(x, y)
+                    }
+                    if(true) {
+                        long x = 2
+                        print(x, y)
+                    }
+                    print(x, y)
+                }
+                """);
+        assertStreamsEmpty();
+
+        this.interpreter.execute(this.unit);
+        assertLinesMatch(List.of("5 1", "5 2", "2 1", "5 1"), getSystemOutputLines());
     }
 }

@@ -9,6 +9,16 @@ public class Scope {
 
     private final Map<String, IValue> localVariables = new HashMap<>();
 
+    private boolean subScope;
+
+    public Scope() {
+        this(false);
+    }
+
+    public Scope(boolean subScope) {
+        this.subScope = subScope;
+    }
+
     public void setLocalVariable(String name, IValue value) {
         this.localVariables.put(name, value);
     }
@@ -19,5 +29,9 @@ public class Scope {
 
     public boolean hasLocalVariable(String name) {
         return this.localVariables.containsKey(name);
+    }
+
+    public boolean isSubScope() {
+        return this.subScope;
     }
 }

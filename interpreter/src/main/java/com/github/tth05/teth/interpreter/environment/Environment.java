@@ -37,19 +37,28 @@ public class Environment {
                 Type.STRING
         ));
     }
-    private final Deque<Scope> scopeStack = new ArrayDeque<>();
+    private final Scope[] scopeStack = new Scope[512];
     {
-        this.scopeStack.push(new Scope());
+        this.scopeStack[0] = new Scope(false);
     }
+    private int scopeStackIndex;
 
     public void addTopLevelFunction(String name, IFunction function) {
         this.topLevelFunctions.put(name, function);
     }
 
     public IValue lookupIdentifier(String name) {
-        var local = currentScope().getLocalVariable(name);
-        if (local != null)
-            return local;
+        var index = this.scopeStackIndex;
+        while (true) {
+            var scope = this.scopeStack[index];
+            var local = scope.getLocalVariable(name);
+            if (local != null)
+                return local;
+
+            index--;
+            if (index < 0 || !scope.isSubScope())
+                break;
+        }
 
         var global = this.topLevelFunctions.get(name);
         if (global == null)
@@ -58,19 +67,27 @@ public class Environment {
         return new FunctionValue(global);
     }
 
+    public void enterSubScope() {
+        enterScope(true);
+    }
+
     public void enterScope() {
-        this.scopeStack.add(new Scope());
+        enterScope(false);
+    }
+
+    private void enterScope(boolean subScope) {
+        this.scopeStack[++this.scopeStackIndex] = new Scope(subScope);
     }
 
     public void exitScope() {
-        if (this.scopeStack.size() <= 1)
+        if (this.scopeStackIndex < 1)
             throw new IllegalStateException("Cannot exit the global scope");
 
-        this.scopeStack.removeLast();
+        this.scopeStack[this.scopeStackIndex--] = null;
     }
 
     public Scope currentScope() {
-        return this.scopeStack.getLast();
+        return this.scopeStack[this.scopeStackIndex];
     }
 
     public IFunction getTopLevelFunction(String name) {
