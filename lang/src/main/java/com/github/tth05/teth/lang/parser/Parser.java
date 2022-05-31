@@ -295,8 +295,8 @@ public class Parser {
                     elements.add(parseExpression());
                 }
 
-                this.stream.consumeType(TokenType.R_SQUARE_BRACKET);
-                yield new ListLiteralExpression(span, elements);
+                var lastSpan = this.stream.consumeType(TokenType.R_SQUARE_BRACKET).span();
+                yield new ListLiteralExpression(Span.of(span, lastSpan), elements);
             }
             default -> throw new UnexpectedTokenException(token.span(), "Expected a literal");
         };

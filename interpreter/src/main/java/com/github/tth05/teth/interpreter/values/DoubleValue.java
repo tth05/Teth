@@ -1,6 +1,5 @@
 package com.github.tth05.teth.interpreter.values;
 
-import com.github.tth05.teth.interpreter.InterpreterException;
 import com.github.tth05.teth.lang.parser.Type;
 import com.github.tth05.teth.lang.parser.ast.BinaryExpression;
 import com.github.tth05.teth.lang.parser.ast.UnaryExpression;
@@ -19,12 +18,10 @@ public class DoubleValue implements IValue, IBinaryOperatorInvokable, IUnaryOper
 
     @Override
     public IValue invokeUnaryOperator(UnaryExpression.Operator operator) {
-        switch (operator) {
-            case OP_NEGATIVE -> this.value = -this.value;
+        return switch (operator) {
+            case OP_NEGATIVE -> new DoubleValue(-this.value);
             default -> throw new RuntimeException("Unknown intrinsic operation");
-        }
-
-        return this;
+        };
     }
 
     @Override
@@ -32,31 +29,22 @@ public class DoubleValue implements IValue, IBinaryOperatorInvokable, IUnaryOper
         if (!(arg instanceof DoubleValue other))
             throw new RuntimeException("Invalid arguments for intrinsic operation");
 
-        switch (operator) {
-            case OP_POW -> this.value = Math.pow(this.value, other.value);
-            case OP_MULTIPLY -> this.value *= other.value;
-            case OP_DIVIDE -> this.value /= other.value;
-            case OP_ADD -> this.value += other.value;
-            case OP_SUBTRACT -> this.value -= other.value;
-            default -> {
-                return switch (operator) {
-                    case OP_LESS_EQUAL -> new BooleanValue(this.value <= other.value);
-                    case OP_GREATER -> new BooleanValue(this.value > other.value);
-                    case OP_LESS -> new BooleanValue(this.value < other.value);
-                    case OP_GREATER_EQUAL -> new BooleanValue(this.value >= other.value);
-                    case OP_EQUAL -> new BooleanValue(this.value == other.value);
-                    case OP_NOT_EQUAL -> new BooleanValue(this.value != other.value);
-                    default -> throw new RuntimeException("Unknown intrinsic operation");
-                };
-            }
-        }
-
-        return this;
-    }
-
-    @Override
-    public IValue copy() {
-        return new DoubleValue(this.value);
+        return switch (operator) {
+            case OP_POW -> new DoubleValue(Math.pow(this.value, other.value));
+            case OP_MULTIPLY -> new DoubleValue(this.value * other.value);
+            case OP_DIVIDE -> new DoubleValue(this.value / other.value);
+            case OP_ADD -> new DoubleValue(this.value + other.value);
+            case OP_SUBTRACT -> new DoubleValue(this.value - other.value);
+            default -> switch (operator) {
+                case OP_LESS_EQUAL -> new BooleanValue(this.value <= other.value);
+                case OP_GREATER -> new BooleanValue(this.value > other.value);
+                case OP_LESS -> new BooleanValue(this.value < other.value);
+                case OP_GREATER_EQUAL -> new BooleanValue(this.value >= other.value);
+                case OP_EQUAL -> new BooleanValue(this.value == other.value);
+                case OP_NOT_EQUAL -> new BooleanValue(this.value != other.value);
+                default -> throw new RuntimeException("Unknown intrinsic operation");
+            };
+        };
     }
 
     @Override

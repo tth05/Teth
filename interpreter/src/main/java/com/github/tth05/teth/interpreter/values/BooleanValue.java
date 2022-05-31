@@ -1,6 +1,5 @@
 package com.github.tth05.teth.interpreter.values;
 
-import com.github.tth05.teth.interpreter.InterpreterException;
 import com.github.tth05.teth.lang.parser.Type;
 import com.github.tth05.teth.lang.parser.ast.BinaryExpression;
 import com.github.tth05.teth.lang.parser.ast.UnaryExpression;
@@ -19,12 +18,10 @@ public class BooleanValue implements IValue, IBinaryOperatorInvokable, IUnaryOpe
 
     @Override
     public IValue invokeUnaryOperator(UnaryExpression.Operator operator) {
-        switch (operator) {
-            case OP_NOT -> this.value = !this.value;
+        return switch (operator) {
+            case OP_NOT -> new BooleanValue(!this.value);
             default -> throw new RuntimeException("Unknown intrinsic operation");
-        }
-
-        return this;
+        };
     }
 
     @Override
@@ -37,11 +34,6 @@ public class BooleanValue implements IValue, IBinaryOperatorInvokable, IUnaryOpe
             case OP_NOT_EQUAL -> new BooleanValue(this.value != other.value);
             default -> throw new RuntimeException("Unknown intrinsic operation");
         };
-    }
-
-    @Override
-    public IValue copy() {
-        return new BooleanValue(this.value);
     }
 
     @Override

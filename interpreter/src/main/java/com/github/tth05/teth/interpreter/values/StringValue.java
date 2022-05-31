@@ -24,12 +24,10 @@ public class StringValue implements IValue, IBinaryOperatorInvokable, IHasMember
             throw new RuntimeException("Invalid arguments for intrinsic operation");
 
         if (operator == BinaryExpression.Operator.OP_ADD) {
-            this.value += other.value;
+            return new StringValue(this.value + other.value);
         } else {
             throw new RuntimeException("Unknown intrinsic operation");
         }
-
-        return this;
     }
 
     @Override
@@ -40,11 +38,6 @@ public class StringValue implements IValue, IBinaryOperatorInvokable, IHasMember
     @Override
     public IValue getMember(Environment environment, String name) {
         return new FunctionValue(environment.getTopLevelFunction("__string_length"));
-    }
-
-    @Override
-    public IValue copy() {
-        return new StringValue(this.value);
     }
 
     @Override

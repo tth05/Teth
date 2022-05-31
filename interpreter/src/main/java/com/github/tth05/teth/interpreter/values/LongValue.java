@@ -19,12 +19,10 @@ public class LongValue implements IValue, IBinaryOperatorInvokable, IUnaryOperat
 
     @Override
     public IValue invokeUnaryOperator(UnaryExpression.Operator operator) {
-        switch (operator) {
-            case OP_NEGATIVE -> this.value = -this.value;
+        return switch (operator) {
+            case OP_NEGATIVE -> new LongValue(-this.value);
             default -> throw new RuntimeException("Unknown intrinsic operation");
-        }
-
-        return this;
+        };
     }
 
     @Override
@@ -32,26 +30,22 @@ public class LongValue implements IValue, IBinaryOperatorInvokable, IUnaryOperat
         if (!(arg instanceof LongValue other))
             throw new RuntimeException("Invalid arguments for intrinsic operation");
 
-        switch (operator) {
-            case OP_POW -> this.value = (long) Math.pow(this.value, other.value);
-            case OP_MULTIPLY -> this.value *= other.value;
-            case OP_DIVIDE -> this.value /= other.value;
-            case OP_ADD -> this.value += other.value;
-            case OP_SUBTRACT -> this.value -= other.value;
-            default -> {
-                return switch (operator) {
-                    case OP_LESS_EQUAL -> new BooleanValue(this.value <= other.value);
-                    case OP_GREATER -> new BooleanValue(this.value > other.value);
-                    case OP_LESS -> new BooleanValue(this.value < other.value);
-                    case OP_GREATER_EQUAL -> new BooleanValue(this.value >= other.value);
-                    case OP_EQUAL -> new BooleanValue(this.value == other.value);
-                    case OP_NOT_EQUAL -> new BooleanValue(this.value != other.value);
-                    default -> throw new RuntimeException("Unknown intrinsic operation");
-                };
-            }
-        }
-
-        return this;
+        return switch (operator) {
+            case OP_POW -> new LongValue((long) Math.pow(this.value, other.value));
+            case OP_MULTIPLY -> new LongValue(this.value * other.value);
+            case OP_DIVIDE -> new LongValue(this.value / other.value);
+            case OP_ADD -> new LongValue(this.value + other.value);
+            case OP_SUBTRACT -> new LongValue(this.value - other.value);
+            default -> switch (operator) {
+                case OP_LESS_EQUAL -> new BooleanValue(this.value <= other.value);
+                case OP_GREATER -> new BooleanValue(this.value > other.value);
+                case OP_LESS -> new BooleanValue(this.value < other.value);
+                case OP_GREATER_EQUAL -> new BooleanValue(this.value >= other.value);
+                case OP_EQUAL -> new BooleanValue(this.value == other.value);
+                case OP_NOT_EQUAL -> new BooleanValue(this.value != other.value);
+                default -> throw new RuntimeException("Unknown intrinsic operation");
+            };
+        };
     }
 
     @Override
@@ -66,11 +60,6 @@ public class LongValue implements IValue, IBinaryOperatorInvokable, IUnaryOperat
             case "toBinaryString" -> new FunctionValue(environment.getTopLevelFunction("__long_toBinaryString"));
             default -> throw new IllegalStateException("Unexpected value: " + name);
         };
-    }
-
-    @Override
-    public IValue copy() {
-        return new LongValue(this.value);
     }
 
     @Override

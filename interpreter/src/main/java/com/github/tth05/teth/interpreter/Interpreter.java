@@ -7,6 +7,7 @@ import com.github.tth05.teth.lang.parser.StatementList;
 import com.github.tth05.teth.lang.parser.ast.*;
 
 import java.util.Arrays;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Interpreter {
@@ -49,7 +50,15 @@ public class Interpreter {
 
                 IValue value = evaluateExpression(variableAssignmentExpression.getExpr());
                 this.environment.currentScope().setLocalVariable(nameExpr.getValue(), value);
-                yield value.copy();
+                yield value;
+            }
+            case ListLiteralExpression listLiteralExpression -> {
+                var initializers = listLiteralExpression.getInitializers();
+                var values = initializers.stream().map(this::evaluateExpression).collect(Collectors.toList());
+                if (values.isEmpty())
+                    throw new InterpreterException(listLiteralExpression.getSpan(), "Empty list literals are unsupported until type inference is implemented");
+
+                yield new ListValue(values.get(0).getType(), values);
             }
             case LongLiteralExpression longLiteralExpression -> new LongValue(longLiteralExpression.getValue());
             case DoubleLiteralExpression doubleLiteralExpression -> new DoubleValue(doubleLiteralExpression.getValue());
@@ -89,7 +98,7 @@ public class Interpreter {
             case FunctionDeclaration functionDeclaration ->
                     this.environment.currentScope().setLocalVariable(functionDeclaration.getNameExpr().getValue(), new FunctionDeclarationValue(functionDeclaration));
             case VariableDeclaration localVariableDeclaration ->
-                    this.environment.currentScope().setLocalVariable(localVariableDeclaration.getNameExpr().getValue(), evaluateExpression(localVariableDeclaration.getExpression()).copy());
+                    this.environment.currentScope().setLocalVariable(localVariableDeclaration.getNameExpr().getValue(), evaluateExpression(localVariableDeclaration.getExpression()));
             case BlockStatement blockStatement -> {
                 this.environment.enterSubScope();
                 var returnValue = executeStatementList(blockStatement.getStatements());
@@ -127,7 +136,7 @@ public class Interpreter {
     }
 
     private IValue evaluateFunctionInvocationExpression(FunctionInvocationExpression expr) {
-        var parameters = expr.getParameters().stream().map(p -> evaluateExpression(p).copy()).toArray(IValue[]::new);
+        var parameters = expr.getParameters().stream().map(this::evaluateExpression).toArray(IValue[]::new);
         var targetExpr = expr.getTarget();
 
         IValue target;

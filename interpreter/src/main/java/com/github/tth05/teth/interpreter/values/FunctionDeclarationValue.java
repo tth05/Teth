@@ -21,12 +21,6 @@ public class FunctionDeclarationValue extends AbstractFunction implements IValue
     }
 
     @Override
-    public IValue copy() {
-        // Immutable, no copy needed
-        return this;
-    }
-
-    @Override
     public String getDebugString() {
         return this.declaration.getNameExpr().getValue() + "(" +
                this.declaration.getParameters().stream().map(p -> p.type().toString()).collect(Collectors.joining(", "))

@@ -36,6 +36,36 @@ public class Environment {
                 false,
                 Type.STRING
         ));
+        addTopLevelFunction("__list_size", IntrinsicFunction.create(
+                "__list_size",
+                (parameters) -> new LongValue(((ListValue) parameters[0]).getValue().size()),
+                false,
+                new Type(Type.ANY)
+        ));
+        addTopLevelFunction("__list_add", IntrinsicFunction.create(
+                "__list_add",
+                (parameters) -> {
+                    ((ListValue) parameters[0]).getValue().add(parameters[1]);
+                    return null;
+                },
+                false,
+                new Type(Type.ANY), Type.ANY
+        ));
+        addTopLevelFunction("__list_remove", IntrinsicFunction.create(
+                "__list_remove",
+                (parameters) -> {
+                    ((ListValue) parameters[0]).getValue().remove((int) ((LongValue) parameters[1]).getValue());
+                    return null;
+                },
+                false,
+                new Type(Type.ANY), Type.LONG
+        ));
+        addTopLevelFunction("__list_get", IntrinsicFunction.create(
+                "__list_get",
+                (parameters) -> ((ListValue) parameters[0]).getValue().get((int) ((LongValue) parameters[1]).getValue()),
+                false,
+                new Type(Type.ANY), Type.LONG
+        ));
     }
     private final Scope[] scopeStack = new Scope[512];
     {

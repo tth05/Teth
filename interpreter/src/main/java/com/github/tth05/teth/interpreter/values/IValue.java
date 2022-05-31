@@ -6,7 +6,5 @@ public interface IValue {
 
     String getDebugString();
 
-    IValue copy();
-
     Type getType();
 }

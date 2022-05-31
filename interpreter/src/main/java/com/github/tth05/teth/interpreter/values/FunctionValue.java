@@ -32,12 +32,6 @@ public class FunctionValue implements IValue, IFunction {
     }
 
     @Override
-    public IValue copy() {
-        // Immutable, no copy needed
-        return this;
-    }
-
-    @Override
     public Type getType() {
         return Type.FUNCTION;
     }
