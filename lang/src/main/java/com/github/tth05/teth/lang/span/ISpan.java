@@ -4,31 +4,31 @@ import com.github.tth05.teth.lang.util.CharArrayUtils;
 
 public interface ISpan {
 
-    int getOffset();
+    int offset();
 
     /**
      * @return The exclusive end offset of the span.
      */
-    int getOffsetEnd();
+    int offsetEnd();
 
-    char[] getSource();
+    char[] source();
 
     default int getStartLine() {
-        return CharArrayUtils.getLineNumber(getSource(), getOffset());
+        return CharArrayUtils.getLineNumber(source(), offset());
     }
 
     default int getEndLine() {
-        return CharArrayUtils.getLineNumber(getSource(), getOffsetEnd());
+        return CharArrayUtils.getLineNumber(source(), offsetEnd());
     }
 
     default int getStartColumn() {
-        return getOffset() - CharArrayUtils.getLineStart(getSource(), getOffset());
+        return offset() - CharArrayUtils.getLineStart(source(), offset());
     }
 
     /**
      * @return The exclusive end column of the span.
      */
     default int getEndColumn() {
-        return getOffsetEnd() - CharArrayUtils.getLineStart(getSource(), getOffsetEnd());
+        return offsetEnd() - CharArrayUtils.getLineStart(source(), offsetEnd());
     }
 }

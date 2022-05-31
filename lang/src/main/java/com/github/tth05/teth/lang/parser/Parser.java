@@ -151,6 +151,7 @@ public class Parser {
         }
 
         this.stream.consumeType(TokenType.R_PAREN);
+        consumeLineBreaks();
         var returnTypeToken = this.stream.consumeType(TokenType.IDENTIFIER);
         var body = parseBlock();
         return new FunctionDeclaration(

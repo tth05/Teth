@@ -80,8 +80,25 @@ public class TokenizerTest extends AbstractTokenizerTest {
     }
 
     @Test
+    public void testListLiteral() {
+        createStreams("[5 + 5, true, \"str\"]");
+        assertIterableEquals(tokenList(
+                new Token(makeSpan(0, 1), "[", TokenType.L_SQUARE_PAREN),
+                new Token(makeSpan(1, 2), "5", TokenType.LONG_LITERAL),
+                new Token(makeSpan(3, 4), "+", TokenType.PLUS),
+                new Token(makeSpan(5, 6), "5", TokenType.LONG_LITERAL),
+                new Token(makeSpan(6, 7), ",", TokenType.COMMA),
+                new Token(makeSpan(8, 12), "true", TokenType.BOOLEAN_LITERAL),
+                new Token(makeSpan(12, 13), ",", TokenType.COMMA),
+                new Token(makeSpan(14, 19), "str", TokenType.STRING_LITERAL),
+                new Token(makeSpan(19, 20), "]", TokenType.R_SQUARE_PAREN)
+        ), tokensIntoList());
+        assertStreamsEmpty();
+    }
+
+    @Test
     public void testInvalidChars() {
-        var matcher = Pattern.compile("^[a-zA-Z0-9+\\-*/^_.,=\\t\\n<>! (){}]$").matcher("");
+        var matcher = Pattern.compile("^[a-zA-Z0-9+\\-*/^_.,=\\t\\n<>! (){}\\[\\]]$").matcher("");
         for (int i = 1; i < 1000; i++) {
             var str = "" + (char) i;
             if (matcher.reset(str).matches())
@@ -197,7 +214,7 @@ public class TokenizerTest extends AbstractTokenizerTest {
         var lastToken = list.get(list.size() - 1);
         var lastSpan = lastToken.span();
 
-        list.add(new Token(new Span(lastSpan.getSource(), lastSpan.getSource().length, lastSpan.getSource().length + 1), "", TokenType.EOF));
+        list.add(new Token(new Span(lastSpan.source(), lastSpan.source().length, lastSpan.source().length + 1), "", TokenType.EOF));
         return list;
     }
 

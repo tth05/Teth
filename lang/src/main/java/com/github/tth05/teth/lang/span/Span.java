@@ -2,32 +2,7 @@ package com.github.tth05.teth.lang.span;
 
 import java.util.Arrays;
 
-public final class Span implements ISpan {
-
-    private final char[] source;
-    private final int offset;
-    private final int offsetEnd;
-
-    public Span(char[] source, int offset, int offsetEnd) {
-        this.source = source;
-        this.offset = offset;
-        this.offsetEnd = offsetEnd;
-    }
-
-    @Override
-    public int getOffset() {
-        return this.offset;
-    }
-
-    @Override
-    public int getOffsetEnd() {
-        return this.offsetEnd;
-    }
-
-    @Override
-    public char[] getSource() {
-        return this.source;
-    }
+public record Span(char[] source, int offset, int offsetEnd) implements ISpan {
 
     @Override
     public boolean equals(Object o) {
@@ -55,10 +30,10 @@ public final class Span implements ISpan {
 
     @Override
     public String toString() {
-        return "Span(" + this.offset  + ", " + this.offsetEnd + ", " + getStartLine() + ", " + getStartColumn() + ")";
+        return "Span(" + this.offset + ", " + this.offsetEnd + ", " + getStartLine() + ", " + getStartColumn() + ")";
     }
 
     public static Span of(ISpan first, ISpan last) {
-        return new Span(first.getSource(), first.getOffset(), last.getOffsetEnd());
+        return new Span(first.source(), first.offset(), last.offsetEnd());
     }
 }

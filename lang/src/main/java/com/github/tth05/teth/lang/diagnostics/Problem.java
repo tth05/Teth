@@ -7,8 +7,8 @@ public record Problem(ISpan span, String message) {
 
     public String prettyPrint(boolean useAnsiColors) {
         StringBuilder sb = new StringBuilder();
-        var source = this.span.getSource();
-        var offset = this.span.getOffset();
+        var source = this.span.source();
+        var offset = this.span.offset();
         var line = this.span.getStartLine();
         var startColumn = this.span.getStartColumn();
 

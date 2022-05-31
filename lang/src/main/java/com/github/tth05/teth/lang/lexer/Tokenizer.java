@@ -193,6 +193,8 @@ public class Tokenizer {
             case ')' -> TokenType.R_PAREN;
             case '{' -> TokenType.L_CURLY_PAREN;
             case '}' -> TokenType.R_CURLY_PAREN;
+            case '[' -> TokenType.L_SQUARE_PAREN;
+            case ']' -> TokenType.R_SQUARE_PAREN;
             default -> throw new IllegalStateException("Unreachable");
         });
     }
@@ -222,7 +224,7 @@ public class Tokenizer {
     }
 
     private static boolean isParen(char c) {
-        return c == '(' || c == ')' || c == '{' || c == '}';
+        return c == '(' || c == ')' || c == '{' || c == '}' || c == '[' || c == ']';
     }
 
     private static boolean isUnderscore(char c) {

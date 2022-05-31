@@ -25,6 +25,8 @@ public enum TokenType {
     POW("^"),
     L_PAREN("("),
     R_PAREN(")"),
+    L_SQUARE_PAREN("["),
+    R_SQUARE_PAREN("]"),
     L_CURLY_PAREN("{"),
     R_CURLY_PAREN("}"),
     LINE_BREAK("Line break"),
