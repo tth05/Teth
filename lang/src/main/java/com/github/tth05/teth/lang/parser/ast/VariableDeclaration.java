@@ -1,6 +1,5 @@
 package com.github.tth05.teth.lang.parser.ast;
 
-import com.github.tth05.teth.lang.parser.Type;
 import com.github.tth05.teth.lang.span.ISpan;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
@@ -8,16 +7,16 @@ import java.util.Objects;
 
 public class VariableDeclaration extends Statement {
 
-    private final Type type;
+    private final TypeExpression type;
     private final IdentifierExpression nameExpr;
 
     private final Expression expression;
 
-    public VariableDeclaration(ISpan span, Type type, IdentifierExpression nameExpr) {
+    public VariableDeclaration(ISpan span, TypeExpression type, IdentifierExpression nameExpr) {
         this(span, type, nameExpr, null);
     }
 
-    public VariableDeclaration(ISpan span, Type type, IdentifierExpression nameExpr, Expression expression) {
+    public VariableDeclaration(ISpan span, TypeExpression type, IdentifierExpression nameExpr, Expression expression) {
         super(span);
         this.type = type;
         this.nameExpr = nameExpr;
@@ -28,7 +27,7 @@ public class VariableDeclaration extends Statement {
         return this.nameExpr;
     }
 
-    public Type getType() {
+    public TypeExpression getType() {
         return this.type;
     }
 
@@ -68,7 +67,10 @@ public class VariableDeclaration extends Statement {
         builder.appendAttribute("name");
         this.nameExpr.dump(builder);
         builder.newLine().appendAttribute("expression");
-        this.expression.dump(builder);
+        if (this.expression != null)
+            this.expression.dump(builder);
+        else
+            builder.append("<none>");
         builder.endBlock().newLine().append("}");
     }
 

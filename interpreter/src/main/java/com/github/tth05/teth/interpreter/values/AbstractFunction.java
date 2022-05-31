@@ -21,7 +21,7 @@ public abstract class AbstractFunction implements IFunction {
     public boolean isApplicable(IValue[] parameters) {
         if (this.varargs) {
             for (IValue parameter : parameters) {
-                if (!parameter.getType().equals(this.parameterTypes[0]))
+                if (!parameter.getType().isSubtypeOf(this.parameterTypes[0]))
                     return false;
             }
 
@@ -32,7 +32,7 @@ public abstract class AbstractFunction implements IFunction {
             return false;
 
         for (int i = 0; i < parameters.length; i++) {
-            if (!parameters[i].getType().equals(this.parameterTypes[i]))
+            if (!parameters[i].getType().isSubtypeOf(this.parameterTypes[i]))
                 return false;
         }
 

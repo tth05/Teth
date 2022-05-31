@@ -120,7 +120,7 @@ public class Interpreter {
         this.environment.enterScope();
         var parameters = functionDeclaration.getParameters();
         for (int i = 0; i < parameters.size(); i++)
-            this.environment.currentScope().setLocalVariable(parameters.get(i).name(), arguments[i]);
+            this.environment.currentScope().setLocalVariable(parameters.get(i).name().getValue(), arguments[i]);
         var returnValue = executeStatement(functionDeclaration.getBody());
         this.environment.exitScope();
         return returnValue;

@@ -1,12 +1,12 @@
 package com.github.tth05.teth.lang.parser.ast;
 
 import com.github.tth05.teth.lang.parser.IDumpable;
-import com.github.tth05.teth.lang.parser.Type;
 import com.github.tth05.teth.lang.span.ISpan;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 public class FunctionDeclaration extends Statement {
 
@@ -45,6 +45,11 @@ public class FunctionDeclaration extends Statement {
         builder.startBlock();
         builder.appendAttribute("name");
         this.nameExpr.dump(builder);
+        builder.appendAttribute("returnType");
+        if (this.returnTypeExpr != null)
+            this.returnTypeExpr.dump(builder);
+        else
+            builder.append("<none>");
         builder.newLine().appendAttribute("parameters").append("[").newLine().startBlock();
         this.parameters.forEach(p -> {
             p.dump(builder);
@@ -66,6 +71,8 @@ public class FunctionDeclaration extends Statement {
 
         if (!this.nameExpr.equals(that.nameExpr))
             return false;
+        if (!Objects.equals(this.returnTypeExpr, that.returnTypeExpr))
+            return false;
         if (!this.parameters.equals(that.parameters))
             return false;
         return this.body.equals(that.body);
@@ -74,16 +81,17 @@ public class FunctionDeclaration extends Statement {
     @Override
     public int hashCode() {
         int result = this.nameExpr.hashCode();
+        result = 31 * result + (this.returnTypeExpr != null ? this.returnTypeExpr.hashCode() : 0);
         result = 31 * result + this.parameters.hashCode();
         result = 31 * result + this.body.hashCode();
         return result;
     }
 
-    public record Parameter(Type type, String name) implements IDumpable {
+    public record Parameter(TypeExpression type, IdentifierExpression name) implements IDumpable {
 
         @Override
         public void dump(ASTDumpBuilder builder) {
-            builder.append(this.type.toString()).append(" ").append(this.name);
+            builder.append(this.type.toString()).append(" ").append(this.name.toString());
         }
     }
 }

@@ -83,7 +83,7 @@ public class TokenizerTest extends AbstractTokenizerTest {
     public void testListLiteral() {
         createStreams("[5 + 5, true, \"str\"]");
         assertIterableEquals(tokenList(
-                new Token(makeSpan(0, 1), "[", TokenType.L_SQUARE_PAREN),
+                new Token(makeSpan(0, 1), "[", TokenType.L_SQUARE_BRACKET),
                 new Token(makeSpan(1, 2), "5", TokenType.LONG_LITERAL),
                 new Token(makeSpan(3, 4), "+", TokenType.PLUS),
                 new Token(makeSpan(5, 6), "5", TokenType.LONG_LITERAL),
@@ -91,7 +91,7 @@ public class TokenizerTest extends AbstractTokenizerTest {
                 new Token(makeSpan(8, 12), "true", TokenType.BOOLEAN_LITERAL),
                 new Token(makeSpan(12, 13), ",", TokenType.COMMA),
                 new Token(makeSpan(14, 19), "str", TokenType.STRING_LITERAL),
-                new Token(makeSpan(19, 20), "]", TokenType.R_SQUARE_PAREN)
+                new Token(makeSpan(19, 20), "]", TokenType.R_SQUARE_BRACKET)
         ), tokensIntoList());
         assertStreamsEmpty();
     }

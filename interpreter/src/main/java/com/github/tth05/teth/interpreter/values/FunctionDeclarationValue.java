@@ -11,7 +11,7 @@ public class FunctionDeclarationValue extends AbstractFunction implements IValue
     private final FunctionDeclaration declaration;
 
     public FunctionDeclarationValue(FunctionDeclaration declaration) {
-        super(declaration.getNameExpr().getValue(), false, declaration.getParameters().stream().map(FunctionDeclaration.Parameter::type).toArray(Type[]::new));
+        super(declaration.getNameExpr().getValue(), false, declaration.getParameters().stream().map(p -> p.type().getType()).toArray(Type[]::new));
         this.declaration = declaration;
     }
 

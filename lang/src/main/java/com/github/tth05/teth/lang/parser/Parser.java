@@ -54,8 +54,7 @@ public class Parser {
     private Statement parseStatement() {
         consumeLineBreaks();
         var current = this.stream.peek();
-        var next = this.stream.peek(1);
-        if (current.is(TokenType.IDENTIFIER) && next.is(TokenType.IDENTIFIER)) {
+        if (isStartOfVariableDeclaration()) {
             return parseVariableDeclaration();
         } else if (current.is(TokenType.KEYWORD)) { // Keyword statement
             var keyword = current.value();
@@ -111,7 +110,7 @@ public class Parser {
     }
 
     private VariableDeclaration parseVariableDeclaration() {
-        var type = this.stream.consumeType(TokenType.IDENTIFIER);
+        var type = parseType();
         consumeLineBreaks();
         var name = this.stream.consumeType(TokenType.IDENTIFIER);
         consumeLineBreaks();
@@ -123,8 +122,8 @@ public class Parser {
         }
 
         return new VariableDeclaration(
-                Span.of(type.span(), assignment != null ? assignment.getSpan() : name.span()),
-                Type.fromString(type.value()), new IdentifierExpression(name.span(), name.value()), assignment
+                Span.of(type.getSpan(), assignment != null ? assignment.getSpan() : name.span()),
+                type, new IdentifierExpression(name.span(), name.value()), assignment
         );
     }
 
@@ -143,21 +142,21 @@ public class Parser {
                 this.stream.consumeType(TokenType.COMMA);
 
             consumeLineBreaks();
-            var type = Type.fromString(this.stream.consumeType(TokenType.IDENTIFIER).value());
+            var type = parseType();
             consumeLineBreaks();
-            var parameterName = this.stream.consumeType(TokenType.IDENTIFIER).value();
+            var nameToken = this.stream.consumeType(TokenType.IDENTIFIER);
             consumeLineBreaks();
-            parameters.add(new FunctionDeclaration.Parameter(type, parameterName));
+            parameters.add(new FunctionDeclaration.Parameter(type, new IdentifierExpression(nameToken.span(), nameToken.value())));
         }
 
         this.stream.consumeType(TokenType.R_PAREN);
         consumeLineBreaks();
-        var returnTypeToken = this.stream.consumeType(TokenType.IDENTIFIER);
+        var returnType = this.stream.peek().is(TokenType.IDENTIFIER) ? parseType() : null;
         var body = parseBlock();
         return new FunctionDeclaration(
                 Span.of(firstSpan, body.getSpan()),
                 new IdentifierExpression(functionName.span(), functionName.value()),
-                new TypeExpression(returnTypeToken.span(), Type.fromString(returnTypeToken.value())),
+                returnType,
                 parameters, body
         );
     }
@@ -282,8 +281,63 @@ public class Parser {
             case BOOLEAN_LITERAL ->
                     new BooleanLiteralExpression(span, Boolean.parseBoolean(this.stream.consumeType(TokenType.BOOLEAN_LITERAL).value()));
             case IDENTIFIER -> new IdentifierExpression(span, this.stream.consumeType(TokenType.IDENTIFIER).value());
+            case L_SQUARE_BRACKET -> {
+                this.stream.consume();
+                var elements = new ExpressionList();
+                while (true) {
+                    token = this.stream.peek();
+                    if (token.is(TokenType.R_SQUARE_BRACKET))
+                        break;
+
+                    if (!elements.isEmpty())
+                        this.stream.consumeType(TokenType.COMMA);
+
+                    elements.add(parseExpression());
+                }
+
+                this.stream.consumeType(TokenType.R_SQUARE_BRACKET);
+                yield new ListLiteralExpression(span, elements);
+            }
             default -> throw new UnexpectedTokenException(token.span(), "Expected a literal");
         };
+    }
+
+    private TypeExpression parseType() {
+        var current = this.stream.consume();
+        if (!current.is(TokenType.IDENTIFIER))
+            throw new UnexpectedTokenException(current.span(), "Expected a type");
+
+        var firstSpan = current.span();
+        var secondSpan = firstSpan;
+        var type = Type.fromString(current.value());
+
+        while (this.stream.peek().is(TokenType.L_SQUARE_BRACKET)) {
+            this.stream.consume();
+
+            var rBracket = this.stream.consume();
+            if (!rBracket.is(TokenType.R_SQUARE_BRACKET))
+                throw new UnexpectedTokenException(rBracket.span(), "Expected a closing square bracket");
+
+            secondSpan = rBracket.span();
+            type = new Type(type);
+        }
+
+        return new TypeExpression(Span.of(firstSpan, secondSpan), type);
+    }
+
+    private boolean isStartOfVariableDeclaration() {
+        if (!this.stream.peek().is(TokenType.IDENTIFIER))
+            return false;
+
+        var offset = 1;
+        while (this.stream.peek(offset).is(TokenType.L_SQUARE_BRACKET)) {
+            offset++;
+            if (!this.stream.peek(offset).is(TokenType.R_SQUARE_BRACKET))
+                return false;
+            offset++;
+        }
+
+        return this.stream.peek(offset).is(TokenType.IDENTIFIER);
     }
 
     public static ParserResult fromString(String source) {

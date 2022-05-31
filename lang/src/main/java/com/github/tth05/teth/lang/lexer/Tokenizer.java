@@ -193,8 +193,8 @@ public class Tokenizer {
             case ')' -> TokenType.R_PAREN;
             case '{' -> TokenType.L_CURLY_PAREN;
             case '}' -> TokenType.R_CURLY_PAREN;
-            case '[' -> TokenType.L_SQUARE_PAREN;
-            case ']' -> TokenType.R_SQUARE_PAREN;
+            case '[' -> TokenType.L_SQUARE_BRACKET;
+            case ']' -> TokenType.R_SQUARE_BRACKET;
             default -> throw new IllegalStateException("Unreachable");
         });
     }
