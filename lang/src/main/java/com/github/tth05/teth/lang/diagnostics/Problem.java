@@ -63,6 +63,7 @@ public record Problem(ISpan span, String message) {
     private static StringBuilder addAnsiHighlight(String str, int highlightStart, int highlightEnd, int ansiColor) {
         var lineContents = new StringBuilder(str);
 
+        highlightEnd = highlightEnd < highlightStart ? lineContents.length() : highlightEnd;
         lineContents.insert(Math.min(lineContents.length(), highlightEnd), "\u001b[0m");
         lineContents.insert(highlightStart, "\u001b[0;" + ansiColor + "m");
         return lineContents;

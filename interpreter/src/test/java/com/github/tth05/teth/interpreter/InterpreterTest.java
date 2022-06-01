@@ -135,4 +135,19 @@ public class InterpreterTest extends AbstractInterpreterTest {
         this.interpreter.execute(this.unit);
         assertLinesMatch(List.of("5 1", "5 2", "2 1", "5 1"), getSystemOutputLines());
     }
+
+    @Test
+    public void testRecursiveFibonacci() {
+        createAST("""
+                print(fib(30))
+                fn fib(long n) long {
+                        if(n <= 1) return n
+                        return fib(n-1) + fib(n-2)
+                }
+                """);
+        assertStreamsEmpty();
+
+        this.interpreter.execute(this.unit);
+        assertLinesMatch(List.of("832040"), getSystemOutputLines());
+    }
 }

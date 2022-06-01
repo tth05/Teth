@@ -1,10 +1,13 @@
 package com.github.tth05.teth.interpreter.environment;
 
 import com.github.tth05.teth.interpreter.Interpreter;
+import com.github.tth05.teth.interpreter.InterpreterException;
 import com.github.tth05.teth.interpreter.values.*;
 import com.github.tth05.teth.lang.parser.Type;
+import com.github.tth05.teth.lang.span.ISpan;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Function;
 
 public class Environment {
@@ -97,15 +100,18 @@ public class Environment {
         return new FunctionValue(global);
     }
 
-    public void enterSubScope() {
-        enterScope(true);
+    public void enterSubScope(ISpan location) {
+        enterScope(location, true);
     }
 
-    public void enterScope() {
-        enterScope(false);
+    public void enterScope(ISpan location) {
+        enterScope(location, false);
     }
 
-    private void enterScope(boolean subScope) {
+    private void enterScope(ISpan location, boolean subScope) {
+        if (this.scopeStackIndex >= this.scopeStack.length - 1)
+            throw new InterpreterException(location, "Max scope stack size reached while entering");
+
         this.scopeStack[++this.scopeStackIndex] = new Scope(subScope);
     }
 

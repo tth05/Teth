@@ -8,13 +8,17 @@ import com.github.tth05.teth.lang.parser.ast.*;
 
 import java.util.Arrays;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class Interpreter {
 
     private final Environment environment = new Environment();
 
     public void execute(SourceFileUnit ast) throws InterpreterException {
+        // Collect top level functions
+        ast.getStatements().stream().filter(s -> s instanceof FunctionDeclaration).map(s -> (FunctionDeclaration) s).forEach(d -> {
+            this.environment.addTopLevelFunction(d.getNameExpr().getValue(), new FunctionDeclarationValue(d));
+        });
+
         executeStatementList(ast.getStatements());
     }
 
@@ -100,7 +104,7 @@ public class Interpreter {
             case VariableDeclaration localVariableDeclaration ->
                     this.environment.currentScope().setLocalVariable(localVariableDeclaration.getNameExpr().getValue(), evaluateExpression(localVariableDeclaration.getExpression()));
             case BlockStatement blockStatement -> {
-                this.environment.enterSubScope();
+                this.environment.enterSubScope(blockStatement.getSpan());
                 var returnValue = executeStatementList(blockStatement.getStatements());
                 this.environment.exitScope();
                 return returnValue;
@@ -126,7 +130,9 @@ public class Interpreter {
 
     public IValue callFunction(FunctionDeclaration functionDeclaration, IValue[] arguments) {
         //TODO varargs
-        this.environment.enterScope();
+        this.environment.enterScope(functionDeclaration.getNameExpr().getSpan());
+        this.environment.currentScope().setLocalVariable(functionDeclaration.getNameExpr().getValue(), new FunctionDeclarationValue(functionDeclaration));
+
         var parameters = functionDeclaration.getParameters();
         for (int i = 0; i < parameters.size(); i++)
             this.environment.currentScope().setLocalVariable(parameters.get(i).name().getValue(), arguments[i]);
@@ -136,7 +142,11 @@ public class Interpreter {
     }
 
     private IValue evaluateFunctionInvocationExpression(FunctionInvocationExpression expr) {
-        var parameters = expr.getParameters().stream().map(this::evaluateExpression).toArray(IValue[]::new);
+        var functionInvocationParameters = new IValue[expr.getParameters().size()];
+        var parameters = expr.getParameters();
+        for (int i = 0; i < parameters.size(); i++)
+            functionInvocationParameters[i] = evaluateExpression(parameters.get(i));
+
         var targetExpr = expr.getTarget();
 
         IValue target;
@@ -144,17 +154,20 @@ public class Interpreter {
             var self = evaluateExpression(memberAccessExpression.getTarget());
             target = extractMember(self, memberAccessExpression.getMemberNameExpr());
             // :^)
-            parameters = Stream.concat(Stream.of(self), Stream.of(parameters)).toArray(IValue[]::new);
+            var tmp = new IValue[functionInvocationParameters.length + 1];
+            tmp[0] = self;
+            System.arraycopy(functionInvocationParameters, 0, tmp, 1, functionInvocationParameters.length);
+            functionInvocationParameters = tmp;
         } else {
             target = evaluateExpression(targetExpr);
         }
 
         if (!(target instanceof IFunction invokable))
             throw new InterpreterException(targetExpr.getSpan(), "Target did not evaluate to function: '" + target.getDebugString() + "'");
-        if (!invokable.isApplicable(parameters))
-            throw new InterpreterException(targetExpr.getSpan(), "Target '" + target.getDebugString() + "' is not applicable to: " + Arrays.toString(parameters));
+        if (!invokable.isApplicable(functionInvocationParameters))
+            throw new InterpreterException(targetExpr.getSpan(), "Target '" + target.getDebugString() + "' is not applicable to: " + Arrays.toString(functionInvocationParameters));
 
-        return invokable.invoke(this, parameters);
+        return invokable.invoke(this, functionInvocationParameters);
     }
 
     private IValue extractMember(IValue target, IdentifierExpression memberName) {

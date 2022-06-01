@@ -9,7 +9,7 @@ public class Scope {
 
     private final Map<String, IValue> localVariables = new HashMap<>();
 
-    private boolean subScope;
+    private final boolean subScope;
 
     public Scope() {
         this(false);
