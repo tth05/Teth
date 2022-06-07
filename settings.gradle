@@ -2,4 +2,6 @@ rootProject.name = 'teth'
 include 'lang'
 include 'cli'
 include 'interpreter'
+include 'bytecode'
+include 'bytecode-interpreter'
 

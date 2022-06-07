@@ -34,7 +34,7 @@ public record Problem(ISpan span, String message) {
 
         // Append next line
         var currentLineEnd = CharArrayUtils.getLineEnd(source, offset);
-        if (currentLineEnd < source.length - 1 /* NULL */ - 1) {
+        if (currentLineEnd < source.length - 1) {
             sb.append("\n");
             appendLine(sb, source, currentLineEnd + 1, line + 1 + 1, useAnsiColors);
         }
