@@ -38,7 +38,7 @@ public class Interpreter {
             new RETURN_Insn(true)
     };
     /**
-     * Avoids invokeinterface call when execution instruction.
+     * Avoids invokeinterface call when executing instruction.
      */
     private final int[] cachedOpCodes = Arrays.stream(this.instructions).mapToInt(IInstrunction::getOpCode).toArray();
 
@@ -155,12 +155,13 @@ public class Interpreter {
         return this.programCounter;
     }
 
-    public void initLocalsFrom(Object[] parameterValues, int paramCount, int localCount) {
+    public void initLocalsFromStack(int paramCount, int localCount) {
         localCount += paramCount;
 
         for (int i = 0; i < paramCount; i++)
-            this.locals[++this.localsPointer] = parameterValues[i];
+            this.locals[this.localsPointer + (paramCount - i)] = pop();
 
+        this.localsPointer += localCount;
         this.locals[++this.localsPointer] = localCount;
     }
 }

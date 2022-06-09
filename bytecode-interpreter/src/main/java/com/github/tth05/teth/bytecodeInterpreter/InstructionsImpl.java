@@ -69,8 +69,7 @@ public class InstructionsImpl {
                 if (invokeInsn.isInstanceFunction())
                     throw new UnsupportedOperationException();
 
-                var args = collectFunctionArguments(interpreter, paramCount);
-                interpreter.initLocalsFrom(args, paramCount, invokeInsn.getLocalCount());
+                interpreter.initLocalsFromStack(paramCount, invokeInsn.getLocalCount());
                 clearArgsArray(paramCount);
                 interpreter.saveReturnAddress();
                 interpreter.setProgramCounter(invokeInsn.getAbsoluteJumpAddress());
