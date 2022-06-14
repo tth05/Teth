@@ -1,5 +1,6 @@
 package com.github.tth05.teth.lang.parser.ast;
 
+import com.github.tth05.teth.lang.parser.ASTVisitor;
 import com.github.tth05.teth.lang.span.ISpan;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
@@ -33,6 +34,11 @@ public class VariableDeclaration extends Statement {
 
     public Expression getExpression() {
         return this.expression;
+    }
+
+    @Override
+    public void accept(ASTVisitor visitor) {
+        visitor.visit(this);
     }
 
     @Override

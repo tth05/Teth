@@ -4,4 +4,5 @@ include 'cli'
 include 'interpreter'
 include 'bytecode'
 include 'bytecode-interpreter'
+include 'analyzer'
 

@@ -1,0 +1,112 @@
+package com.github.tth05.teth.analyzer;
+
+import com.github.tth05.teth.lang.diagnostics.ProblemList;
+import com.github.tth05.teth.lang.parser.ASTVisitor;
+import com.github.tth05.teth.lang.parser.SourceFileUnit;
+import com.github.tth05.teth.lang.parser.Type;
+import com.github.tth05.teth.lang.parser.ast.*;
+
+import java.util.IdentityHashMap;
+import java.util.Map;
+
+public class Analyzer {
+
+    private final Map<Expression, Type> resolvedExpressionTypes = new IdentityHashMap<>();
+
+    private final SourceFileUnit unit;
+
+    public Analyzer(SourceFileUnit unit) {
+        this.unit = unit;
+    }
+
+    public ProblemList analyze() {
+        try {
+            new Visitor().visit(this.unit);
+            return ProblemList.of();
+        } catch (TypeResolverException e) {
+            return ProblemList.of(e.asProblem());
+        }
+    }
+
+    /**
+     * IntrinsicFunctionBinding, SourceFunctionBinding
+     */
+    public void resolvedInvocationBinding(FunctionInvocationExpression invocation) {
+
+    }
+
+    public Type resolvedType(Expression expression) {
+        return this.resolvedExpressionTypes.get(expression);
+    }
+
+    @SuppressWarnings("UnqualifiedFieldAccess")
+    private final class Visitor extends ASTVisitor {
+
+        @Override
+        public void visit(UnaryExpression expression) {
+            super.visit(expression);
+
+            var type = resolvedExpressionTypes.get(expression.getExpression());
+            var operator = expression.getOperator();
+            if ((operator == UnaryExpression.Operator.OP_NEGATIVE && !type.isNumber()) ||
+                (operator == UnaryExpression.Operator.OP_NOT && type != Type.BOOLEAN))
+                throw new TypeResolverException(expression.getExpression().getSpan(), "Unary operator " + operator.asString() + " cannot be applied to " + type);
+
+            resolvedExpressionTypes.put(expression, type);
+        }
+
+        @Override
+        public void visit(BinaryExpression expression) {
+            super.visit(expression);
+
+            var leftType = resolvedExpressionTypes.get(expression.getLeft());
+            var rightType = resolvedExpressionTypes.get(expression.getRight());
+
+            if (leftType.isNumber() ^ rightType.isNumber())
+                throw new TypeResolverException(expression.getSpan(), "Operator " + expression.getOperator().asString() + " cannot be applied to " + leftType + " and " + rightType);
+            if (leftType == Type.STRING ^ rightType == Type.STRING)
+                throw new TypeResolverException(expression.getSpan(), "Operator " + expression.getOperator().asString() + " cannot be applied to " + leftType + " and " + rightType);
+
+            var binaryType = leftType.isNumber() ? (leftType == Type.DOUBLE || rightType == Type.DOUBLE ? Type.DOUBLE : Type.LONG) : Type.STRING;
+            resolvedExpressionTypes.put(expression, binaryType);
+        }
+
+        @Override
+        public void visit(ListLiteralExpression listLiteralExpression) {
+            super.visit(listLiteralExpression);
+
+            if (listLiteralExpression.getInitializers().isEmpty()) {
+                resolvedExpressionTypes.put(listLiteralExpression, new Type(Type.ANY));
+                return;
+            }
+
+            var elementType = resolvedExpressionTypes.get(listLiteralExpression.getInitializers().get(0));
+            for (Expression initializer : listLiteralExpression.getInitializers()) {
+                if (!resolvedExpressionTypes.get(initializer).isSubtypeOf(elementType))
+                    throw new TypeResolverException(initializer.getSpan(), "List element type mismatch");
+            }
+
+            resolvedExpressionTypes.put(listLiteralExpression, new Type(elementType));
+        }
+
+        @Override
+        public void visit(BooleanLiteralExpression booleanLiteralExpression) {
+            resolvedExpressionTypes.put(booleanLiteralExpression, Type.BOOLEAN);
+        }
+
+        @Override
+        public void visit(StringLiteralExpression stringLiteralExpression) {
+            resolvedExpressionTypes.put(stringLiteralExpression, Type.STRING);
+        }
+
+        @Override
+        public void visit(DoubleLiteralExpression doubleLiteralExpression) {
+            resolvedExpressionTypes.put(doubleLiteralExpression, Type.DOUBLE);
+        }
+
+        @Override
+        public void visit(LongLiteralExpression longLiteralExpression) {
+            resolvedExpressionTypes.put(longLiteralExpression, Type.LONG);
+        }
+    }
+}

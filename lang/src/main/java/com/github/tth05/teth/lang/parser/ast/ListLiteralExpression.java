@@ -1,5 +1,6 @@
 package com.github.tth05.teth.lang.parser.ast;
 
+import com.github.tth05.teth.lang.parser.ASTVisitor;
 import com.github.tth05.teth.lang.parser.ExpressionList;
 import com.github.tth05.teth.lang.span.ISpan;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
@@ -17,6 +18,11 @@ public class ListLiteralExpression extends Expression {
 
     public List<Expression> getInitializers() {
         return this.initializers;
+    }
+
+    @Override
+    public void accept(ASTVisitor visitor) {
+        visitor.visit(this);
     }
 
     @Override

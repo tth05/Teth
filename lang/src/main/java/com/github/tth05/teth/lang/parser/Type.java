@@ -32,6 +32,10 @@ public class Type {
         return this.innerType != null;
     }
 
+    public boolean isNumber() {
+        return this == LONG || this == DOUBLE;
+    }
+
     public boolean isSubtypeOf(Type other) {
         if (this == ANY)
             return false;

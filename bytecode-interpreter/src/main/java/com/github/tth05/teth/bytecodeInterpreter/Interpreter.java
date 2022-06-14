@@ -37,10 +37,6 @@ public class Interpreter {
             new LOAD_LOCAL_Insn(0),
             new RETURN_Insn(true)
     };
-    /**
-     * Avoids invokeinterface call when executing instruction.
-     */
-    private final int[] cachedOpCodes = Arrays.stream(this.instructions).mapToInt(IInstrunction::getOpCode).toArray();
 
     private final Object[] locals = new Object[2048];
     private int localsPointer = 0;
@@ -54,9 +50,13 @@ public class Interpreter {
     private int programCounter = 0;
 
     public void execute() {
+        // These locals exist for micro-optimization
+        var cachedOpCodes = Arrays.stream(this.instructions).mapToInt(IInstrunction::getOpCode).toArray();
+        var instructions = this.instructions;
+
         var pc = 0;
         while ((pc = this.programCounter) != -1) {
-            InstructionsImpl.run(this, this.cachedOpCodes[pc], this.instructions[pc]);
+            InstructionsImpl.run(this, cachedOpCodes[pc], instructions[pc]);
             if (this.programCounter == pc)
                 this.programCounter++;
         }
@@ -107,9 +107,10 @@ public class Interpreter {
         setProgramCounter(returnAddress);
         this.returnAddresses[this.returnAddressesPointer--] = 0;
 
-        var localCount = (int) this.locals[this.localsPointer];
-        for (int i = 0; i < localCount + 1; i++)
-            this.locals[this.localsPointer--] = null;
+        var locals = this.locals;
+        var localCount = (int) locals[this.localsPointer] + 1;
+        for (int i = 0; i < localCount; i++)
+            locals[this.localsPointer--] = null;
     }
 
     public void saveReturnAddress() {
@@ -158,8 +159,8 @@ public class Interpreter {
     public void initLocalsFromStack(int paramCount, int localCount) {
         localCount += paramCount;
 
-        for (int i = 0; i < paramCount; i++)
-            this.locals[this.localsPointer + (paramCount - i)] = pop();
+        for (int i = paramCount; i >= 1; i--)
+            this.locals[this.localsPointer + i] = pop();
 
         this.localsPointer += localCount;
         this.locals[++this.localsPointer] = localCount;

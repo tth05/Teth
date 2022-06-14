@@ -1,5 +1,6 @@
 package com.github.tth05.teth.lang.parser.ast;
 
+import com.github.tth05.teth.lang.parser.ASTVisitor;
 import com.github.tth05.teth.lang.parser.IDumpable;
 import com.github.tth05.teth.lang.span.ISpan;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
@@ -37,6 +38,11 @@ public class FunctionDeclaration extends Statement {
 
     public BlockStatement getBody() {
         return this.body;
+    }
+
+    @Override
+    public void accept(ASTVisitor visitor) {
+        visitor.visit(this);
     }
 
     @Override

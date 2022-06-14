@@ -70,7 +70,6 @@ public class InstructionsImpl {
                     throw new UnsupportedOperationException();
 
                 interpreter.initLocalsFromStack(paramCount, invokeInsn.getLocalCount());
-                clearArgsArray(paramCount);
                 interpreter.saveReturnAddress();
                 interpreter.setProgramCounter(invokeInsn.getAbsoluteJumpAddress());
                 interpreter.createStackBoundary();
