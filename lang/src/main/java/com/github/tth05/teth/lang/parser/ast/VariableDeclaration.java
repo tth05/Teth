@@ -28,7 +28,7 @@ public class VariableDeclaration extends Statement {
         return this.nameExpr;
     }
 
-    public TypeExpression getType() {
+    public TypeExpression getTypeExpr() {
         return this.type;
     }
 

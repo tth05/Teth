@@ -43,6 +43,19 @@ public class Analyzer {
     private final class Visitor extends ASTVisitor {
 
         @Override
+        public void visit(VariableDeclaration declaration) {
+            super.visit(declaration);
+
+            var type = declaration.getTypeExpr().getType();
+            var expression = declaration.getExpression();
+            if (expression != null) {
+                var resolvedType = resolvedExpressionTypes.get(expression);
+                if (!resolvedType.isSubtypeOf(type))
+                    throw new TypeResolverException(expression.getSpan(), "Cannot assign value of type " + resolvedType + " to variable of type " + type);
+            }
+        }
+
+        @Override
         public void visit(UnaryExpression expression) {
             super.visit(expression);
 

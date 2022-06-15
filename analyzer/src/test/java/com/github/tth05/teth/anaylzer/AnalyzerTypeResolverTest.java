@@ -130,4 +130,30 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
         assertEquals(1, problems.size());
         assertEquals("List element type mismatch", problems.get(0).message());
     }
+
+    @Test
+    public void testVariableDeclaration() {
+        var problems = analyze("long[] a = [1, 2, 3]");
+
+        assertTrue(problems.isEmpty());
+
+        problems = analyze("double d");
+
+        assertTrue(problems.isEmpty());
+    }
+
+    @Test
+    public void testVariableDeclarationIncompatibleTypes() {
+        var problems = analyze("long[] a = [\"\"]");
+
+        assertFalse(problems.isEmpty());
+        assertEquals(1, problems.size());
+        assertEquals("Cannot assign value of type string[] to variable of type long[]", problems.get(0).message());
+
+        problems = analyze("double d = 6");
+
+        assertFalse(problems.isEmpty());
+        assertEquals(1, problems.size());
+        assertEquals("Cannot assign value of type long to variable of type double", problems.get(0).message());
+    }
 }

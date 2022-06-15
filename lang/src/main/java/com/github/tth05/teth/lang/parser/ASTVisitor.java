@@ -31,7 +31,7 @@ public abstract class ASTVisitor {
     }
 
     public void visit(VariableDeclaration declaration) {
-        declaration.getType().accept(this);
+        declaration.getTypeExpr().accept(this);
         declaration.getNameExpr().accept(this);
         var expression = declaration.getExpression();
         if (expression != null)
