@@ -156,4 +156,24 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
         assertEquals(1, problems.size());
         assertEquals("Cannot assign value of type long to variable of type double", problems.get(0).message());
     }
+
+    @Test
+    public void testIfStatementCondition() {
+        var problems = analyze("if(true) 5");
+
+        assertTrue(problems.isEmpty());
+
+        problems = analyze("if(true == false) 5");
+
+        assertTrue(problems.isEmpty());
+    }
+
+    @Test
+    public void testIfStatementConditionIncorrectType() {
+        var problems = analyze("if(5) 5");
+
+        assertFalse(problems.isEmpty());
+        assertEquals(1, problems.size());
+        assertEquals("Condition of if statement must be a bool", problems.get(0).message());
+    }
 }

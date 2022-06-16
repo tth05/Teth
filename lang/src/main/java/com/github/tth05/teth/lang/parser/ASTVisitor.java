@@ -93,8 +93,4 @@ public abstract class ASTVisitor {
 
     public void visit(TypeExpression typeExpression) {
     }
-
-    public void visit(IVisitable visitable) {
-        throw new UnsupportedOperationException();
-    }
 }

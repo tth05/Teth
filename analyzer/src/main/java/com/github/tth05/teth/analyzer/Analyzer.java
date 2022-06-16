@@ -6,6 +6,8 @@ import com.github.tth05.teth.lang.parser.SourceFileUnit;
 import com.github.tth05.teth.lang.parser.Type;
 import com.github.tth05.teth.lang.parser.ast.*;
 
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Map;
 
@@ -42,6 +44,15 @@ public class Analyzer {
     @SuppressWarnings("UnqualifiedFieldAccess")
     private final class Visitor extends ASTVisitor {
 
+        private static final Map<Type, BinaryExpression.Operator[]> BINARY_OPERATORS_ALLOWED_TYPES = new HashMap<>();
+        static {
+            var all = BinaryExpression.Operator.values();
+            BINARY_OPERATORS_ALLOWED_TYPES.put(Type.LONG, all);
+            BINARY_OPERATORS_ALLOWED_TYPES.put(Type.DOUBLE, all);
+            BINARY_OPERATORS_ALLOWED_TYPES.put(Type.STRING, new BinaryExpression.Operator[]{BinaryExpression.Operator.OP_ADD});
+            BINARY_OPERATORS_ALLOWED_TYPES.put(Type.BOOLEAN, new BinaryExpression.Operator[]{BinaryExpression.Operator.OP_EQUAL, BinaryExpression.Operator.OP_NOT_EQUAL});
+        }
+
         @Override
         public void visit(VariableDeclaration declaration) {
             super.visit(declaration);
@@ -53,6 +64,15 @@ public class Analyzer {
                 if (!resolvedType.isSubtypeOf(type))
                     throw new TypeResolverException(expression.getSpan(), "Cannot assign value of type " + resolvedType + " to variable of type " + type);
             }
+        }
+
+
+        @Override
+        public void visit(IfStatement statement) {
+            super.visit(statement);
+
+            if (!resolvedExpressionTypes.get(statement.getCondition()).equals(Type.BOOLEAN))
+                throw new TypeResolverException(statement.getCondition().getSpan(), "Condition of if statement must be a bool");
         }
 
         @Override
@@ -74,13 +94,15 @@ public class Analyzer {
 
             var leftType = resolvedExpressionTypes.get(expression.getLeft());
             var rightType = resolvedExpressionTypes.get(expression.getRight());
+            var anyNumber = leftType.isNumber() || rightType.isNumber();
+            var typesMatch = anyNumber ? leftType.isNumber() && rightType.isNumber() : leftType.equals(rightType);
 
-            if (leftType.isNumber() ^ rightType.isNumber())
-                throw new TypeResolverException(expression.getSpan(), "Operator " + expression.getOperator().asString() + " cannot be applied to " + leftType + " and " + rightType);
-            if (leftType == Type.STRING ^ rightType == Type.STRING)
+            if (!typesMatch ||
+                !BINARY_OPERATORS_ALLOWED_TYPES.containsKey(leftType) ||
+                Arrays.stream(BINARY_OPERATORS_ALLOWED_TYPES.get(leftType)).noneMatch(op -> op == expression.getOperator()))
                 throw new TypeResolverException(expression.getSpan(), "Operator " + expression.getOperator().asString() + " cannot be applied to " + leftType + " and " + rightType);
 
-            var binaryType = leftType.isNumber() ? (leftType == Type.DOUBLE || rightType == Type.DOUBLE ? Type.DOUBLE : Type.LONG) : Type.STRING;
+            var binaryType = anyNumber ? (leftType == Type.DOUBLE || rightType == Type.DOUBLE ? Type.DOUBLE : Type.LONG) : leftType;
             resolvedExpressionTypes.put(expression, binaryType);
         }
 
