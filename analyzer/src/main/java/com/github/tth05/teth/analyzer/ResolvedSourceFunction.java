@@ -10,7 +10,7 @@ public class ResolvedSourceFunction {
     private final FunctionDeclaration.Parameter parameters;
     private final TypeExpression returnTypeExpr;
 
-    private final AnalyzedScope scope = new AnalyzedScope();
+    private final DeclarationStack scope = new DeclarationStack();
 
     public ResolvedSourceFunction(IdentifierExpression nameExpr, FunctionDeclaration.Parameter parameters, TypeExpression returnTypeExpr) {
         this.nameExpr = nameExpr;
@@ -18,7 +18,7 @@ public class ResolvedSourceFunction {
         this.returnTypeExpr = returnTypeExpr;
     }
 
-    public AnalyzedScope getScope() {
+    public DeclarationStack getScope() {
         return this.scope;
     }
 }

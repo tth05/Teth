@@ -1,6 +1,5 @@
-package com.github.tth05.teth.anaylzer;
+package com.github.tth05.teth.analyzer;
 
-import com.github.tth05.teth.analyzer.Analyzer;
 import com.github.tth05.teth.lang.diagnostics.ProblemList;
 import com.github.tth05.teth.lang.lexer.TokenStream;
 import com.github.tth05.teth.lang.lexer.Tokenizer;
@@ -23,7 +22,7 @@ public abstract class AbstractAnalyzerTest {
         assertStreamsEmpty();
 
         this.analyzer = new Analyzer(this.unit);
-        return analyzer.analyze();
+        return this.analyzer.analyze();
     }
 
     protected void createAST(String str) {

@@ -25,7 +25,7 @@ public class Analyzer {
         try {
             new Visitor().visit(this.unit);
             return ProblemList.of();
-        } catch (TypeResolverException e) {
+        } catch (TypeResolverException | ValidationException e) {
             return ProblemList.of(e.asProblem());
         }
     }
@@ -53,6 +53,15 @@ public class Analyzer {
             BINARY_OPERATORS_ALLOWED_TYPES.put(Type.BOOLEAN, new BinaryExpression.Operator[]{BinaryExpression.Operator.OP_EQUAL, BinaryExpression.Operator.OP_NOT_EQUAL});
         }
 
+        private final DeclarationStack declarationStack = new DeclarationStack();
+
+        @Override
+        public void visit(SourceFileUnit unit) {
+            // Begin global scope
+            this.declarationStack.beginScope(false);
+            super.visit(unit);
+        }
+
         @Override
         public void visit(VariableDeclaration declaration) {
             super.visit(declaration);
@@ -64,8 +73,33 @@ public class Analyzer {
                 if (!resolvedType.isSubtypeOf(type))
                     throw new TypeResolverException(expression.getSpan(), "Cannot assign value of type " + resolvedType + " to variable of type " + type);
             }
+
+            this.declarationStack.addDeclaration(declaration.getNameExpr().getValue(), declaration);
         }
 
+        @Override
+        public void visit(VariableAssignmentExpression expression) {
+            super.visit(expression);
+
+            var decl = this.declarationStack.resolveIdentifier(expression.getTargetNameExpr().getValue());
+            if (decl == null)
+                throw new ValidationException(expression.getTargetNameExpr().getSpan(), "Unresolved identifier");
+            if (!(decl instanceof VariableDeclaration varDecl))
+                throw new ValidationException(expression.getTargetNameExpr().getSpan(), "Identifier is not a variable");
+
+            var type = resolvedExpressionTypes.get(expression.getExpr());
+            if (!type.equals(varDecl.getTypeExpr().getType()))
+                throw new TypeResolverException(expression.getExpr().getSpan(), "Cannot assign expression of type " + type + " to variable of type " + varDecl.getTypeExpr().getType());
+
+            resolvedExpressionTypes.put(expression, type);
+        }
+
+        @Override
+        public void visit(BlockStatement statement) {
+            this.declarationStack.beginScope(true);
+            super.visit(statement);
+            this.declarationStack.endScope();
+        }
 
         @Override
         public void visit(IfStatement statement) {

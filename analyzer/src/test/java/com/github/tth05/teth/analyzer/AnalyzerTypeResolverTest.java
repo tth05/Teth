@@ -1,4 +1,4 @@
-package com.github.tth05.teth.anaylzer;
+package com.github.tth05.teth.analyzer;
 
 import com.github.tth05.teth.lang.parser.Type;
 import com.github.tth05.teth.lang.parser.ast.Expression;
@@ -175,5 +175,22 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
         assertFalse(problems.isEmpty());
         assertEquals(1, problems.size());
         assertEquals("Condition of if statement must be a bool", problems.get(0).message());
+    }
+
+    @Test
+    public void testAssignToVariable() {
+        var problems = analyze("long a\n a = 5");
+
+        assertTrue(problems.isEmpty());
+        assertEquals(Type.LONG, this.analyzer.resolvedType(((Expression) this.unit.getStatements().get(1))));
+    }
+
+    @Test
+    public void testAssignToVariableIncompatibleTypes() {
+        var problems = analyze("long a \n a=5.0");
+
+        assertFalse(problems.isEmpty());
+        assertEquals(1, problems.size());
+        assertEquals("Cannot assign expression of type double to variable of type long", problems.get(0).message());
     }
 }
