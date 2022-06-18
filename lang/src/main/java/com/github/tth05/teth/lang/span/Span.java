@@ -34,6 +34,9 @@ public record Span(char[] source, int offset, int offsetEnd) implements ISpan {
     }
 
     public static Span of(ISpan first, ISpan last) {
+        if (first.source() != last.source())
+            throw new IllegalArgumentException("Spans must be from the same source");
+
         return new Span(first.source(), first.offset(), last.offsetEnd());
     }
 }

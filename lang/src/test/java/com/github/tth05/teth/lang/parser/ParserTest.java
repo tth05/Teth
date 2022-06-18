@@ -387,8 +387,8 @@ public class ParserTest extends AbstractParserTest {
                                         new IdentifierExpression(null, "foo"),
                                         null,
                                         List.of(
-                                                new FunctionDeclaration.ParameterDeclaration(new TypeExpression(null, Type.fromString("type")), new IdentifierExpression(null, "a"), 0),
-                                                new FunctionDeclaration.ParameterDeclaration(new TypeExpression(null, Type.fromString("long")), new IdentifierExpression(null, "b"), 1)
+                                                new FunctionDeclaration.ParameterDeclaration(null, new TypeExpression(null, Type.fromString("type")), new IdentifierExpression(null, "a"), 0),
+                                                new FunctionDeclaration.ParameterDeclaration(null, new TypeExpression(null, Type.fromString("long")), new IdentifierExpression(null, "b"), 1)
                                         ),
                                         new BlockStatement(
                                                 null,

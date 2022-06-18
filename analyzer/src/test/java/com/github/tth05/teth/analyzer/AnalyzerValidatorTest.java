@@ -42,7 +42,6 @@ public class AnalyzerValidatorTest extends AbstractAnalyzerTest {
     public void testAssignAccessFunctionParameter() {
         var problems = analyze("fn f(long a) {a=5\n fn b(long c){c=3}b(a)}");
 
-        System.out.println(problems);
         assertTrue(problems.isEmpty());
     }
 

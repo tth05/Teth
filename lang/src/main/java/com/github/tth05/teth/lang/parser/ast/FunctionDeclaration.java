@@ -105,11 +105,15 @@ public class FunctionDeclaration extends Statement {
         private final IdentifierExpression name;
         private final int index;
 
-        public ParameterDeclaration(TypeExpression type, IdentifierExpression name, int index) {
-            super(Span.of(type.getSpan(), name.getSpan()));
+        public ParameterDeclaration(ISpan span, TypeExpression type, IdentifierExpression name, int index) {
+            super(span);
             this.type = type;
             this.name = name;
             this.index = index;
+        }
+
+        public ParameterDeclaration(TypeExpression type, IdentifierExpression name, int index) {
+            this(Span.of(type.getSpan(), name.getSpan()), type, name, index);
         }
 
         @Override
