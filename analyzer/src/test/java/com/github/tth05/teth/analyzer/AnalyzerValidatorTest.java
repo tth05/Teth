@@ -37,4 +37,36 @@ public class AnalyzerValidatorTest extends AbstractAnalyzerTest {
         assertEquals(1, problems.size());
         assertEquals("Unresolved identifier", problems.get(0).message());
     }
+
+    @Test
+    public void testAssignAccessFunctionParameter() {
+        var problems = analyze("fn f(long a) {a=5\n fn b(long c){c=3}b(a)}");
+
+        System.out.println(problems);
+        assertTrue(problems.isEmpty());
+    }
+
+    @Test
+    public void testAssignToParameterOutOfScope() {
+        var problems = analyze("fn f(long a) {} a = 5");
+
+        assertFalse(problems.isEmpty());
+        assertEquals(1, problems.size());
+        assertEquals("Unresolved identifier", problems.get(0).message());
+
+        problems = analyze("fn f(long a) {fn b(long c){a=3}}");
+
+        assertFalse(problems.isEmpty());
+        assertEquals(1, problems.size());
+        assertEquals("Unresolved identifier", problems.get(0).message());
+    }
+
+    @Test
+    public void testReturnOutsideFunction() {
+        var problems = analyze("return 5");
+
+        assertFalse(problems.isEmpty());
+        assertEquals(1, problems.size());
+        assertEquals("Return statement outside of function", problems.get(0).message());
+    }
 }

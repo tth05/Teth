@@ -193,4 +193,26 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
         assertEquals(1, problems.size());
         assertEquals("Cannot assign expression of type double to variable of type long", problems.get(0).message());
     }
+
+    @Test
+    public void testReturn() {
+        var problems = analyze("fn f() long {return 5}");
+
+        assertTrue(problems.isEmpty());
+    }
+
+    @Test
+    public void testReturnIncompatibleTypes() {
+        var problems = analyze("fn f(){return 5}");
+
+        assertFalse(problems.isEmpty());
+        assertEquals(1, problems.size());
+        assertEquals("Cannot return long from function returning void", problems.get(0).message());
+
+        problems = analyze("fn f() double {return true}");
+
+        assertFalse(problems.isEmpty());
+        assertEquals(1, problems.size());
+        assertEquals("Cannot return bool from function returning double", problems.get(0).message());
+    }
 }

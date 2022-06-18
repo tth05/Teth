@@ -4,6 +4,7 @@ import java.util.Objects;
 
 public class Type {
 
+    public static final Type VOID = new Type("void");
     public static final Type ANY = new Type("any");
     public static final Type LONG = new Type("long");
     public static final Type STRING = new Type("string");

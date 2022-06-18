@@ -14,6 +14,7 @@ import java.util.Map;
 public class Analyzer {
 
     private final Map<Expression, Type> resolvedExpressionTypes = new IdentityHashMap<>();
+    private final Map<IdentifierExpression, Statement> resolvedIdentifierBindings = new IdentityHashMap<>();
 
     private final SourceFileUnit unit;
 
@@ -33,8 +34,8 @@ public class Analyzer {
     /**
      * IntrinsicFunctionBinding, SourceFunctionBinding
      */
-    public void resolvedInvocationBinding(FunctionInvocationExpression invocation) {
-
+    public Statement resolvedIdentifierBinding(IdentifierExpression identifierExpression) {
+        return this.resolvedIdentifierBindings.get(identifierExpression);
     }
 
     public Type resolvedType(Expression expression) {
@@ -55,6 +56,8 @@ public class Analyzer {
 
         private final DeclarationStack declarationStack = new DeclarationStack();
 
+        private FunctionDeclaration currentFunction;
+
         @Override
         public void visit(SourceFileUnit unit) {
             // Begin global scope
@@ -63,8 +66,55 @@ public class Analyzer {
         }
 
         @Override
+        public void visit(FunctionDeclaration declaration) {
+            // Add self to outer scope
+            this.declarationStack.addDeclaration(declaration.getNameExpr().getValue(), declaration);
+
+            this.currentFunction = declaration;
+            this.declarationStack.beginScope(false);
+            // Don't want to visit function name here
+            declaration.getParameters().forEach(p -> p.accept(this));
+            var returnTypeExpr = declaration.getReturnTypeExpr();
+            if (returnTypeExpr != null)
+                returnTypeExpr.accept(this);
+
+            // Add self to inner scope
+            this.declarationStack.addDeclaration(declaration.getNameExpr().getValue(), declaration);
+            // TODO: Validate body returns something in all cases
+            declaration.getBody().accept(this);
+            this.declarationStack.endScope();
+            this.currentFunction = null;
+        }
+
+        @Override
+        public void visit(FunctionDeclaration.ParameterDeclaration parameter) {
+            { // Don't want to visit parameter name here
+                parameter.getTypeExpr().accept(this);
+            }
+
+            this.declarationStack.addDeclaration(parameter.getNameExpr().getValue(), parameter);
+        }
+
+        @Override
+        public void visit(ReturnStatement returnStatement) {
+            super.visit(returnStatement);
+
+            if (this.currentFunction == null)
+                throw new ValidationException(returnStatement.getSpan(), "Return statement outside of function");
+
+            var type = resolvedExpressionTypes.get(returnStatement.getValueExpr());
+            if (!type.equals(this.currentFunction.getReturnType()))
+                throw new TypeResolverException(returnStatement.getSpan(), "Cannot return " + type + " from function returning " + this.currentFunction.getReturnType());
+        }
+
+        @Override
         public void visit(VariableDeclaration declaration) {
-            super.visit(declaration);
+            { // Don't want to visit name here
+                declaration.getTypeExpr().accept(this);
+                var expression = declaration.getExpression();
+                if (expression != null)
+                    expression.accept(this);
+            }
 
             var type = declaration.getTypeExpr().getType();
             var expression = declaration.getExpression();
@@ -81,10 +131,11 @@ public class Analyzer {
         public void visit(VariableAssignmentExpression expression) {
             super.visit(expression);
 
-            var decl = this.declarationStack.resolveIdentifier(expression.getTargetNameExpr().getValue());
+            var decl = resolvedIdentifierBindings.get(expression.getTargetNameExpr());
+
             if (decl == null)
                 throw new ValidationException(expression.getTargetNameExpr().getSpan(), "Unresolved identifier");
-            if (!(decl instanceof VariableDeclaration varDecl))
+            if (!(decl instanceof IVariableDeclaration varDecl))
                 throw new ValidationException(expression.getTargetNameExpr().getSpan(), "Identifier is not a variable");
 
             var type = resolvedExpressionTypes.get(expression.getExpr());
@@ -176,6 +227,29 @@ public class Analyzer {
         @Override
         public void visit(LongLiteralExpression longLiteralExpression) {
             resolvedExpressionTypes.put(longLiteralExpression, Type.LONG);
+        }
+
+        @Override
+        public void visit(TypeExpression typeExpression) {
+            // TODO: Check that type exists
+        }
+
+        @Override
+        public void visit(IdentifierExpression identifierExpression) {
+            var decl = this.declarationStack.resolveIdentifier(identifierExpression.getValue());
+            if (decl == null)
+                throw new ValidationException(identifierExpression.getSpan(), "Unresolved identifier");
+
+            var type = switch (decl) {
+                case VariableDeclaration declaration -> declaration.getTypeExpr().getType();
+                case FunctionDeclaration ignored -> Type.FUNCTION;
+                case FunctionDeclaration.ParameterDeclaration declaration -> declaration.getTypeExpr().getType();
+                default ->
+                        throw new ValidationException(identifierExpression.getSpan(), "Identifier is not a variable or function");
+            };
+
+            resolvedExpressionTypes.put(identifierExpression, type);
+            resolvedIdentifierBindings.put(identifierExpression, decl);
         }
     }
 }

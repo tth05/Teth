@@ -6,7 +6,7 @@ import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
 import java.util.Objects;
 
-public class VariableDeclaration extends Statement {
+public class VariableDeclaration extends Statement implements IVariableDeclaration{
 
     private final TypeExpression type;
     private final IdentifierExpression nameExpr;

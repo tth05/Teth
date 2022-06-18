@@ -133,7 +133,7 @@ public class Parser {
         var functionName = this.stream.consumeType(TokenType.IDENTIFIER);
         consumeLineBreaks();
         this.stream.consumeType(TokenType.L_PAREN);
-        var parameters = new ArrayList<FunctionDeclaration.Parameter>();
+        var parameters = new ArrayList<FunctionDeclaration.ParameterDeclaration>();
         while (true) {
             var token = this.stream.peek();
             if (token.is(TokenType.R_PAREN))
@@ -146,7 +146,7 @@ public class Parser {
             consumeLineBreaks();
             var nameToken = this.stream.consumeType(TokenType.IDENTIFIER);
             consumeLineBreaks();
-            parameters.add(new FunctionDeclaration.Parameter(type, new IdentifierExpression(nameToken.span(), nameToken.value())));
+            parameters.add(new FunctionDeclaration.ParameterDeclaration(type, new IdentifierExpression(nameToken.span(), nameToken.value()), parameters.size()));
         }
 
         this.stream.consumeType(TokenType.R_PAREN);

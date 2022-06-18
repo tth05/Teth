@@ -40,12 +40,16 @@ public abstract class ASTVisitor {
 
     public void visit(FunctionDeclaration declaration) {
         declaration.getNameExpr().accept(this);
-        declaration.getParameters().forEach(p -> {
-            p.type().accept(this);
-            p.name().accept(this);
-        });
-        declaration.getReturnTypeExpr().accept(this);
+        declaration.getParameters().forEach(p -> p.accept(this));
+        var expr = declaration.getReturnTypeExpr();
+        if (expr != null)
+            expr.accept(this);
         declaration.getBody().accept(this);
+    }
+
+    public void visit(FunctionDeclaration.ParameterDeclaration parameter) {
+        parameter.getTypeExpr().accept(this);
+        parameter.getNameExpr().accept(this);
     }
 
     public void visit(FunctionInvocationExpression invocation) {
