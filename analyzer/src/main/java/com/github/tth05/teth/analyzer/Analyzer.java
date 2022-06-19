@@ -5,6 +5,7 @@ import com.github.tth05.teth.lang.parser.ASTVisitor;
 import com.github.tth05.teth.lang.parser.SourceFileUnit;
 import com.github.tth05.teth.lang.parser.Type;
 import com.github.tth05.teth.lang.parser.ast.*;
+import com.github.tth05.teth.lang.stdlib.StandardLibrary;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -93,6 +94,24 @@ public class Analyzer {
             }
 
             this.declarationStack.addDeclaration(parameter.getNameExpr().getValue(), parameter);
+        }
+
+        @Override
+        public void visit(MemberAccessExpression expression) {
+            { // Don't want to visit member name here
+                expression.getTarget().accept(this);
+            }
+
+            var type = resolvedExpressionTypes.get(expression.getTarget());
+            var member = StandardLibrary.getMemberOfType(type, expression.getMemberNameExpr().getValue());
+            if (member == null)
+                throw new TypeResolverException(expression.getMemberNameExpr().getSpan(), "Member " + expression.getMemberNameExpr().getValue() + " not found in type " + type);
+
+            resolvedExpressionTypes.put(expression, switch (member) {
+                case FunctionDeclaration ignored -> Type.FUNCTION;
+                default -> throw new IllegalStateException();
+            });
+            resolvedIdentifierBindings.put(expression.getMemberNameExpr(), member);
         }
 
         @Override
@@ -231,7 +250,8 @@ public class Analyzer {
 
         @Override
         public void visit(TypeExpression typeExpression) {
-            // TODO: Check that type exists
+            if (!StandardLibrary.isBuiltinType(typeExpression.getType()))
+                throw new TypeResolverException(typeExpression.getSpan(), "Unknown type " + typeExpression.getType());
         }
 
         @Override

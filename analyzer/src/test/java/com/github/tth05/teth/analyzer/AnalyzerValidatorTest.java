@@ -68,4 +68,20 @@ public class AnalyzerValidatorTest extends AbstractAnalyzerTest {
         assertEquals(1, problems.size());
         assertEquals("Return statement outside of function", problems.get(0).message());
     }
+
+    @Test
+    public void testAccessMember() {
+        var problems = analyze("function f = (5).toString");
+
+        assertTrue(problems.isEmpty());
+    }
+
+    @Test
+    public void testAccessNonExistentMember() {
+        var problems = analyze("function f = (5).toStringg");
+
+        assertFalse(problems.isEmpty());
+        assertEquals(1, problems.size());
+        assertEquals("Member toStringg not found in type long", problems.get(0).message());
+    }
 }

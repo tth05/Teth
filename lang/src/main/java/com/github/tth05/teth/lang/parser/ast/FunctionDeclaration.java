@@ -17,13 +17,19 @@ public class FunctionDeclaration extends Statement {
     private final TypeExpression returnTypeExpr;
     private final List<ParameterDeclaration> parameters;
     private final BlockStatement body;
+    private final boolean intrinsic;
 
     public FunctionDeclaration(ISpan span, IdentifierExpression nameExpr, TypeExpression returnTypeExpr, List<ParameterDeclaration> parameters, BlockStatement body) {
+        this(span, nameExpr, returnTypeExpr, parameters, body, false);
+    }
+
+    public FunctionDeclaration(ISpan span, IdentifierExpression nameExpr, TypeExpression returnTypeExpr, List<ParameterDeclaration> parameters, BlockStatement body, boolean intrinsic) {
         super(span);
         this.nameExpr = nameExpr;
         this.returnTypeExpr = returnTypeExpr;
         this.parameters = parameters;
         this.body = body;
+        this.intrinsic = intrinsic;
     }
 
     public IdentifierExpression getNameExpr() {
@@ -44,6 +50,10 @@ public class FunctionDeclaration extends Statement {
 
     public BlockStatement getBody() {
         return this.body;
+    }
+
+    public boolean isIntrinsic() {
+        return this.intrinsic;
     }
 
     @Override
