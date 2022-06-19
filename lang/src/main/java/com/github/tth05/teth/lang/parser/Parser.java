@@ -243,7 +243,7 @@ public class Parser {
     }
 
     private Expression parseFunctionInvocation(Expression target) {
-        var firstSpan = this.stream.consumeType(TokenType.L_PAREN).span();
+        this.stream.consumeType(TokenType.L_PAREN);
         consumeLineBreaks();
         var parameters = new ExpressionList();
         while (true) {
@@ -257,7 +257,7 @@ public class Parser {
         }
 
         var secondSpan = this.stream.consumeType(TokenType.R_PAREN).span();
-        return new FunctionInvocationExpression(Span.of(firstSpan, secondSpan), target, parameters);
+        return new FunctionInvocationExpression(Span.of(target.getSpan(), secondSpan), target, parameters);
     }
 
     private Expression parseParenthesisedExpression() {

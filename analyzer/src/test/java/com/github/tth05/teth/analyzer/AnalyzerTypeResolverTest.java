@@ -215,4 +215,36 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
         assertEquals(1, problems.size());
         assertEquals("Cannot return bool from function returning double", problems.get(0).message());
     }
+
+    @Test
+    public void testFunctionReturnType() {
+        var problems = analyze("fn f() long {return 5}long l = f()");
+
+        assertTrue(problems.isEmpty());
+    }
+
+    @Test
+    public void testFunctionReturnTypeIncompatible() {
+        var problems = analyze("fn f(){}double d = f()");
+
+        assertFalse(problems.isEmpty());
+        assertEquals(1, problems.size());
+        assertEquals("Cannot assign value of type void to variable of type double", problems.get(0).message());
+    }
+
+    @Test
+    public void testFunctionParameterTypes() {
+        var problems = analyze("fn f() long {return 5}f()\nfn b(long l) {}b(5)");
+
+        assertTrue(problems.isEmpty());
+    }
+
+    @Test
+    public void testFunctionParameterTypesMismatch() {
+        var problems = analyze("fn f(long a, string s, long l) {}f(5, \"\", 5.0)");
+
+        assertFalse(problems.isEmpty());
+        assertEquals(1, problems.size());
+        assertEquals("Parameter type mismatch. Expected long, got double", problems.get(0).message());
+    }
 }

@@ -4,7 +4,7 @@ import com.github.tth05.teth.lang.parser.ASTVisitor;
 import com.github.tth05.teth.lang.span.ISpan;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
-public class MemberAccessExpression extends Expression {
+public class MemberAccessExpression extends Expression implements IDeclarationReference {
 
     private final IdentifierExpression memberNameExpr;
     private final Expression target;
@@ -21,6 +21,11 @@ public class MemberAccessExpression extends Expression {
 
     public Expression getTarget() {
         return this.target;
+    }
+
+    @Override
+    public IdentifierExpression getReferenceNameExpr() {
+        return getMemberNameExpr();
     }
 
     @Override

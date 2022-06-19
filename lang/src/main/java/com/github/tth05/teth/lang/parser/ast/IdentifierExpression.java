@@ -7,7 +7,7 @@ import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 import java.util.Objects;
 
 
-public class IdentifierExpression extends Expression {
+public class IdentifierExpression extends Expression implements IDeclarationReference{
 
     private final String value;
 
@@ -18,6 +18,11 @@ public class IdentifierExpression extends Expression {
 
     public String getValue() {
         return this.value;
+    }
+
+    @Override
+    public IdentifierExpression getReferenceNameExpr() {
+        return this;
     }
 
     @Override

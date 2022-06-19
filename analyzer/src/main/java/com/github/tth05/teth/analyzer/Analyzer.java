@@ -7,15 +7,12 @@ import com.github.tth05.teth.lang.parser.Type;
 import com.github.tth05.teth.lang.parser.ast.*;
 import com.github.tth05.teth.lang.stdlib.StandardLibrary;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.IdentityHashMap;
-import java.util.Map;
+import java.util.*;
 
 public class Analyzer {
 
     private final Map<Expression, Type> resolvedExpressionTypes = new IdentityHashMap<>();
-    private final Map<IdentifierExpression, Statement> resolvedIdentifierBindings = new IdentityHashMap<>();
+    private final Map<IDeclarationReference, Statement> resolvedReferences = new IdentityHashMap<>();
 
     private final SourceFileUnit unit;
 
@@ -36,7 +33,7 @@ public class Analyzer {
      * IntrinsicFunctionBinding, SourceFunctionBinding
      */
     public Statement resolvedIdentifierBinding(IdentifierExpression identifierExpression) {
-        return this.resolvedIdentifierBindings.get(identifierExpression);
+        return this.resolvedReferences.get(identifierExpression);
     }
 
     public Type resolvedType(Expression expression) {
@@ -57,21 +54,30 @@ public class Analyzer {
 
         private final DeclarationStack declarationStack = new DeclarationStack();
 
-        private FunctionDeclaration currentFunction;
+        private Deque<FunctionDeclaration> currentFunctionStack = new ArrayDeque<>(5);
 
         @Override
         public void visit(SourceFileUnit unit) {
             // Begin global scope
             this.declarationStack.beginScope(false);
+            // Collect top level functions
+            for (var decl : unit.getStatements()) {
+                if (!(decl instanceof FunctionDeclaration functionDeclaration))
+                    continue;
+
+                this.declarationStack.addDeclaration(functionDeclaration.getNameExpr().getValue(), functionDeclaration);
+            }
+
             super.visit(unit);
         }
 
         @Override
         public void visit(FunctionDeclaration declaration) {
-            // Add self to outer scope
-            this.declarationStack.addDeclaration(declaration.getNameExpr().getValue(), declaration);
+            // Add nested functions to outer scope, as if this were a variable declaration
+            if (!this.currentFunctionStack.isEmpty())
+                this.declarationStack.addDeclaration(declaration.getNameExpr().getValue(), declaration);
 
-            this.currentFunction = declaration;
+            this.currentFunctionStack.addLast(declaration);
             this.declarationStack.beginScope(false);
             // Don't want to visit function name here
             declaration.getParameters().forEach(p -> p.accept(this));
@@ -79,12 +85,13 @@ public class Analyzer {
             if (returnTypeExpr != null)
                 returnTypeExpr.accept(this);
 
-            // Add self to inner scope
-            this.declarationStack.addDeclaration(declaration.getNameExpr().getValue(), declaration);
+            // Add self to inner scope, to allow nested functions to access themselves
+            if (this.currentFunctionStack.size() > 1)
+                this.declarationStack.addDeclaration(declaration.getNameExpr().getValue(), declaration);
             // TODO: Validate body returns something in all cases
             declaration.getBody().accept(this);
             this.declarationStack.endScope();
-            this.currentFunction = null;
+            this.currentFunctionStack.removeLast();
         }
 
         @Override
@@ -94,6 +101,32 @@ public class Analyzer {
             }
 
             this.declarationStack.addDeclaration(parameter.getNameExpr().getValue(), parameter);
+        }
+
+        @Override
+        public void visit(FunctionInvocationExpression invocation) {
+            super.visit(invocation);
+
+            if (!(invocation.getTarget() instanceof IDeclarationReference reference))
+                throw new ValidationException(invocation.getTarget().getSpan(), "Function invocation target must be a function");
+
+            var func = resolvedReferences.get(reference);
+            if (!(func instanceof FunctionDeclaration decl))
+                throw new ValidationException(invocation.getTarget().getSpan(), "Function invocation target must be a function");
+
+            if (decl.getParameters().size() != invocation.getParameters().size())
+                throw new ValidationException(invocation.getSpan(), "Wrong number of parameters for function invocation. Expected " + decl.getParameters().size() + ", got " + invocation.getParameters().size());
+
+            for (int i = 0; i < decl.getParameters().size(); i++) {
+                var param = decl.getParameters().get(i);
+                var paramType = param.getTypeExpr().getType();
+                var paramExpr = invocation.getParameters().get(i);
+                var paramExprType = resolvedExpressionTypes.get(paramExpr);
+                if (!paramType.equals(paramExprType))
+                    throw new ValidationException(paramExpr.getSpan(), "Parameter type mismatch. Expected " + paramType + ", got " + paramExprType);
+            }
+
+            resolvedExpressionTypes.put(invocation, decl.getReturnType());
         }
 
         @Override
@@ -111,19 +144,20 @@ public class Analyzer {
                 case FunctionDeclaration ignored -> Type.FUNCTION;
                 default -> throw new IllegalStateException();
             });
-            resolvedIdentifierBindings.put(expression.getMemberNameExpr(), member);
+            resolvedReferences.put(expression, member);
         }
 
         @Override
         public void visit(ReturnStatement returnStatement) {
             super.visit(returnStatement);
 
-            if (this.currentFunction == null)
+            if (this.currentFunctionStack.isEmpty())
                 throw new ValidationException(returnStatement.getSpan(), "Return statement outside of function");
 
             var type = resolvedExpressionTypes.get(returnStatement.getValueExpr());
-            if (!type.equals(this.currentFunction.getReturnType()))
-                throw new TypeResolverException(returnStatement.getSpan(), "Cannot return " + type + " from function returning " + this.currentFunction.getReturnType());
+            var currentFunction = this.currentFunctionStack.getLast();
+            if (!type.equals(currentFunction.getReturnType()))
+                throw new TypeResolverException(returnStatement.getSpan(), "Cannot return " + type + " from function returning " + currentFunction.getReturnType());
         }
 
         @Override
@@ -150,7 +184,7 @@ public class Analyzer {
         public void visit(VariableAssignmentExpression expression) {
             super.visit(expression);
 
-            var decl = resolvedIdentifierBindings.get(expression.getTargetNameExpr());
+            var decl = resolvedReferences.get(expression.getTargetNameExpr());
 
             if (decl == null)
                 throw new ValidationException(expression.getTargetNameExpr().getSpan(), "Unresolved identifier");
@@ -269,7 +303,7 @@ public class Analyzer {
             };
 
             resolvedExpressionTypes.put(identifierExpression, type);
-            resolvedIdentifierBindings.put(identifierExpression, decl);
+            resolvedReferences.put(identifierExpression, decl);
         }
     }
 }

@@ -84,4 +84,25 @@ public class AnalyzerValidatorTest extends AbstractAnalyzerTest {
         assertEquals(1, problems.size());
         assertEquals("Member toStringg not found in type long", problems.get(0).message());
     }
+
+    @Test
+    public void testIncorrectFunctionInvocation() {
+        var problems = analyze("(5+5)()");
+
+        assertFalse(problems.isEmpty());
+        assertEquals(1, problems.size());
+        assertEquals("Function invocation target must be a function", problems.get(0).message());
+
+        problems = analyze("long a\na()");
+
+        assertFalse(problems.isEmpty());
+        assertEquals(1, problems.size());
+        assertEquals("Function invocation target must be a function", problems.get(0).message());
+
+        problems = analyze("(5).toString(2452, 12358)");
+
+        assertFalse(problems.isEmpty());
+        assertEquals(1, problems.size());
+        assertEquals("Wrong number of parameters for function invocation. Expected 0, got 2", problems.get(0).message());
+    }
 }
