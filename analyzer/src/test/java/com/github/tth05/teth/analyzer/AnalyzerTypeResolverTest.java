@@ -133,24 +133,28 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
 
     @Test
     public void testVariableDeclaration() {
-        var problems = analyze("long[] a = [1, 2, 3]");
+        var problems = analyze("let a: long[] = [1, 2, 3]");
 
         assertTrue(problems.isEmpty());
 
-        problems = analyze("double d");
+        problems = analyze("let a = [1, 2, 3]\n a=[5]");
+
+        assertTrue(problems.isEmpty());
+
+        problems = analyze("let d: double = 5.0");
 
         assertTrue(problems.isEmpty());
     }
 
     @Test
     public void testVariableDeclarationIncompatibleTypes() {
-        var problems = analyze("long[] a = [\"\"]");
+        var problems = analyze("let a: long[] = [\"\"]");
 
         assertFalse(problems.isEmpty());
         assertEquals(1, problems.size());
         assertEquals("Cannot assign value of type string[] to variable of type long[]", problems.get(0).message());
 
-        problems = analyze("double d = 6");
+        problems = analyze("let d: double = 6");
 
         assertFalse(problems.isEmpty());
         assertEquals(1, problems.size());
@@ -179,7 +183,7 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
 
     @Test
     public void testAssignToVariable() {
-        var problems = analyze("long a\n a = 5");
+        var problems = analyze("let a = 0\n a = 5");
 
         assertTrue(problems.isEmpty());
         assertEquals(Type.LONG, this.analyzer.resolvedType(((Expression) this.unit.getStatements().get(1))));
@@ -187,7 +191,7 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
 
     @Test
     public void testAssignToVariableIncompatibleTypes() {
-        var problems = analyze("long a \n a=5.0");
+        var problems = analyze("let a = 0 \n a=5.0");
 
         assertFalse(problems.isEmpty());
         assertEquals(1, problems.size());
@@ -218,14 +222,14 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
 
     @Test
     public void testFunctionReturnType() {
-        var problems = analyze("fn f() long {return 5}long l = f()");
+        var problems = analyze("fn f() long {return 5}let l: long = f()");
 
         assertTrue(problems.isEmpty());
     }
 
     @Test
     public void testFunctionReturnTypeIncompatible() {
-        var problems = analyze("fn f(){}double d = f()");
+        var problems = analyze("fn f(){}let d: double = f()");
 
         assertFalse(problems.isEmpty());
         assertEquals(1, problems.size());
@@ -234,14 +238,14 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
 
     @Test
     public void testFunctionParameterTypes() {
-        var problems = analyze("fn f() long {return 5}f()\nfn b(long l) {}b(5)");
+        var problems = analyze("fn f() long {return 5}f()\nfn b(l : long) {}b(5)");
 
         assertTrue(problems.isEmpty());
     }
 
     @Test
     public void testFunctionParameterTypesMismatch() {
-        var problems = analyze("fn f(long a, string s, long l) {}f(5, \"\", 5.0)");
+        var problems = analyze("fn f(a: long, s: string, l: long) {}f(5, \"\", 5.0)");
 
         assertFalse(problems.isEmpty());
         assertEquals(1, problems.size());

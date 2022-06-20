@@ -98,7 +98,7 @@ public class TokenizerTest extends AbstractTokenizerTest {
 
     @Test
     public void testInvalidChars() {
-        var matcher = Pattern.compile("^[a-zA-Z0-9+\\-*/^_.,=\\t\\n<>! (){}\\[\\]]$").matcher("");
+        var matcher = Pattern.compile("^[a-zA-Z0-9+\\-*/^_:.,=\\t\\n<>! (){}\\[\\]]$").matcher("");
         for (int i = 1; i < 1000; i++) {
             var str = "" + (char) i;
             if (matcher.reset(str).matches())
@@ -110,26 +110,28 @@ public class TokenizerTest extends AbstractTokenizerTest {
 
     @Test
     public void testAssign() {
-        createStreams("type anIdentifier = 56");
+        createStreams("let anIdentifier: type = 56");
         assertIterableEquals(tokenList(
-                new Token(makeSpan(0, 4), "type", TokenType.IDENTIFIER),
-                new Token(makeSpan(5, 17), "anIdentifier", TokenType.IDENTIFIER),
-                new Token(makeSpan(18, 19), "=", TokenType.EQUAL),
-                new Token(makeSpan(20, 22), "56", TokenType.LONG_LITERAL)
+                new Token(makeSpan(0, 3), "let", TokenType.KEYWORD),
+                new Token(makeSpan(4, 16), "anIdentifier", TokenType.IDENTIFIER),
+                new Token(makeSpan(16, 17), ":", TokenType.COLON),
+                new Token(makeSpan(18, 22), "type", TokenType.IDENTIFIER),
+                new Token(makeSpan(23, 24), "=", TokenType.EQUAL),
+                new Token(makeSpan(25, 27), "56", TokenType.LONG_LITERAL)
         ), tokensIntoList());
         assertStreamsEmpty();
     }
 
     @Test
     public void testAssignMultiline() {
-        createStreams("type anIdentifier\n =\n 56");
+        createStreams("let anIdentifier\n =\n 56");
         assertIterableEquals(tokenList(
-                new Token(makeSpan(0, 4), "type", TokenType.IDENTIFIER),
-                new Token(makeSpan(5, 17), "anIdentifier", TokenType.IDENTIFIER),
-                new Token(makeSpan(17, 18), "\n", TokenType.LINE_BREAK),
-                new Token(makeSpan(19, 20), "=", TokenType.EQUAL),
-                new Token(makeSpan(20, 21), "\n", TokenType.LINE_BREAK),
-                new Token(makeSpan(22, 24), "56", TokenType.LONG_LITERAL)
+                new Token(makeSpan(0, 3), "let", TokenType.KEYWORD),
+                new Token(makeSpan(4, 16), "anIdentifier", TokenType.IDENTIFIER),
+                new Token(makeSpan(16, 17), "\n", TokenType.LINE_BREAK),
+                new Token(makeSpan(18, 19), "=", TokenType.EQUAL),
+                new Token(makeSpan(19, 20), "\n", TokenType.LINE_BREAK),
+                new Token(makeSpan(21, 23), "56", TokenType.LONG_LITERAL)
         ), tokensIntoList());
         assertStreamsEmpty();
     }
@@ -216,14 +218,5 @@ public class TokenizerTest extends AbstractTokenizerTest {
 
         list.add(new Token(new Span(lastSpan.source(), lastSpan.source().length, lastSpan.source().length + 1), "", TokenType.EOF));
         return list;
-    }
-
-    private static int countLineBreaks(char[] source, int start) {
-        int count = 0;
-        for (int i = start; i < source.length; i++) {
-            if (source[i] == '\n')
-                count++;
-        }
-        return count;
     }
 }

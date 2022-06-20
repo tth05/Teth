@@ -61,50 +61,57 @@ public class ParserTest extends AbstractParserTest {
     @Test
     public void testParseTypes() {
         createAST("""
-                long l
-                double l
-                string l
-                boolean l
-                any l
-                function l
-                long[] l
+                let l: long = 5
+                let l: double = 5
+                let l: string = 5
+                let l: boolean = 5
+                let l: any = 5
+                let l: function = 5
+                let l: long[] = 5
                 """);
         assertEquals(new SourceFileUnit(
                 List.of(
                         new VariableDeclaration(
                                 null,
                                 new TypeExpression(null, Type.fromString("long")),
-                                new IdentifierExpression(null, "l")
+                                new IdentifierExpression(null, "l"),
+                                new LongLiteralExpression(null, 5)
                         ),
                         new VariableDeclaration(
                                 null,
                                 new TypeExpression(null, Type.fromString("double")),
-                                new IdentifierExpression(null, "l")
+                                new IdentifierExpression(null, "l"),
+                                new LongLiteralExpression(null, 5)
                         ),
                         new VariableDeclaration(
                                 null,
                                 new TypeExpression(null, Type.fromString("string")),
-                                new IdentifierExpression(null, "l")
+                                new IdentifierExpression(null, "l"),
+                                new LongLiteralExpression(null, 5)
                         ),
                         new VariableDeclaration(
                                 null,
                                 new TypeExpression(null, Type.fromString("boolean")),
-                                new IdentifierExpression(null, "l")
+                                new IdentifierExpression(null, "l"),
+                                new LongLiteralExpression(null, 5)
                         ),
                         new VariableDeclaration(
                                 null,
                                 new TypeExpression(null, Type.fromString("any")),
-                                new IdentifierExpression(null, "l")
+                                new IdentifierExpression(null, "l"),
+                                new LongLiteralExpression(null, 5)
                         ),
                         new VariableDeclaration(
                                 null,
                                 new TypeExpression(null, Type.fromString("function")),
-                                new IdentifierExpression(null, "l")
+                                new IdentifierExpression(null, "l"),
+                                new LongLiteralExpression(null, 5)
                         ),
                         new VariableDeclaration(
                                 null,
                                 new TypeExpression(null, new Type(Type.fromString("long"))),
-                                new IdentifierExpression(null, "l")
+                                new IdentifierExpression(null, "l"),
+                                new LongLiteralExpression(null, 5)
                         )
                 )
         ), this.unit);
@@ -352,8 +359,14 @@ public class ParserTest extends AbstractParserTest {
     }
 
     @Test
+    public void testParseVariableDeclarationMissingInitializer() {
+        assertThrows(RuntimeException.class, () -> createAST("let d: double"));
+        assertThrows(RuntimeException.class, () -> createAST("let d"));
+    }
+
+    @Test
     public void testParseVariableDeclaration() {
-        createAST("double d = 25");
+        createAST("let d: double = 25");
         assertEquals(
                 new SourceFileUnit(
                         List.of(
@@ -373,7 +386,7 @@ public class ParserTest extends AbstractParserTest {
     @Test
     public void testParseFunctionDeclaration() {
         createAST("""
-                fn foo(type a, long b) {
+                fn foo(a: type, b: long) {
                     fn bar() string {
                         return "hello"
                     }
@@ -506,8 +519,8 @@ public class ParserTest extends AbstractParserTest {
                 * c ^ d
                 fn 
                 a
-                (a a,
-                 b b
+                (a: a,
+                 b: b
                  ) a
                  {
                  a = 

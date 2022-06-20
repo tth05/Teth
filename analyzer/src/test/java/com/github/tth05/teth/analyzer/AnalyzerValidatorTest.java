@@ -8,7 +8,7 @@ public class AnalyzerValidatorTest extends AbstractAnalyzerTest {
 
     @Test
     public void testAssignToVariable() {
-        var problems = analyze("long a \n a = 5");
+        var problems = analyze("let a: long = 10 \n a = 5");
 
         assertTrue(problems.isEmpty());
     }
@@ -24,7 +24,7 @@ public class AnalyzerValidatorTest extends AbstractAnalyzerTest {
 
     @Test
     public void testAssignToVariableInGlobalScope() {
-        var problems = analyze("long a {a=5{{a=5}}}a=5");
+        var problems = analyze("let a:long = 0 {a=5{{a=5}}}a=5");
 
         assertTrue(problems.isEmpty());
     }
@@ -40,20 +40,20 @@ public class AnalyzerValidatorTest extends AbstractAnalyzerTest {
 
     @Test
     public void testAssignAccessFunctionParameter() {
-        var problems = analyze("fn f(long a) {a=5\n fn b(long c){c=3}b(a)}");
+        var problems = analyze("fn f(a: long) {a=5\n fn b(c: long){c=3}b(a)}");
 
         assertTrue(problems.isEmpty());
     }
 
     @Test
     public void testAssignToParameterOutOfScope() {
-        var problems = analyze("fn f(long a) {} a = 5");
+        var problems = analyze("fn f(a: long) {} a = 5");
 
         assertFalse(problems.isEmpty());
         assertEquals(1, problems.size());
         assertEquals("Unresolved identifier", problems.get(0).message());
 
-        problems = analyze("fn f(long a) {fn b(long c){a=3}}");
+        problems = analyze("fn f(a: long) {fn b(c: long){a=3}}");
 
         assertFalse(problems.isEmpty());
         assertEquals(1, problems.size());
@@ -71,14 +71,14 @@ public class AnalyzerValidatorTest extends AbstractAnalyzerTest {
 
     @Test
     public void testAccessMember() {
-        var problems = analyze("function f = (5).toString");
+        var problems = analyze("let f: function = (5).toString");
 
         assertTrue(problems.isEmpty());
     }
 
     @Test
     public void testAccessNonExistentMember() {
-        var problems = analyze("function f = (5).toStringg");
+        var problems = analyze("let f: function = (5).toStringg");
 
         assertFalse(problems.isEmpty());
         assertEquals(1, problems.size());
@@ -93,7 +93,7 @@ public class AnalyzerValidatorTest extends AbstractAnalyzerTest {
         assertEquals(1, problems.size());
         assertEquals("Function invocation target must be a function", problems.get(0).message());
 
-        problems = analyze("long a\na()");
+        problems = analyze("let a: long = 0\na()");
 
         assertFalse(problems.isEmpty());
         assertEquals(1, problems.size());

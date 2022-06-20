@@ -31,11 +31,11 @@ public abstract class ASTVisitor {
     }
 
     public void visit(VariableDeclaration declaration) {
-        declaration.getTypeExpr().accept(this);
+        var typeExpr = declaration.getTypeExpr();
+        if (typeExpr != null)
+            typeExpr.accept(this);
         declaration.getNameExpr().accept(this);
-        var expression = declaration.getExpression();
-        if (expression != null)
-            expression.accept(this);
+        declaration.getInitializerExpr().accept(this);
     }
 
     public void visit(FunctionDeclaration declaration) {

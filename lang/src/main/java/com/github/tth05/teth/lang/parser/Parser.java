@@ -54,14 +54,13 @@ public class Parser {
     private Statement parseStatement() {
         consumeLineBreaks();
         var current = this.stream.peek();
-        if (isStartOfVariableDeclaration()) {
-            return parseVariableDeclaration();
-        } else if (current.is(TokenType.KEYWORD)) { // Keyword statement
+        if (current.is(TokenType.KEYWORD)) { // Keyword statement
             var keyword = current.value();
             return switch (keyword) {
                 case "if" -> parseIfStatement();
                 case "fn" -> parseFunctionDeclaration();
                 case "return" -> parseReturnStatement();
+                case "let" -> parseVariableDeclaration();
                 default -> throw new UnexpectedTokenException(current.span(), "Keyword '%s' not allowed here", keyword);
             };
         } else if (current.is(TokenType.L_CURLY_PAREN)) { // Block statement
@@ -110,20 +109,26 @@ public class Parser {
     }
 
     private VariableDeclaration parseVariableDeclaration() {
-        var type = parseType();
+        // We know that a 'let' is here
+        var firstSpan = this.stream.consumeType(TokenType.KEYWORD).span();
         consumeLineBreaks();
         var name = this.stream.consumeType(TokenType.IDENTIFIER);
         consumeLineBreaks();
 
-        Expression assignment = null;
-        if (this.stream.peek().is(TokenType.EQUAL)) {
-            this.stream.consumeType(TokenType.EQUAL);
-            assignment = parseExpression();
+        TypeExpression type = null;
+        if (this.stream.peek().is(TokenType.COLON)) {
+            this.stream.consumeType(TokenType.COLON);
+            consumeLineBreaks();
+            type = parseType();
+            consumeLineBreaks();
         }
 
+        this.stream.consumeType(TokenType.EQUAL);
+        var initializer = parseExpression();
+
         return new VariableDeclaration(
-                Span.of(type.getSpan(), assignment != null ? assignment.getSpan() : name.span()),
-                type, new IdentifierExpression(name.span(), name.value()), assignment
+                Span.of(firstSpan, initializer.getSpan()),
+                type, new IdentifierExpression(name.span(), name.value()), initializer
         );
     }
 
@@ -142,9 +147,11 @@ public class Parser {
                 this.stream.consumeType(TokenType.COMMA);
 
             consumeLineBreaks();
-            var type = parseType();
-            consumeLineBreaks();
             var nameToken = this.stream.consumeType(TokenType.IDENTIFIER);
+            consumeLineBreaks();
+            this.stream.consumeType(TokenType.COLON);
+            consumeLineBreaks();
+            var type = parseType();
             consumeLineBreaks();
             parameters.add(new FunctionDeclaration.ParameterDeclaration(type, new IdentifierExpression(nameToken.span(), nameToken.value()), parameters.size()));
         }
@@ -323,21 +330,6 @@ public class Parser {
         }
 
         return new TypeExpression(Span.of(firstSpan, secondSpan), type);
-    }
-
-    private boolean isStartOfVariableDeclaration() {
-        if (!this.stream.peek().is(TokenType.IDENTIFIER))
-            return false;
-
-        var offset = 1;
-        while (this.stream.peek(offset).is(TokenType.L_SQUARE_BRACKET)) {
-            offset++;
-            if (!this.stream.peek(offset).is(TokenType.R_SQUARE_BRACKET))
-                return false;
-            offset++;
-        }
-
-        return this.stream.peek(offset).is(TokenType.IDENTIFIER);
     }
 
     public static ParserResult fromString(String source) {

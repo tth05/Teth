@@ -10,6 +10,7 @@ public enum TokenType {
     BOOLEAN_LITERAL("Boolean"),
     COMMA(","),
     DOT("."),
+    COLON(":"),
     EQUAL("="),
     NOT("!"),
     EQUAL_EQUAL("=="),

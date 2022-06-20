@@ -136,6 +136,11 @@ public class FunctionDeclaration extends Statement {
             visitor.visit(this);
         }
 
+        @Override
+        public void setInferredType(Type type) {
+            throw new UnsupportedOperationException("Cannot set inferred type of parameter");
+        }
+
         public TypeExpression getTypeExpr() {
             return this.type;
         }

@@ -1,39 +1,44 @@
 package com.github.tth05.teth.lang.parser.ast;
 
 import com.github.tth05.teth.lang.parser.ASTVisitor;
+import com.github.tth05.teth.lang.parser.Type;
 import com.github.tth05.teth.lang.span.ISpan;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
 import java.util.Objects;
 
-public class VariableDeclaration extends Statement implements IVariableDeclaration{
+public class VariableDeclaration extends Statement implements IVariableDeclaration {
 
-    private final TypeExpression type;
     private final IdentifierExpression nameExpr;
+    private final Expression initializer;
 
-    private final Expression expression;
+    private TypeExpression type;
 
-    public VariableDeclaration(ISpan span, TypeExpression type, IdentifierExpression nameExpr) {
-        this(span, type, nameExpr, null);
-    }
-
-    public VariableDeclaration(ISpan span, TypeExpression type, IdentifierExpression nameExpr, Expression expression) {
+    public VariableDeclaration(ISpan span, TypeExpression type, IdentifierExpression nameExpr, Expression initializer) {
         super(span);
         this.type = type;
         this.nameExpr = nameExpr;
-        this.expression = expression;
+        this.initializer = initializer;
     }
 
     public IdentifierExpression getNameExpr() {
         return this.nameExpr;
     }
 
+    @Override
+    public void setInferredType(Type type) {
+        if (this.type != null)
+            throw new UnsupportedOperationException("Cannot override existing type");
+
+        this.type = new TypeExpression(this.nameExpr.getSpan(), type);
+    }
+
     public TypeExpression getTypeExpr() {
         return this.type;
     }
 
-    public Expression getExpression() {
-        return this.expression;
+    public Expression getInitializerExpr() {
+        return this.initializer;
     }
 
     @Override
@@ -50,18 +55,18 @@ public class VariableDeclaration extends Statement implements IVariableDeclarati
 
         VariableDeclaration that = (VariableDeclaration) o;
 
-        if (!this.type.equals(that.type))
-            return false;
         if (!this.nameExpr.equals(that.nameExpr))
             return false;
-        return Objects.equals(this.expression, that.expression);
+        if (!this.initializer.equals(that.initializer))
+            return false;
+        return Objects.equals(this.type, that.type);
     }
 
     @Override
     public int hashCode() {
-        int result = this.type.hashCode();
-        result = 31 * result + this.nameExpr.hashCode();
-        result = 31 * result + (this.expression != null ? this.expression.hashCode() : 0);
+        int result = this.nameExpr.hashCode();
+        result = 31 * result + this.initializer.hashCode();
+        result = 31 * result + (this.type != null ? this.type.hashCode() : 0);
         return result;
     }
 
@@ -69,14 +74,11 @@ public class VariableDeclaration extends Statement implements IVariableDeclarati
     public void dump(ASTDumpBuilder builder) {
         builder.append("VariableDeclaration {").newLine();
         builder.startBlock();
-        builder.appendAttribute("type", this.type.toString()).newLine();
+        builder.appendAttribute("type", this.type != null ? this.type.toString() : "<no type>").newLine();
         builder.appendAttribute("name");
         this.nameExpr.dump(builder);
         builder.newLine().appendAttribute("expression");
-        if (this.expression != null)
-            this.expression.dump(builder);
-        else
-            builder.append("<none>");
+        this.initializer.dump(builder);
         builder.endBlock().newLine().append("}");
     }
 

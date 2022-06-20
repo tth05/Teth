@@ -102,7 +102,7 @@ public class Interpreter {
             case FunctionDeclaration functionDeclaration ->
                     this.environment.currentScope().setLocalVariable(functionDeclaration.getNameExpr().getValue(), new FunctionDeclarationValue(functionDeclaration));
             case VariableDeclaration localVariableDeclaration ->
-                    this.environment.currentScope().setLocalVariable(localVariableDeclaration.getNameExpr().getValue(), evaluateExpression(localVariableDeclaration.getExpression()));
+                    this.environment.currentScope().setLocalVariable(localVariableDeclaration.getNameExpr().getValue(), evaluateExpression(localVariableDeclaration.getInitializerExpr()));
             case BlockStatement blockStatement -> {
                 this.environment.enterSubScope(blockStatement.getSpan());
                 var returnValue = executeStatementList(blockStatement.getStatements());

@@ -46,6 +46,8 @@ public class Tokenizer {
                     emit(this.stream.consumeKnownSingle(), ",", TokenType.COMMA);
                 } else if (isDot(c)) {
                     emit(this.stream.consumeKnownSingle(), ".", TokenType.DOT);
+                } else if (isColon(c)) {
+                    emit(this.stream.consumeKnownSingle(), ":", TokenType.COLON);
                 } else {
                     throw new UnexpectedCharException(this.stream.createCurrentIndexSpan(), "Invalid character '%s'", c);
                 }
@@ -200,7 +202,7 @@ public class Tokenizer {
     }
 
     private static boolean isKeyword(String value) {
-        return value.equals("if") || value.equals("else") || value.equals("fn") || value.equals("return");
+        return value.equals("if") || value.equals("else") || value.equals("fn") || value.equals("return") || value.equals("let");
     }
 
     private static boolean isBooleanLiteral(String value) {
@@ -239,8 +241,12 @@ public class Tokenizer {
         return c == '.';
     }
 
+    private static boolean isColon(char c) {
+        return c == ':';
+    }
+
     private static boolean isSeparator(char c) {
-        return c == 0 || isWhitespace(c) || isLineBreak(c) || isOperator(c) || isParen(c) || isComma(c);
+        return c == 0 || isWhitespace(c) || isLineBreak(c) || isOperator(c) || isParen(c) || isComma(c) || isColon(c);
     }
 
     private static boolean isLineBreak(char c) {

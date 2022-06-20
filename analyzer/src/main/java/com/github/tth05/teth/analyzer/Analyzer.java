@@ -54,7 +54,7 @@ public class Analyzer {
 
         private final DeclarationStack declarationStack = new DeclarationStack();
 
-        private Deque<FunctionDeclaration> currentFunctionStack = new ArrayDeque<>(5);
+        private final Deque<FunctionDeclaration> currentFunctionStack = new ArrayDeque<>(5);
 
         @Override
         public void visit(SourceFileUnit unit) {
@@ -163,18 +163,20 @@ public class Analyzer {
         @Override
         public void visit(VariableDeclaration declaration) {
             { // Don't want to visit name here
-                declaration.getTypeExpr().accept(this);
-                var expression = declaration.getExpression();
-                if (expression != null)
-                    expression.accept(this);
+                var typeExpr = declaration.getTypeExpr();
+                if (typeExpr != null)
+                    typeExpr.accept(this);
+                declaration.getInitializerExpr().accept(this);
             }
 
-            var type = declaration.getTypeExpr().getType();
-            var expression = declaration.getExpression();
-            if (expression != null) {
-                var resolvedType = resolvedExpressionTypes.get(expression);
-                if (!resolvedType.isSubtypeOf(type))
-                    throw new TypeResolverException(expression.getSpan(), "Cannot assign value of type " + resolvedType + " to variable of type " + type);
+            var varType = declaration.getTypeExpr();
+            var expression = declaration.getInitializerExpr();
+            var resolvedType = resolvedExpressionTypes.get(expression);
+            if (varType == null) {
+                declaration.setInferredType(resolvedType);
+            } else {
+                if (!resolvedType.isSubtypeOf(varType.getType()))
+                    throw new TypeResolverException(expression.getSpan(), "Cannot assign value of type " + resolvedType + " to variable of type " + varType.getType());
             }
 
             this.declarationStack.addDeclaration(declaration.getNameExpr().getValue(), declaration);
