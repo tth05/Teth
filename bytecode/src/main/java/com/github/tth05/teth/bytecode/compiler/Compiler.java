@@ -148,8 +148,10 @@ public class Compiler {
         @Override
         public void visit(ListLiteralExpression listLiteralExpression) {
             this.currentFunctionInsn.add(new CREATE_LIST_Insn());
-            listLiteralExpression.getInitializers().forEach(e -> {
+            for (int i = 0; i < listLiteralExpression.getInitializers().size(); i++)
                 this.currentFunctionInsn.add(new DUP_Insn());
+
+            listLiteralExpression.getInitializers().forEach(e -> {
                 e.accept(this);
                 this.currentFunctionInsn.add(new INVOKE_INTRINSIC_Insn("list.add"));
             });
