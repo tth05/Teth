@@ -23,7 +23,8 @@ public class StandardLibrary {
                 default -> throw new IllegalStateException();
             };
 
-            if (name.equals(memberName))
+            // ew
+            if (name.split("\\.")[1].equals(memberName))
                 return member;
         }
 
@@ -34,29 +35,38 @@ public class StandardLibrary {
         if (type == Type.LONG) {
             if (LONG_FUNCTIONS == null)
                 LONG_FUNCTIONS = new FunctionDeclaration[]{
-                        createFakeFunctionDeclaration("toString", Type.STRING),
-                        createFakeFunctionDeclaration("toBinaryString", Type.STRING),
+                        createFakeFunctionDeclaration("long.toString", Type.STRING),
+                        createFakeFunctionDeclaration("long.toBinaryString", Type.STRING),
                 };
 
             return LONG_FUNCTIONS;
         } else if (type == Type.STRING) {
             if (STRING_FUNCTIONS == null)
-                STRING_FUNCTIONS = new FunctionDeclaration[]{createFakeFunctionDeclaration("len", Type.LONG)};
+                STRING_FUNCTIONS = new FunctionDeclaration[]{createFakeFunctionDeclaration("string.len", Type.LONG)};
 
             return STRING_FUNCTIONS;
         } else if (type.isList()) {
             if (LIST_FUNCTIONS == null)
                 LIST_FUNCTIONS = new FunctionDeclaration[]{
-                        createFakeFunctionDeclaration("len", Type.LONG),
-                        createFakeFunctionDeclaration("add", Type.VOID, Type.ANY),
-                        createFakeFunctionDeclaration("remove", Type.VOID, Type.LONG),
-                        createFakeFunctionDeclaration("get", Type.ANY, Type.LONG),
+                        createFakeFunctionDeclaration("list.len", Type.LONG),
+                        createFakeFunctionDeclaration("list.add", Type.VOID, Type.ANY),
+                        createFakeFunctionDeclaration("list.remove", Type.VOID, Type.LONG),
+                        createFakeFunctionDeclaration("list.get", Type.ANY, Type.LONG),
                 };
 
             return LIST_FUNCTIONS;
         }
 
         return new Statement[0];
+    }
+
+    public static Statement getGlobalFunction(String value) {
+        for (var function : getGlobalFunctions()) {
+            if (((FunctionDeclaration) function).getNameExpr().getValue().equals(value))
+                return function;
+        }
+
+        return null;
     }
 
     public static Statement[] getGlobalFunctions() {

@@ -216,8 +216,17 @@ public interface OpCodes {
      * </ul>
      */
     byte S_CONST = 20;
-    byte LOAD_LOCAL = 21;
-    byte STORE_LOCAL = 22;
+    /**
+     * Pushes an empty list onto the stack.
+     * <br>
+     * Stack (before, after):
+     * <pre><code>
+     * -> value
+     * </code></pre>
+     */
+    byte CREATE_LIST = 21;
+    byte LOAD_LOCAL = 22;
+    byte STORE_LOCAL = 23;
     /**
      * Pushes a member of an instance onto the stack.
      * <br>
@@ -232,6 +241,7 @@ public interface OpCodes {
      *   <li><strong>n</strong> bytes member name</li>
      * </ul>
      */
-    byte LOAD_MEMBER = 23;
-    byte EXIT = 24;
+    byte LOAD_MEMBER = 24;
+    byte EXIT = 25;
+    byte DUP = 26;
 }

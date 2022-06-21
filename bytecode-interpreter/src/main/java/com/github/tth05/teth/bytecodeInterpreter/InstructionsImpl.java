@@ -3,7 +3,9 @@ package com.github.tth05.teth.bytecodeInterpreter;
 import com.github.tth05.teth.bytecode.compiler.OpCodes;
 import com.github.tth05.teth.bytecode.decoder.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
 
@@ -13,7 +15,14 @@ public class InstructionsImpl {
     private static final Map<String, BiConsumer<Interpreter, Object[]>> INTRINSICS = new HashMap<>();
     static {
         INTRINSICS.put("print", (interpreter, args) -> {
-            System.out.println(args[0]);
+            var list = (List) args[0];
+            var first = true;
+            for (Object o : list) {
+                System.out.print((first ? "" : " ") + o);
+                first = false;
+            }
+
+            System.out.println();
         });
         INTRINSICS.put("string.concat", (interpreter, args) -> {
             var left = ((String) args[0]);
@@ -25,6 +34,12 @@ public class InstructionsImpl {
             var val = (Long) args[0];
 
             interpreter.push(val.toString());
+        });
+        INTRINSICS.put("list.add", (interpreter, args) -> {
+            var list = (List) args[0];
+            var el = args[1];
+
+            list.add(el);
         });
     }
 
@@ -54,6 +69,13 @@ public class InstructionsImpl {
                 var localIndex = ((LOAD_LOCAL_Insn) insn).getLocalIndex();
                 interpreter.push(interpreter.local(localIndex));
             }
+            case OpCodes.CREATE_LIST -> {
+                //noinspection rawtypes
+                interpreter.push(new ArrayList());
+            }
+            case OpCodes.DUP -> {
+                interpreter.push(interpreter.peek());
+            }
             case OpCodes.JUMP_IF_TRUE -> {
                 var relativeJumpOffset = ((JUMP_IF_TRUE_Insn) insn).getRelativeJumpOffset();
                 var condition = interpreter.pop();
@@ -69,7 +91,7 @@ public class InstructionsImpl {
                 if (invokeInsn.isInstanceFunction())
                     throw new UnsupportedOperationException();
 
-                interpreter.initLocalsFromStack(paramCount, invokeInsn.getLocalCount());
+                interpreter.initLocalsFromStack(paramCount, invokeInsn.getLocalsCount());
                 interpreter.saveReturnAddress();
                 interpreter.setProgramCounter(invokeInsn.getAbsoluteJumpAddress());
                 interpreter.createStackBoundary();
@@ -115,11 +137,6 @@ public class InstructionsImpl {
             ARGS_ARRAY[i] = interpreter.pop();
 
         return ARGS_ARRAY;
-    }
-
-    private static void clearArgsArray(int argCount) {
-        for (int i = argCount - 1; i >= 0; i--)
-            ARGS_ARRAY[i] = null;
     }
 
     private static boolean validateLongDoubleOperands(Object left, Object right) {

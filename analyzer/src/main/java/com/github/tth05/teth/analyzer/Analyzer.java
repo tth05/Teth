@@ -32,7 +32,7 @@ public class Analyzer {
     /**
      * IntrinsicFunctionBinding, SourceFunctionBinding
      */
-    public Statement resolvedIdentifierBinding(IdentifierExpression identifierExpression) {
+    public Statement resolvedReference(IDeclarationReference identifierExpression) {
         return this.resolvedReferences.get(identifierExpression);
     }
 
@@ -48,6 +48,7 @@ public class Analyzer {
             var all = BinaryExpression.Operator.values();
             BINARY_OPERATORS_ALLOWED_TYPES.put(Type.LONG, all);
             BINARY_OPERATORS_ALLOWED_TYPES.put(Type.DOUBLE, all);
+            // TODO: Remove add operator for strings
             BINARY_OPERATORS_ALLOWED_TYPES.put(Type.STRING, new BinaryExpression.Operator[]{BinaryExpression.Operator.OP_ADD});
             BINARY_OPERATORS_ALLOWED_TYPES.put(Type.BOOLEAN, new BinaryExpression.Operator[]{BinaryExpression.Operator.OP_EQUAL, BinaryExpression.Operator.OP_NOT_EQUAL});
         }
@@ -122,7 +123,7 @@ public class Analyzer {
                 var paramType = param.getTypeExpr().getType();
                 var paramExpr = invocation.getParameters().get(i);
                 var paramExprType = resolvedExpressionTypes.get(paramExpr);
-                if (!paramType.equals(paramExprType))
+                if (!paramExprType.isSubtypeOf(paramType))
                     throw new ValidationException(paramExpr.getSpan(), "Parameter type mismatch. Expected " + paramType + ", got " + paramExprType);
             }
 
@@ -293,6 +294,8 @@ public class Analyzer {
         @Override
         public void visit(IdentifierExpression identifierExpression) {
             var decl = this.declarationStack.resolveIdentifier(identifierExpression.getValue());
+            if (decl == null)
+                decl = StandardLibrary.getGlobalFunction(identifierExpression.getValue());
             if (decl == null)
                 throw new ValidationException(identifierExpression.getSpan(), "Unresolved identifier");
 

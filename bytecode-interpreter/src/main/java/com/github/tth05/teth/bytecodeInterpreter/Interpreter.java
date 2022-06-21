@@ -6,37 +6,7 @@ import java.util.Arrays;
 
 public class Interpreter {
 
-    private final IInstrunction[] instructions = new IInstrunction[]{
-            //main
-            new S_CONST_Insn("Fib of 10 is "),
-            new L_CONST_Insn(30),
-            new INVOKE_Insn(false, 1, 0, 7),
-            new INVOKE_INTRINSIC_Insn("long.toString"),
-            new INVOKE_INTRINSIC_Insn("string.concat"),
-            new INVOKE_INTRINSIC_Insn("print"),
-            new EXIT_Insn(),
-            //fib(long n) long
-            new LOAD_LOCAL_Insn(0),
-            new L_CONST_Insn(1),
-            new LD_LESS_EQUAL_Insn(),
-            new JUMP_IF_TRUE_Insn(11),
-            //fib(n-1)
-            new LOAD_LOCAL_Insn(0),
-            new L_CONST_Insn(-1),
-            new LD_ADD_Insn(),
-            new INVOKE_Insn(false, 1, 0, 7),
-            //fib(n-2)
-            new LOAD_LOCAL_Insn(0),
-            new L_CONST_Insn(-2),
-            new LD_ADD_Insn(),
-            new INVOKE_Insn(false, 1, 0, 7),
-            //fib(n-1) + fib(n-2)
-            new LD_ADD_Insn(),
-            new RETURN_Insn(true),
-            // else
-            new LOAD_LOCAL_Insn(0),
-            new RETURN_Insn(true)
-    };
+    private final IInstrunction[] instructions;
 
     private final Object[] locals = new Object[2048];
     private int localsPointer = 0;
@@ -48,6 +18,10 @@ public class Interpreter {
     private int returnAddressesPointer = 0;
 
     private int programCounter = 0;
+
+    public Interpreter(IInstrunction[] instructions) {
+        this.instructions = instructions;
+    }
 
     public void execute() {
         // These locals exist for micro-optimization
@@ -82,6 +56,17 @@ public class Interpreter {
             throw new IllegalStateException("Stack is full");
 
         this.stack[++this.stackPointer] = value;
+    }
+
+    public Object peek() {
+        if (this.stackPointer == 0)
+            throw new IllegalStateException("Stack is empty");
+
+        var result = this.stack[this.stackPointer];
+        if (result == null)
+            throw new IllegalStateException("Cannot peek on stack boundary");
+
+        return result;
     }
 
     public Object local(int localIndex) {
