@@ -41,6 +41,12 @@ public class InstructionsImpl {
 
             list.add(el);
         });
+        INTRINSICS.put("list.get", (interpreter, args) -> {
+            var list = (List) args[0];
+            var el = (long) args[1];
+
+            interpreter.push(list.get((int) el));
+        });
     }
 
     public static void run(Interpreter interpreter, int code, IInstrunction insn) {

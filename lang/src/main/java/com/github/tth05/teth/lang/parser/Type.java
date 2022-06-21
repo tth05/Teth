@@ -38,10 +38,10 @@ public class Type {
     }
 
     public boolean isSubtypeOf(Type other) {
-        if (this == ANY)
-            return false;
         if (this == other)
             return true;
+        if (this == ANY)
+            return false;
         if (other == ANY)
             return true;
         if (this.innerType != null ^ other.innerType != null)
