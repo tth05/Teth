@@ -41,6 +41,15 @@ public interface OpCodes {
      */
     byte LD_ADD = 1;
     /**
+     * Subtracts two longs/doubles. If any operand is a double, the result is a double.
+     * <br>
+     * Stack (before, after):
+     * <pre><code>
+     * value1, value2 -> result
+     * </code></pre>
+     */
+    byte LD_SUB = 27;
+    /**
      * Multiplies two longs/doubles.  If any operand is a double, the result is a double.
      * <br>
      * Stack (before, after):
@@ -158,7 +167,7 @@ public interface OpCodes {
      *   <li>4 byte relative jump offset if true</li>
      * </ul>
      */
-    byte JUMP_IF_TRUE = 16;
+    byte JUMP_IF_FALSE = 16;
     /**
      * Pushes a long constant onto the stack.
      * <br>

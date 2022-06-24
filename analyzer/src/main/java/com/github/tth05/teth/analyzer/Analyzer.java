@@ -48,8 +48,6 @@ public class Analyzer {
             var all = BinaryExpression.Operator.values();
             BINARY_OPERATORS_ALLOWED_TYPES.put(Type.LONG, all);
             BINARY_OPERATORS_ALLOWED_TYPES.put(Type.DOUBLE, all);
-            // TODO: Remove add operator for strings
-            BINARY_OPERATORS_ALLOWED_TYPES.put(Type.STRING, new BinaryExpression.Operator[]{BinaryExpression.Operator.OP_ADD});
             BINARY_OPERATORS_ALLOWED_TYPES.put(Type.BOOLEAN, new BinaryExpression.Operator[]{BinaryExpression.Operator.OP_EQUAL, BinaryExpression.Operator.OP_NOT_EQUAL});
         }
 
@@ -243,7 +241,14 @@ public class Analyzer {
                 Arrays.stream(BINARY_OPERATORS_ALLOWED_TYPES.get(leftType)).noneMatch(op -> op == expression.getOperator()))
                 throw new TypeResolverException(expression.getSpan(), "Operator " + expression.getOperator().asString() + " cannot be applied to " + leftType + " and " + rightType);
 
-            var binaryType = anyNumber ? (leftType == Type.DOUBLE || rightType == Type.DOUBLE ? Type.DOUBLE : Type.LONG) : leftType;
+            Type binaryType;
+            if (expression.getOperator().producesBoolean())
+                binaryType = Type.BOOLEAN;
+            else if (anyNumber)
+                binaryType = leftType == Type.DOUBLE || rightType == Type.DOUBLE ? Type.DOUBLE : Type.LONG;
+            else
+                binaryType = leftType;
+
             resolvedExpressionTypes.put(expression, binaryType);
         }
 

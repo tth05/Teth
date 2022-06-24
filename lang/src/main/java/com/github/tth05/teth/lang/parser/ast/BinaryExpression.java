@@ -122,6 +122,13 @@ public class BinaryExpression extends Expression {
             return this.precedence;
         }
 
+        /**
+         * @return {@code true} if this operator evaluates to a boolean value, {@code false} otherwise.
+         */
+        public boolean producesBoolean() {
+            return this == OP_EQUAL || this == OP_NOT_EQUAL || this == OP_LESS || this == OP_LESS_EQUAL || this == OP_GREATER || this == OP_GREATER_EQUAL;
+        }
+
         public static Operator fromTokenType(TokenType type) {
             return switch (type) {
                 case POW -> Operator.OP_POW;

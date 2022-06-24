@@ -38,6 +38,7 @@ public class Compiler {
         private final Analyzer analyzer;
 
         private List<IInstrunction> currentFunctionInsn = new ArrayList<>();
+        private Map<String, Integer> currentFunctionLocals = new HashMap<>();
 
         public BytecodeGeneratorVisitor(Analyzer analyzer) {
             this.analyzer = analyzer;
@@ -86,7 +87,13 @@ public class Compiler {
         @Override
         public void visit(FunctionDeclaration declaration) {
             var parentFunction = this.currentFunctionInsn;
+            var parentLocals = this.currentFunctionLocals;
             this.currentFunctionInsn = new ArrayList<>();
+            this.currentFunctionLocals = new HashMap<>();
+            // Add parameters to locals
+            for (var parameter : declaration.getParameters())
+                this.currentFunctionLocals.put(parameter.getNameExpr().getValue(), this.currentFunctionLocals.size());
+
             this.functionInsnMap.put(declaration, this.currentFunctionInsn);
 
             super.visit(declaration);
@@ -95,6 +102,7 @@ public class Compiler {
             if (declaration.getReturnTypeExpr() == null)
                 this.currentFunctionInsn.add(new RETURN_Insn(false));
             this.currentFunctionInsn = parentFunction;
+            this.currentFunctionLocals = parentLocals;
         }
 
         @Override
@@ -117,11 +125,40 @@ public class Compiler {
         }
 
         @Override
+        public void visit(IfStatement statement) {
+            statement.getCondition().accept(this);
+            var generateElse = statement.getElseStatement() != null;
+
+            // If start placeholder
+            var startIndex = this.currentFunctionInsn.size();
+            this.currentFunctionInsn.add(null);
+
+            statement.getBody().accept(this);
+            // Body end placeholder
+            var bodyEndIndex = this.currentFunctionInsn.size();
+            if (generateElse)
+                this.currentFunctionInsn.add(null);
+
+            // Jump after body if condition is false
+            this.currentFunctionInsn.set(startIndex, new JUMP_IF_FALSE_Insn(this.currentFunctionInsn.size() - startIndex));
+
+            var elseStatement = statement.getElseStatement();
+            if (generateElse)
+                elseStatement.accept(this);
+
+            if (generateElse) {
+                // Jump after else if condition is true
+                this.currentFunctionInsn.set(bodyEndIndex, new JUMP_Insn(this.currentFunctionInsn.size() - bodyEndIndex));
+            }
+        }
+
+        @Override
         public void visit(BinaryExpression expression) {
             super.visit(expression);
 
             switch (expression.getOperator()) {
                 case OP_ADD -> this.currentFunctionInsn.add(new LD_ADD_Insn());
+                case OP_SUBTRACT -> this.currentFunctionInsn.add(new LD_SUB_Insn());
                 case OP_LESS_EQUAL -> this.currentFunctionInsn.add(new LD_LESS_EQUAL_Insn());
                 default -> throw new UnsupportedOperationException();
             }
@@ -145,6 +182,19 @@ public class Compiler {
         @Override
         public void visit(StringLiteralExpression stringLiteralExpression) {
             this.currentFunctionInsn.add(new S_CONST_Insn(stringLiteralExpression.getValue()));
+        }
+
+        @Override
+        public void visit(IdentifierExpression identifierExpression) {
+            var reference = this.analyzer.resolvedReference(identifierExpression);
+            if (!(reference instanceof IVariableDeclaration varDecl))
+                return;
+
+            var varIndex = this.currentFunctionLocals.get(varDecl.getNameExpr().getValue());
+            if (varIndex == null)
+                throw new IllegalStateException("Variable not found");
+
+            this.currentFunctionInsn.add(new LOAD_LOCAL_Insn(varIndex));
         }
 
         @Override

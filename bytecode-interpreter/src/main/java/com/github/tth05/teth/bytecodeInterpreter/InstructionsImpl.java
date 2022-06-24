@@ -51,6 +51,15 @@ public class InstructionsImpl {
 
     public static void run(Interpreter interpreter, int code, IInstrunction insn) {
         switch (code) {
+            case OpCodes.LD_NEGATE -> {
+                var value = (Number) interpreter.pop();
+                if (value instanceof Long)
+                    value = -value.longValue();
+                else
+                    value = -value.doubleValue();
+
+                interpreter.push(value);
+            }
             case OpCodes.LD_ADD -> {
                 var left = interpreter.pop();
                 var right = interpreter.pop();
@@ -62,6 +71,18 @@ public class InstructionsImpl {
                     interpreter.push(leftNum.doubleValue() + rightNum.doubleValue());
                 else
                     interpreter.push(leftNum.longValue() + rightNum.longValue());
+            }
+            case OpCodes.LD_SUB -> {
+                var left = interpreter.pop();
+                var right = interpreter.pop();
+                boolean useDouble = validateLongDoubleOperands(left, right);
+                var leftNum = (Number) right;
+                var rightNum = (Number) left;
+
+                if (useDouble)
+                    interpreter.push(leftNum.doubleValue() - rightNum.doubleValue());
+                else
+                    interpreter.push(leftNum.longValue() - rightNum.longValue());
             }
             case OpCodes.L_CONST -> {
                 var value = ((L_CONST_Insn) insn).getValue();
@@ -82,12 +103,16 @@ public class InstructionsImpl {
             case OpCodes.DUP -> {
                 interpreter.push(interpreter.peek());
             }
-            case OpCodes.JUMP_IF_TRUE -> {
-                var relativeJumpOffset = ((JUMP_IF_TRUE_Insn) insn).getRelativeJumpOffset();
+            case OpCodes.JUMP -> {
+                var relativeJumpOffset = ((JUMP_IF_FALSE_Insn) insn).getRelativeJumpOffset();
+                interpreter.setProgramCounter(interpreter.getProgramCounter() + relativeJumpOffset);
+            }
+            case OpCodes.JUMP_IF_FALSE -> {
+                var relativeJumpOffset = ((JUMP_IF_FALSE_Insn) insn).getRelativeJumpOffset();
                 var condition = interpreter.pop();
                 if (!(condition instanceof Boolean b))
-                    throw new IllegalArgumentException("JUMP_IF_TRUE: Top of stack is not a boolean");
-                if (!b)
+                    throw new IllegalArgumentException("JUMP_IF_FALSE: Top of stack is not a boolean");
+                if (b)
                     return;
                 interpreter.setProgramCounter(interpreter.getProgramCounter() + relativeJumpOffset);
             }

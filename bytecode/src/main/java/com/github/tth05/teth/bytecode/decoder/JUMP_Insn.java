@@ -2,11 +2,11 @@ package com.github.tth05.teth.bytecode.decoder;
 
 import com.github.tth05.teth.bytecode.compiler.OpCodes;
 
-public class JUMP_IF_TRUE_Insn implements IInstrunction {
+public class JUMP_Insn implements IInstrunction {
 
     private final int relativeJumpOffset;
 
-    public JUMP_IF_TRUE_Insn(int relativeJumpOffset) {
+    public JUMP_Insn(int relativeJumpOffset) {
         this.relativeJumpOffset = relativeJumpOffset;
     }
 
@@ -16,11 +16,11 @@ public class JUMP_IF_TRUE_Insn implements IInstrunction {
 
     @Override
     public byte getOpCode() {
-        return OpCodes.JUMP_IF_TRUE;
+        return OpCodes.JUMP;
     }
 
     @Override
     public String getDebugParametersString() {
-        return String.format("relativeOffset: %d", this.relativeJumpOffset);
+        return String.format("relativeJumpOffset: %d", this.relativeJumpOffset);
     }
 }
