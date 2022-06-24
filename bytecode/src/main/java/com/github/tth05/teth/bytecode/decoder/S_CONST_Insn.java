@@ -18,4 +18,9 @@ public class S_CONST_Insn implements IInstrunction {
     public byte getOpCode() {
         return OpCodes.S_CONST;
     }
+
+    @Override
+    public String getDebugParametersString() {
+        return this.value;
+    }
 }

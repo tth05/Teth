@@ -8,4 +8,9 @@ public class EXIT_Insn implements IInstrunction {
     public byte getOpCode() {
         return OpCodes.EXIT;
     }
+
+    @Override
+    public String getDebugParametersString() {
+        return "";
+    }
 }

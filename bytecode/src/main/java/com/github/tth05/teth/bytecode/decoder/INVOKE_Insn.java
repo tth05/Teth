@@ -36,4 +36,9 @@ public class INVOKE_Insn implements IInstrunction {
     public byte getOpCode() {
         return OpCodes.INVOKE;
     }
+
+    @Override
+    public String getDebugParametersString() {
+        return String.format("%s, pCount: %d, lCount: %d, target: %d", this.instanceFunction ? "instance" : "static", this.paramCount, this.localsCount, this.absoluteJumpAddress);
+    }
 }

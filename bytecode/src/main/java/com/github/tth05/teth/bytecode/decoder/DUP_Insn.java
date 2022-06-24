@@ -8,4 +8,9 @@ public class DUP_Insn implements IInstrunction {
     public byte getOpCode() {
         return OpCodes.DUP;
     }
+
+    @Override
+    public String getDebugParametersString() {
+        return "";
+    }
 }

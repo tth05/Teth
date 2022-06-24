@@ -18,4 +18,9 @@ public class INVOKE_INTRINSIC_Insn implements IInstrunction {
     public byte getOpCode() {
         return OpCodes.INVOKE_INTRINSIC;
     }
+
+    @Override
+    public String getDebugParametersString() {
+        return this.intrinsicName;
+    }
 }

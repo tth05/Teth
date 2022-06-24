@@ -60,6 +60,7 @@ public class Compiler {
                     insns[i++] = insn;
             }
 
+            // Resolve jump addresses
             for (int j = 0; j < insns.length; j++) {
                 var insn = insns[j];
                 if (!(insn instanceof PlaceholderInvokeInsn placeholder))
@@ -101,9 +102,7 @@ public class Compiler {
             if (reference.isIntrinsic()) {
                 this.currentFunctionInsn.add(new INVOKE_INTRINSIC_Insn(reference.getNameExpr().getValue()));
             } else {
-                this.currentFunctionInsn.add(new PlaceholderInvokeInsn(
-                        reference
-                ));
+                this.currentFunctionInsn.add(new PlaceholderInvokeInsn(reference));
             }
         }
 
@@ -168,6 +167,11 @@ public class Compiler {
 
         @Override
         public byte getOpCode() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public String getDebugParametersString() {
             throw new UnsupportedOperationException();
         }
     }

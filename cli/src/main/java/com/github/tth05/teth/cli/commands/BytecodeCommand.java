@@ -1,7 +1,6 @@
 package com.github.tth05.teth.cli.commands;
 
 import com.github.tth05.teth.bytecode.compiler.Compiler;
-import com.github.tth05.teth.bytecode.decoder.IInstrunction;
 import com.github.tth05.teth.cli.commands.converters.String2ExistingFileConverter;
 import com.github.tth05.teth.lang.parser.Parser;
 import picocli.CommandLine;
@@ -40,9 +39,9 @@ public class BytecodeCommand implements Runnable {
             if (compilationResult.logProblems(System.out, true))
                 return;
 
-            for (IInstrunction instruction : compilationResult.getInstructions()) {
-                // TODO: Better debug printing
-                System.out.println(instruction.getOpCode());
+            var instructions = compilationResult.getInstructions();
+            for (int i = 0; i < instructions.length; i++) {
+                System.out.println(i + ": " + instructions[i].getDebugString());
             }
         } catch (IOException e) {
             e.printStackTrace();

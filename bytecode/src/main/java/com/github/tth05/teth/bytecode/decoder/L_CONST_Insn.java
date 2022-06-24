@@ -18,4 +18,9 @@ public class L_CONST_Insn implements IInstrunction {
     public byte getOpCode() {
         return OpCodes.L_CONST;
     }
+
+    @Override
+    public String getDebugParametersString() {
+        return this.value + "";
+    }
 }

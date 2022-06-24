@@ -18,4 +18,9 @@ public class JUMP_IF_TRUE_Insn implements IInstrunction {
     public byte getOpCode() {
         return OpCodes.JUMP_IF_TRUE;
     }
+
+    @Override
+    public String getDebugParametersString() {
+        return String.format("relativeOffset: %d", this.relativeJumpOffset);
+    }
 }

@@ -8,4 +8,9 @@ public class CREATE_LIST_Insn implements IInstrunction {
     public byte getOpCode() {
         return OpCodes.CREATE_LIST;
     }
+
+    @Override
+    public String getDebugParametersString() {
+        return "";
+    }
 }

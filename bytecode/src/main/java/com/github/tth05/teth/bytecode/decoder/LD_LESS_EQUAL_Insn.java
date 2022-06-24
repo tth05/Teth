@@ -8,4 +8,9 @@ public class LD_LESS_EQUAL_Insn implements IInstrunction {
     public byte getOpCode() {
         return OpCodes.LD_LESS_EQUAL;
     }
+
+    @Override
+    public String getDebugParametersString() {
+        return "";
+    }
 }

@@ -18,4 +18,9 @@ public class LOAD_LOCAL_Insn implements IInstrunction {
     public byte getOpCode() {
         return OpCodes.LOAD_LOCAL;
     }
+
+    @Override
+    public String getDebugParametersString() {
+        return this.localIndex + "";
+    }
 }

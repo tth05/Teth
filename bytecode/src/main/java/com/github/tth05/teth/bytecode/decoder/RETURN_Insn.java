@@ -18,4 +18,9 @@ public class RETURN_Insn implements IInstrunction {
     public byte getOpCode() {
         return OpCodes.RETURN;
     }
+
+    @Override
+    public String getDebugParametersString() {
+        return this.returnsValue ? "value" : "";
+    }
 }
