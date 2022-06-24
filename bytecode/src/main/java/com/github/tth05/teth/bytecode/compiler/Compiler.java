@@ -91,6 +91,9 @@ public class Compiler {
 
             super.visit(declaration);
 
+            // Implicit return
+            if (declaration.getReturnTypeExpr() == null)
+                this.currentFunctionInsn.add(new RETURN_Insn(false));
             this.currentFunctionInsn = parentFunction;
         }
 
