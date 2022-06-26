@@ -84,8 +84,36 @@ public class InstructionsImpl {
                 else
                     interpreter.push(leftNum.longValue() - rightNum.longValue());
             }
+            case OpCodes.LD_MUL -> {
+                var left = interpreter.pop();
+                var right = interpreter.pop();
+                boolean useDouble = validateLongDoubleOperands(left, right);
+                var leftNum = (Number) left;
+                var rightNum = (Number) right;
+
+                if (useDouble)
+                    interpreter.push(leftNum.doubleValue() * rightNum.doubleValue());
+                else
+                    interpreter.push(leftNum.longValue() * rightNum.longValue());
+            }
+            case OpCodes.LD_DIV -> {
+                var left = interpreter.pop();
+                var right = interpreter.pop();
+                boolean useDouble = validateLongDoubleOperands(left, right);
+                var leftNum = (Number) left;
+                var rightNum = (Number) right;
+
+                if (useDouble)
+                    interpreter.push(leftNum.doubleValue() / rightNum.doubleValue());
+                else
+                    interpreter.push(leftNum.longValue() / rightNum.longValue());
+            }
             case OpCodes.L_CONST -> {
                 var value = ((L_CONST_Insn) insn).getValue();
+                interpreter.push(value);
+            }
+            case OpCodes.D_CONST -> {
+                var value = ((D_CONST_Insn) insn).getValue();
                 interpreter.push(value);
             }
             case OpCodes.S_CONST -> {

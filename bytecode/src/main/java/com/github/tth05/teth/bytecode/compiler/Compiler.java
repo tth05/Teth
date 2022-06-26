@@ -159,6 +159,8 @@ public class Compiler {
             switch (expression.getOperator()) {
                 case OP_ADD -> this.currentFunctionInsn.add(new LD_ADD_Insn());
                 case OP_SUBTRACT -> this.currentFunctionInsn.add(new LD_SUB_Insn());
+                case OP_MULTIPLY -> this.currentFunctionInsn.add(new LD_MUL_Insn());
+                case OP_DIVIDE -> this.currentFunctionInsn.add(new LD_DIV_Insn());
                 case OP_LESS_EQUAL -> this.currentFunctionInsn.add(new LD_LESS_EQUAL_Insn());
                 default -> throw new UnsupportedOperationException();
             }
