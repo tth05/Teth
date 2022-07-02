@@ -32,8 +32,6 @@ public class Compiler {
 
     private static class BytecodeGeneratorVisitor extends ASTVisitor {
 
-        private static final FunctionDeclaration GLOBAL_FUNCTION = new FunctionDeclaration(null, null, null, null, null);
-
         private final Map<FunctionDeclaration, List<IInstrunction>> functionInsnMap = new IdentityHashMap<>();
         private final Analyzer analyzer;
 
@@ -51,7 +49,7 @@ public class Compiler {
 
             // Ensure global function comes first
             var sortedFunctions = this.functionInsnMap.entrySet().stream()
-                    .sorted(Comparator.comparing(e -> e.getKey() != GLOBAL_FUNCTION)).toList();
+                    .sorted(Comparator.comparing(e -> e.getKey() != Analyzer.GLOBAL_FUNCTION)).toList();
             for (var entry : sortedFunctions) {
                 var function = entry.getKey();
                 var insnList = entry.getValue();
@@ -79,7 +77,7 @@ public class Compiler {
 
         @Override
         public void visit(SourceFileUnit unit) {
-            this.functionInsnMap.put(GLOBAL_FUNCTION, this.currentFunctionInsn);
+            this.functionInsnMap.put(Analyzer.GLOBAL_FUNCTION, this.currentFunctionInsn);
             super.visit(unit);
             this.currentFunctionInsn.add(new EXIT_Insn());
         }

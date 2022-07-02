@@ -11,8 +11,11 @@ import java.util.*;
 
 public class Analyzer {
 
+    public static final FunctionDeclaration GLOBAL_FUNCTION = new FunctionDeclaration(null, null, null, null, null);
+
     private final Map<Expression, Type> resolvedExpressionTypes = new IdentityHashMap<>();
     private final Map<IDeclarationReference, Statement> resolvedReferences = new IdentityHashMap<>();
+    private final Map<FunctionDeclaration, Integer> functionLocalsCount = new IdentityHashMap<>();
 
     private final SourceFileUnit unit;
 
@@ -29,15 +32,16 @@ public class Analyzer {
         }
     }
 
-    /**
-     * IntrinsicFunctionBinding, SourceFunctionBinding
-     */
     public Statement resolvedReference(IDeclarationReference identifierExpression) {
         return this.resolvedReferences.get(identifierExpression);
     }
 
     public Type resolvedType(Expression expression) {
         return this.resolvedExpressionTypes.get(expression);
+    }
+
+    public int functionLocalsCount(FunctionDeclaration function) {
+        return Objects.requireNonNull(this.functionLocalsCount.getOrDefault(function, null), "Function locals count not set");
     }
 
     @SuppressWarnings("UnqualifiedFieldAccess")
@@ -58,7 +62,7 @@ public class Analyzer {
         @Override
         public void visit(SourceFileUnit unit) {
             // Begin global scope
-            this.declarationStack.beginScope(false);
+            beginFunctionDeclaration(GLOBAL_FUNCTION);
             // Collect top level functions
             for (var decl : unit.getStatements()) {
                 if (!(decl instanceof FunctionDeclaration functionDeclaration))
@@ -73,11 +77,10 @@ public class Analyzer {
         @Override
         public void visit(FunctionDeclaration declaration) {
             // Add nested functions to outer scope, as if this were a variable declaration
-            if (!this.currentFunctionStack.isEmpty())
+            if (this.currentFunctionStack.size() != 1)
                 this.declarationStack.addDeclaration(declaration.getNameExpr().getValue(), declaration);
 
-            this.currentFunctionStack.addLast(declaration);
-            this.declarationStack.beginScope(false);
+            beginFunctionDeclaration(declaration);
             // Don't want to visit function name here
             declaration.getParameters().forEach(p -> p.accept(this));
             var returnTypeExpr = declaration.getReturnTypeExpr();
@@ -150,7 +153,7 @@ public class Analyzer {
         public void visit(ReturnStatement returnStatement) {
             super.visit(returnStatement);
 
-            if (this.currentFunctionStack.isEmpty())
+            if (this.currentFunctionStack.size() == 1)
                 throw new ValidationException(returnStatement.getSpan(), "Return statement outside of function");
 
             var type = resolvedExpressionTypes.get(returnStatement.getValueExpr());
@@ -167,6 +170,9 @@ public class Analyzer {
                     typeExpr.accept(this);
                 declaration.getInitializerExpr().accept(this);
             }
+
+            // This will increase the count even if a local is re-declared, but that's fine for now.
+            functionLocalsCount.merge(this.currentFunctionStack.getLast(), 1, Integer::sum);
 
             var varType = declaration.getTypeExpr();
             var expression = declaration.getInitializerExpr();
@@ -314,6 +320,12 @@ public class Analyzer {
 
             resolvedExpressionTypes.put(identifierExpression, type);
             resolvedReferences.put(identifierExpression, decl);
+        }
+
+        private void beginFunctionDeclaration(FunctionDeclaration declaration) {
+            this.currentFunctionStack.addLast(declaration);
+            this.declarationStack.beginScope(false);
+            functionLocalsCount.put(declaration, 0);
         }
     }
 }
