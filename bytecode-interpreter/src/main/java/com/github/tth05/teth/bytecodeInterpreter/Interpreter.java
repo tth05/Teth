@@ -31,8 +31,7 @@ public class Interpreter {
         var pc = 0;
         while ((pc = this.programCounter) != -1) {
             InstructionsImpl.run(this, cachedOpCodes[pc], instructions[pc]);
-            if (this.programCounter == pc)
-                this.programCounter++;
+            this.programCounter++;
         }
     }
 
@@ -69,7 +68,7 @@ public class Interpreter {
         return result;
     }
 
-    public Object local(int localIndex) {
+    public Object loadLocal(int localIndex) {
         var localCount = (int) this.locals[this.localsPointer];
         if (localIndex >= localCount || localIndex < 0)
             throw new IllegalArgumentException("Local index is out of bounds");
@@ -77,8 +76,16 @@ public class Interpreter {
         return this.locals[this.localsPointer - localCount + localIndex];
     }
 
+    public void storeLocal(int localIndex, Object value) {
+        var localCount = (int) this.locals[this.localsPointer];
+        if (localIndex >= localCount || localIndex < 0)
+            throw new IllegalArgumentException("Local index is out of bounds");
+
+        this.locals[this.localsPointer - localCount + localIndex] = value;
+    }
+
     public void exit() {
-        this.programCounter = -1;
+        this.programCounter = -2;
     }
 
     public void jumpToReturnAddress() {
@@ -89,7 +96,7 @@ public class Interpreter {
         if (returnAddress == 0)
             throw new IllegalStateException("Top return address is invalid");
 
-        setProgramCounter(returnAddress);
+        setProgramCounter(returnAddress - 1);
         this.returnAddresses[this.returnAddressesPointer--] = 0;
 
         var locals = this.locals;

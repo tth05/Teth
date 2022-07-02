@@ -52,6 +52,7 @@ public class StandardLibrary {
                         createFakeFunctionDeclaration("list.add", Type.VOID, Type.ANY),
                         createFakeFunctionDeclaration("list.remove", Type.VOID, Type.LONG),
                         createFakeFunctionDeclaration("list.get", Type.ANY, Type.LONG),
+                        createFakeFunctionDeclaration("list.set", Type.VOID, Type.LONG, Type.ANY),
                 };
 
             return LIST_FUNCTIONS;

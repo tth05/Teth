@@ -70,6 +70,15 @@ public class AnalyzerValidatorTest extends AbstractAnalyzerTest {
     }
 
     @Test
+    public void testInvalidReturnValue() {
+        var problems = analyze("fn a() {return 5}");
+
+        assertFalse(problems.isEmpty());
+        assertEquals(1, problems.size());
+        assertEquals("Cannot return long from function returning void", problems.get(0).message());
+    }
+
+    @Test
     public void testAccessMember() {
         var problems = analyze("let f: function = (5).toString");
 

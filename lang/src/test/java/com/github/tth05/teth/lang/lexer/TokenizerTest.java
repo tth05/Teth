@@ -98,7 +98,7 @@ public class TokenizerTest extends AbstractTokenizerTest {
 
     @Test
     public void testInvalidChars() {
-        var matcher = Pattern.compile("^[a-zA-Z0-9+\\-*/^_:.,=\\t\\n<>! (){}\\[\\]]$").matcher("");
+        var matcher = Pattern.compile("^[a-zA-Z0-9+\\-*/^_:.,=\\t\\r\\n<>! (){}\\[\\]]$").matcher("");
         for (int i = 1; i < 1000; i++) {
             var str = "" + (char) i;
             if (matcher.reset(str).matches())

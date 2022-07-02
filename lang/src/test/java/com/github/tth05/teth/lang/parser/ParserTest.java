@@ -390,7 +390,8 @@ public class ParserTest extends AbstractParserTest {
                     fn bar() string {
                         return "hello"
                     }
-                }
+                    
+                    return}
                 """);
         assertEquals(
                 new SourceFileUnit(
@@ -417,7 +418,8 @@ public class ParserTest extends AbstractParserTest {
                                                                                 new ReturnStatement(null, new StringLiteralExpression(null, "hello"))
                                                                         )
                                                                 )
-                                                        )
+                                                        ),
+                                                        new ReturnStatement(null, null)
                                                 )
                                         )
                                 )

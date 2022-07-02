@@ -4,6 +4,8 @@ import com.github.tth05.teth.lang.parser.ASTVisitor;
 import com.github.tth05.teth.lang.span.ISpan;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
+import java.util.Objects;
+
 public class ReturnStatement extends Statement {
 
     private final Expression valueExpr;
@@ -26,7 +28,10 @@ public class ReturnStatement extends Statement {
     public void dump(ASTDumpBuilder builder) {
         builder.append("Return {").newLine().startBlock();
         builder.appendAttribute("value");
-        this.valueExpr.dump(builder);
+        if (this.valueExpr != null)
+            this.valueExpr.dump(builder);
+        else
+            builder.append("<none>");
         builder.endBlock().newLine().append("}");
     }
 
@@ -39,12 +44,12 @@ public class ReturnStatement extends Statement {
 
         ReturnStatement that = (ReturnStatement) o;
 
-        return this.valueExpr.equals(that.valueExpr);
+        return Objects.equals(this.valueExpr, that.valueExpr);
     }
 
     @Override
     public int hashCode() {
-        return this.valueExpr.hashCode();
+        return this.valueExpr != null ? this.valueExpr.hashCode() : 0;
     }
 
     @Override

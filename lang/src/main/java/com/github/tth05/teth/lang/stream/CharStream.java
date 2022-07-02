@@ -19,7 +19,10 @@ public class CharStream {
         if (!isValidIndex(0))
             throw new EndOfStreamException();
 
-        return this.chars[this.index++];
+        var c = this.chars[this.index++];
+        if (c == '\r')
+            return consume();
+        return c;
     }
 
     public ISpan consumeKnownSingle() {
@@ -36,7 +39,13 @@ public class CharStream {
         if (!isValidIndex(offset))
             return 0;
 
-        return this.chars[this.index + offset];
+        var c = this.chars[this.index + offset];
+        if (c == '\r') {
+            this.index++;
+            return peek(offset);
+        }
+
+        return c;
     }
 
     public boolean isEmpty() {

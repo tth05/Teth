@@ -43,8 +43,8 @@ public class Compiler {
         }
 
         public IInstrunction[] toArray() {
-            var i = 0;
-            var insns = new IInstrunction[this.functionInsnMap.values().stream().mapToInt(List::size).sum()];
+            var i = 1;
+            var insns = new IInstrunction[this.functionInsnMap.values().stream().mapToInt(List::size).sum() + 1];
             var functionOffsets = new IdentityHashMap<FunctionDeclaration, Integer>();
 
             // Ensure global function comes first
@@ -60,7 +60,7 @@ public class Compiler {
             }
 
             // Resolve jump addresses
-            for (int j = 0; j < insns.length; j++) {
+            for (int j = 1; j < insns.length; j++) {
                 var insn = insns[j];
                 if (!(insn instanceof PlaceholderInvokeInsn placeholder))
                     continue;
@@ -68,9 +68,11 @@ public class Compiler {
                 var function = placeholder.target;
                 var offset = functionOffsets.get(function);
 
-                // TODO: Compute locals count
-                insns[j] = new INVOKE_Insn(false, function.getParameters().size(), 0, offset);
+                insns[j] = new INVOKE_Insn(false, function.getParameters().size(), this.analyzer.functionLocalsCount(function), offset - 1);
             }
+
+            // "Invoke" global function
+            insns[0] = new INVOKE_Insn(false, 0, this.analyzer.functionLocalsCount(Analyzer.GLOBAL_FUNCTION), 0);
 
             return insns;
         }
@@ -116,6 +118,27 @@ public class Compiler {
         }
 
         @Override
+        public void visit(VariableDeclaration declaration) {
+            {
+                declaration.getInitializerExpr().accept(this);
+            }
+
+            var idx = this.currentFunctionLocals.size();
+            this.currentFunctionLocals.put(declaration.getNameExpr().getValue(), idx);
+            this.currentFunctionInsn.add(new STORE_LOCAL_Insn(idx));
+        }
+
+        @Override
+        public void visit(VariableAssignmentExpression expression) {
+            {
+                expression.getExpr().accept(this);
+            }
+
+            var idx = this.currentFunctionLocals.get(expression.getTargetNameExpr().getValue());
+            this.currentFunctionInsn.add(new STORE_LOCAL_Insn(idx));
+        }
+
+        @Override
         public void visit(ReturnStatement returnStatement) {
             super.visit(returnStatement);
 
@@ -125,7 +148,7 @@ public class Compiler {
         @Override
         public void visit(IfStatement statement) {
             statement.getCondition().accept(this);
-            var generateElse = statement.getElseStatement() != null;
+            var hasElseBlock = statement.getElseStatement() != null;
 
             // If start placeholder
             var startIndex = this.currentFunctionInsn.size();
@@ -134,19 +157,19 @@ public class Compiler {
             statement.getBody().accept(this);
             // Body end placeholder
             var bodyEndIndex = this.currentFunctionInsn.size();
-            if (generateElse)
+            if (hasElseBlock)
                 this.currentFunctionInsn.add(null);
 
             // Jump after body if condition is false
-            this.currentFunctionInsn.set(startIndex, new JUMP_IF_FALSE_Insn(this.currentFunctionInsn.size() - startIndex));
+            this.currentFunctionInsn.set(startIndex, new JUMP_IF_FALSE_Insn(this.currentFunctionInsn.size() - startIndex - 1));
 
             var elseStatement = statement.getElseStatement();
-            if (generateElse)
+            if (hasElseBlock)
                 elseStatement.accept(this);
 
-            if (generateElse) {
+            if (hasElseBlock) {
                 // Jump after else if condition is true
-                this.currentFunctionInsn.set(bodyEndIndex, new JUMP_Insn(this.currentFunctionInsn.size() - bodyEndIndex));
+                this.currentFunctionInsn.set(bodyEndIndex, new JUMP_Insn(this.currentFunctionInsn.size() - bodyEndIndex - 1));
             }
         }
 
@@ -159,8 +182,14 @@ public class Compiler {
                 case OP_SUBTRACT -> this.currentFunctionInsn.add(new LD_SUB_Insn());
                 case OP_MULTIPLY -> this.currentFunctionInsn.add(new LD_MUL_Insn());
                 case OP_DIVIDE -> this.currentFunctionInsn.add(new LD_DIV_Insn());
+                case OP_LESS -> this.currentFunctionInsn.add(new LD_LESS_Insn());
                 case OP_LESS_EQUAL -> this.currentFunctionInsn.add(new LD_LESS_EQUAL_Insn());
-                default -> throw new UnsupportedOperationException();
+                case OP_EQUAL -> this.currentFunctionInsn.add(new LD_EQUAL_Insn());
+                case OP_NOT_EQUAL -> {
+                    this.currentFunctionInsn.add(new LD_EQUAL_Insn());
+                    this.currentFunctionInsn.add(new B_INVERT_Insn());
+                }
+                default -> throw new UnsupportedOperationException("Unsupported operator: " + expression.getOperator());
             }
         }
 

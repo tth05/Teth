@@ -156,7 +156,8 @@ public class Analyzer {
             if (this.currentFunctionStack.size() == 1)
                 throw new ValidationException(returnStatement.getSpan(), "Return statement outside of function");
 
-            var type = resolvedExpressionTypes.get(returnStatement.getValueExpr());
+            var valueExpr = returnStatement.getValueExpr();
+            var type = valueExpr == null ? Type.VOID : resolvedExpressionTypes.get(valueExpr);
             var currentFunction = this.currentFunctionStack.getLast();
             if (!type.equals(currentFunction.getReturnType()))
                 throw new TypeResolverException(returnStatement.getSpan(), "Cannot return " + type + " from function returning " + currentFunction.getReturnType());
@@ -245,7 +246,9 @@ public class Analyzer {
             if (!typesMatch ||
                 !BINARY_OPERATORS_ALLOWED_TYPES.containsKey(leftType) ||
                 Arrays.stream(BINARY_OPERATORS_ALLOWED_TYPES.get(leftType)).noneMatch(op -> op == expression.getOperator()))
-                throw new TypeResolverException(expression.getSpan(), "Operator " + expression.getOperator().asString() + " cannot be applied to " + leftType + " and " + rightType);
+//                throw new TypeResolverException(expression.getSpan(), "Operator " + expression.getOperator().asString() + " cannot be applied to " + leftType + " and " + rightType);
+                // TODO: This check is disabled for now because list.get returns any. This need normal array access or generics.
+                Objects.equals(true, true);
 
             Type binaryType;
             if (expression.getOperator().producesBoolean())

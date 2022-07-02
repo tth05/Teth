@@ -72,8 +72,9 @@ public class Parser {
 
     private Statement parseReturnStatement() {
         var firstSpan = this.stream.consumeType(TokenType.KEYWORD).span();
-        var expression = parseExpression();
-        return new ReturnStatement(Span.of(firstSpan, expression.getSpan()), expression);
+        var next = this.stream.peek();
+        var expression = next.is(TokenType.LINE_BREAK) || next.is(TokenType.L_CURLY_PAREN) || next.is(TokenType.R_CURLY_PAREN) ? null : parseExpression();
+        return new ReturnStatement(Span.of(firstSpan, expression == null ? firstSpan : expression.getSpan()), expression);
     }
 
     private IfStatement parseIfStatement() {

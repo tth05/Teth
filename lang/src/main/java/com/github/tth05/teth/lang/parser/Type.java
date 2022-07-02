@@ -40,10 +40,12 @@ public class Type {
     public boolean isSubtypeOf(Type other) {
         if (this == other)
             return true;
-        if (this == ANY)
+        if (this == VOID)
             return false;
         if (other == ANY)
             return true;
+        if (this == ANY)
+            return false;
         if (this.innerType != null ^ other.innerType != null)
             return false;
         if (this.innerType != null)
