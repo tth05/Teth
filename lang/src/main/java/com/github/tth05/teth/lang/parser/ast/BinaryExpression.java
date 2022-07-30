@@ -26,6 +26,7 @@ public class BinaryExpression extends Expression {
 
     public void setLeft(Expression left) {
         this.left = left;
+        setSpan(Span.of(left.getSpan(), getSpan()));
     }
 
     public Expression getLeft() {
@@ -34,6 +35,7 @@ public class BinaryExpression extends Expression {
 
     public void setRight(Expression right) {
         this.right = right;
+        setSpan(Span.of(getSpan(), right.getSpan()));
     }
 
     public Expression getRight() {

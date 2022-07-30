@@ -6,9 +6,13 @@ import com.github.tth05.teth.lang.span.ISpan;
 
 public abstract class Statement implements IDumpable, IVisitable {
 
-    private final ISpan span;
+    private ISpan span;
 
     protected Statement(ISpan span) {
+        this.span = span;
+    }
+
+    protected void setSpan(ISpan span) {
         this.span = span;
     }
 
