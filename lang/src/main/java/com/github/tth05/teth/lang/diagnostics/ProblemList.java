@@ -8,8 +8,11 @@ public class ProblemList extends ArrayList<Problem> {
     public String prettyPrint(boolean useAnsiColors) {
         var builder = new StringBuilder();
 
-        for (var problem : this) {
-            builder.append(problem.prettyPrint(useAnsiColors)).append("\n");
+        for (int i = 0; i < this.size(); i++) {
+            var problem = this.get(i);
+            builder.append(problem.prettyPrint(useAnsiColors));
+            if (i < this.size() - 1)
+                builder.append('\n');
         }
 
         return builder.toString();
