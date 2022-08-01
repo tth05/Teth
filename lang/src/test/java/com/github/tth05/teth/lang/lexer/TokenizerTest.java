@@ -210,6 +210,17 @@ public class TokenizerTest extends AbstractTokenizerTest {
         assertStreamsEmpty();
     }
 
+    @Test
+    public void testLoop() {
+        createStreams("loop {}");
+        assertIterableEquals(tokenList(
+                new Token(makeSpan(0, 4), "loop", TokenType.KEYWORD),
+                new Token(makeSpan(5, 6), "{", TokenType.L_CURLY_PAREN),
+                new Token(makeSpan(6, 7), "}", TokenType.R_CURLY_PAREN)
+        ), tokensIntoList());
+        assertStreamsEmpty();
+    }
+
     private static List<Token> tokenList(Token... tokens) {
         List<Token> list = new ArrayList<>(Arrays.asList(tokens));
 
