@@ -65,6 +65,17 @@ public abstract class ASTVisitor {
             elseStatement.accept(this);
     }
 
+    public void visit(LoopStatement statement) {
+        statement.getVariableDeclarations().forEach(v -> v.accept(this));
+        var condition = statement.getCondition();
+        if (condition != null)
+            condition.accept(this);
+        statement.getBody().accept(this);
+        var advanceStatement = statement.getAdvanceStatement();
+        if (advanceStatement != null)
+            advanceStatement.accept(this);
+    }
+
     public void visit(ListLiteralExpression listLiteralExpression) {
         listLiteralExpression.getInitializers().forEach(e -> e.accept(this));
     }

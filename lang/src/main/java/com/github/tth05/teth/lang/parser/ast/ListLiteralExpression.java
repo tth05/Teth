@@ -6,6 +6,7 @@ import com.github.tth05.teth.lang.span.ISpan;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
 import java.util.List;
+import java.util.Objects;
 
 public class ListLiteralExpression extends Expression {
 
@@ -13,7 +14,7 @@ public class ListLiteralExpression extends Expression {
 
     public ListLiteralExpression(ISpan span, ExpressionList initializers) {
         super(span);
-        this.initializers = initializers;
+        this.initializers = Objects.requireNonNull(initializers, "initializers cannot be null");
     }
 
     public List<Expression> getInitializers() {

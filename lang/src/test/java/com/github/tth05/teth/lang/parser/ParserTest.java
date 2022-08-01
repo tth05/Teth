@@ -4,6 +4,7 @@ import com.github.tth05.teth.lang.AbstractParserTest;
 import com.github.tth05.teth.lang.parser.ast.*;
 import org.junit.jupiter.api.Test;
 
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -356,6 +357,114 @@ public class ParserTest extends AbstractParserTest {
                 ),
                 this.unit
         );
+        assertStreamsEmpty();
+    }
+
+    @Test
+    public void testParseLoopStatement() {
+        createAST("""
+                loop {}
+                loop a = a + 5
+                loop (i < 5) {}
+                loop (i < 5, i = i + 1) {}
+                loop (let a = 5, let b = 3) {}
+                loop (let a = 5, a, print([a])) {}
+                """);
+        assertEquals(
+                new SourceFileUnit(
+                        List.of(
+                                new LoopStatement(null, Collections.emptyList(), null, new BlockStatement(null, StatementList.of()), null),
+                                new LoopStatement(
+                                        null, Collections.emptyList(), null,
+                                        new BlockStatement(null, StatementList.of(
+                                                new VariableAssignmentExpression(
+                                                        null,
+                                                        new IdentifierExpression(null, "a"),
+                                                        new BinaryExpression(
+                                                                null,
+                                                                new IdentifierExpression(null, "a"),
+                                                                new LongLiteralExpression(null, 5),
+                                                                BinaryExpression.Operator.OP_ADD
+                                                        )
+                                                )
+                                        )),
+                                        null
+                                ),
+                                new LoopStatement(
+                                        null, Collections.emptyList(),
+                                        new BinaryExpression(
+                                                null,
+                                                new IdentifierExpression(null, "i"),
+                                                new LongLiteralExpression(null, 5),
+                                                BinaryExpression.Operator.OP_LESS
+                                        ),
+                                        new BlockStatement(null, StatementList.of()), null
+                                ),
+                                new LoopStatement(
+                                        null, Collections.emptyList(),
+                                        new BinaryExpression(
+                                                null,
+                                                new IdentifierExpression(null, "i"),
+                                                new LongLiteralExpression(null, 5),
+                                                BinaryExpression.Operator.OP_LESS
+                                        ),
+                                        new BlockStatement(null, StatementList.of()),
+                                        new VariableAssignmentExpression(
+                                                null,
+                                                new IdentifierExpression(null, "i"),
+                                                new BinaryExpression(
+                                                        null,
+                                                        new IdentifierExpression(null, "i"),
+                                                        new LongLiteralExpression(null, 1),
+                                                        BinaryExpression.Operator.OP_ADD
+                                                )
+                                        )
+                                ),
+                                new LoopStatement(
+                                        null,
+                                        List.of(
+                                                new VariableDeclaration(
+                                                        null,
+                                                        null,
+                                                        new IdentifierExpression(null, "a"),
+                                                        new LongLiteralExpression(null, 5)
+                                                ),
+                                                new VariableDeclaration(
+                                                        null,
+                                                        null,
+                                                        new IdentifierExpression(null, "b"),
+                                                        new LongLiteralExpression(null, 3)
+                                                )
+                                        ),
+                                        null,
+                                        new BlockStatement(null, StatementList.of()),
+                                        null
+                                ),
+                                new LoopStatement(
+                                        null,
+                                        List.of(
+                                                new VariableDeclaration(
+                                                        null,
+                                                        null,
+                                                        new IdentifierExpression(null, "a"),
+                                                        new LongLiteralExpression(null, 5)
+                                                )
+                                        ),
+                                        new IdentifierExpression(null, "a"),
+                                        new BlockStatement(null, StatementList.of()),
+                                        new FunctionInvocationExpression(
+                                                null,
+                                                new IdentifierExpression(null, "print"),
+                                                ExpressionList.of(
+                                                        new ListLiteralExpression(null, ExpressionList.of(new IdentifierExpression(null, "a")))
+                                                )
+                                        )
+                                )
+                        )
+                ),
+                this.unit
+        );
+        assertStreamsEmpty();
     }
 
     @Test

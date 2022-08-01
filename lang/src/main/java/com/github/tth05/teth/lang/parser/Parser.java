@@ -10,6 +10,7 @@ import com.github.tth05.teth.lang.span.Span;
 import com.github.tth05.teth.lang.stream.CharStream;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.function.Predicate;
 
 //TODO: Allow new-lines everywhere
@@ -58,6 +59,7 @@ public class Parser {
             var keyword = current.value();
             return switch (keyword) {
                 case "if" -> parseIfStatement();
+                case "loop" -> parseLoopStatement();
                 case "fn" -> parseFunctionDeclaration();
                 case "return" -> parseReturnStatement();
                 case "let" -> parseVariableDeclaration();
@@ -89,6 +91,46 @@ public class Parser {
         }
 
         return new IfStatement(Span.of(firstSpan, body.getSpan()), condition, body, null);
+    }
+
+    private LoopStatement parseLoopStatement() {
+        var firstSpan = this.stream.consumeType(TokenType.KEYWORD).span();
+
+        // Infinite loop with no header
+        if (!this.stream.peek().is(TokenType.L_PAREN)) {
+            var body = parseBlock();
+            return new LoopStatement(Span.of(firstSpan, body.getSpan()), Collections.emptyList(), null, body, null);
+        }
+
+        this.stream.consumeType(TokenType.L_PAREN);
+
+        var variableDeclarations = new ArrayList<VariableDeclaration>();
+        Expression condition = null;
+        Statement advance = null;
+
+        var hasCondition = true;
+        while (this.stream.peek().value().equals("let")) {
+            hasCondition = false;
+            variableDeclarations.add(parseVariableDeclaration());
+
+            if (this.stream.peek().is(TokenType.COMMA)) {
+                this.stream.consumeType(TokenType.COMMA);
+                hasCondition = true;
+            }
+        }
+
+        if (hasCondition)
+            condition = parseExpression();
+        if (hasCondition && this.stream.peek().is(TokenType.COMMA)) {
+            this.stream.consumeType(TokenType.COMMA);
+            // Well, this will make for some interesting code
+            advance = parseStatement();
+        }
+
+        this.stream.consumeType(TokenType.R_PAREN);
+
+        var body = parseBlock();
+        return new LoopStatement(Span.of(firstSpan, body.getSpan()), variableDeclarations, condition, body, advance);
     }
 
     private BlockStatement parseBlock() {
