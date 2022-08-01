@@ -174,6 +174,34 @@ public class Compiler {
         }
 
         @Override
+        public void visit(LoopStatement statement) {
+            statement.getVariableDeclarations().forEach(v -> v.accept(this));
+
+            var startIndex = this.currentFunctionInsn.size();
+
+            var condition = statement.getCondition();
+            if (condition != null)
+                condition.accept(this);
+            else
+                this.currentFunctionInsn.add(new B_CONST_Insn(true)); // Infinite loop
+
+            // Loop condition placeholder
+            var conditionIndex = this.currentFunctionInsn.size();
+            this.currentFunctionInsn.add(null);
+
+            statement.getBody().accept(this);
+            var advanceStatement = statement.getAdvanceStatement();
+            if (advanceStatement != null)
+                advanceStatement.accept(this);
+
+            // Unconditional jump to start
+            this.currentFunctionInsn.add(new JUMP_Insn(startIndex - this.currentFunctionInsn.size() - 1));
+
+            // Jump after body if condition is false
+            this.currentFunctionInsn.set(conditionIndex, new JUMP_IF_FALSE_Insn(this.currentFunctionInsn.size() - conditionIndex - 1));
+        }
+
+        @Override
         public void visit(BinaryExpression expression) {
             super.visit(expression);
 

@@ -1,5 +1,6 @@
 package com.github.tth05.teth.bytecodeInterpreter;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -7,6 +8,31 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class InterpreterTest extends AbstractInterpreterTest {
+
+    @Test
+    @Disabled("TODO")
+    public void testVariableRedeclarationShouldNotLeakValueToOuterScope() {
+        execute("""
+                let a = 5
+                {
+                    let a = 10
+                    print([a])
+                }
+                print([a])
+                """);
+
+        // Currently prints 10 and 10
+        assertLinesMatch(List.of("10", "5"), getSystemOutputLines());
+    }
+
+    @Test
+    public void testLoop() {
+        execute("""
+                loop (let i = 1, i <= 10, i = i + 1) print([i]) print(["Done"])
+                """);
+
+        assertLinesMatch(List.of("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "Done"), getSystemOutputLines());
+    }
 
     @Test
     public void testSort() {

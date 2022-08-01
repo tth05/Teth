@@ -63,6 +63,10 @@ public class InstructionsImpl {
                     var value = (Boolean) interpreter.pop();
                     interpreter.push(!value);
                 }
+                case OpCodes.B_CONST -> {
+                    var value = ((B_CONST_Insn) insn).getValue();
+                    interpreter.push(value);
+                }
                 case OpCodes.LD_NEGATE -> {
                     var value = (Number) interpreter.pop();
                     if (value instanceof Long)
@@ -148,7 +152,7 @@ public class InstructionsImpl {
                     interpreter.push(interpreter.peek());
                 }
                 case OpCodes.JUMP -> {
-                    var relativeJumpOffset = ((JUMP_IF_FALSE_Insn) insn).getRelativeJumpOffset();
+                    var relativeJumpOffset = ((JUMP_Insn) insn).getRelativeJumpOffset();
                     interpreter.setProgramCounter(interpreter.getProgramCounter() + relativeJumpOffset);
                 }
                 case OpCodes.JUMP_IF_FALSE -> {
