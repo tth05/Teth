@@ -185,6 +185,26 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
     }
 
     @Test
+    public void testLoopStatementCondition() {
+        var problems = analyze("loop (true) {}");
+
+        assertTrue(problems.isEmpty());
+
+        problems = analyze("loop (let a = 5, a < 5) {}");
+
+        assertTrue(problems.isEmpty());
+    }
+
+    @Test
+    public void testLoopStatementConditionIncorrectType() {
+        var problems = analyze("loop (5) {}");
+
+        assertFalse(problems.isEmpty());
+        assertEquals(1, problems.size());
+        assertEquals("Condition of loop statement must be a bool", problems.get(0).message());
+    }
+
+    @Test
     public void testAssignToVariable() {
         var problems = analyze("let a = 0\n a = 5");
 

@@ -222,6 +222,14 @@ public class Analyzer {
         }
 
         @Override
+        public void visit(LoopStatement statement) {
+            super.visit(statement);
+
+            if (statement.getCondition() != null && !resolvedExpressionTypes.get(statement.getCondition()).equals(Type.BOOLEAN))
+                throw new TypeResolverException(statement.getCondition().getSpan(), "Condition of loop statement must be a bool");
+        }
+
+        @Override
         public void visit(UnaryExpression expression) {
             super.visit(expression);
 
