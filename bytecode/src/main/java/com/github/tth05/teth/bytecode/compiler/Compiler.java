@@ -134,7 +134,11 @@ public class Compiler {
                 expression.getExpr().accept(this);
             }
 
-            var idx = this.currentFunctionLocals.get(expression.getTargetNameExpr().getValue());
+            if (!(expression.getTargetExpr() instanceof IdentifierExpression ident))
+                //TODO: member access
+                throw new UnsupportedOperationException();
+
+            var idx = this.currentFunctionLocals.get(ident.getValue());
             this.currentFunctionInsn.add(new STORE_LOCAL_Insn(idx));
         }
 

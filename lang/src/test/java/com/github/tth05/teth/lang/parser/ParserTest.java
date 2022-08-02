@@ -493,6 +493,52 @@ public class ParserTest extends AbstractParserTest {
     }
 
     @Test
+    public void testParseAssignment() {
+        createAST("""
+                d = 25
+                d.a.c.b().a = 25
+                """);
+        assertEquals(
+                new SourceFileUnit(
+                        List.of(
+                                new VariableAssignmentExpression(
+                                        null,
+                                        new IdentifierExpression(null, "d"),
+                                        new LongLiteralExpression(null, 25)
+                                ),
+                                new VariableAssignmentExpression(
+                                        null,
+                                        new MemberAccessExpression(
+                                                null,
+                                                new IdentifierExpression(null, "a"),
+                                                new FunctionInvocationExpression(
+                                                        null,
+                                                        new MemberAccessExpression(
+                                                                null,
+                                                                new IdentifierExpression(null, "b"),
+                                                                new MemberAccessExpression(
+                                                                        null,
+                                                                        new IdentifierExpression(null, "c"),
+                                                                        new MemberAccessExpression(
+                                                                                null,
+                                                                                new IdentifierExpression(null, "a"),
+                                                                                new IdentifierExpression(null, "d")
+                                                                        )
+                                                                )
+                                                        ),
+                                                        ExpressionList.of()
+                                                )
+                                        ),
+                                        new LongLiteralExpression(null, 25)
+                                )
+                        )
+                ),
+                this.unit
+        );
+        assertStreamsEmpty();
+    }
+
+    @Test
     public void testParseFunctionDeclaration() {
         createAST("""
                 fn foo(a: type, b: long) {

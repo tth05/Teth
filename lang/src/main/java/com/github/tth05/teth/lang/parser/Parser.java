@@ -329,20 +329,20 @@ public class Parser {
             if (currentType == TokenType.L_PAREN) {
                 expr = parseFunctionInvocation(expr);
             } else if (currentType == TokenType.EQUAL) {
-                if (!(expr instanceof IdentifierExpression ident))
-                    throw new UnexpectedTokenException(expr.getSpan(), "Left side of assignment must be an identifier");
+                if (!(expr instanceof IAssignmentTarget))
+                    throw new UnexpectedTokenException(expr.getSpan(), "Left side of assignment must be an identifier or member access");
                 // Consume the equal sign
                 this.stream.consume();
                 var initializerExpression = parseExpression();
                 expr = new VariableAssignmentExpression(
                         Span.of(expr.getSpan(), initializerExpression.getSpan()),
-                        ident, initializerExpression
+                        expr, initializerExpression
                 );
             } else if (currentType == TokenType.DOT) {
                 this.stream.consume();
                 var target = parseLiteralExpression();
                 if (!(target instanceof IdentifierExpression ident))
-                    throw new UnexpectedTokenException(target.getSpan(), "Method access name must be an identifier");
+                    throw new UnexpectedTokenException(target.getSpan(), "Member access name must be an identifier");
 
                 expr = new MemberAccessExpression(Span.of(expr.getSpan(), ident.getSpan()), ident, expr);
             } else {

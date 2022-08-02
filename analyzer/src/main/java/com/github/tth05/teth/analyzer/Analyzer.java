@@ -192,12 +192,12 @@ public class Analyzer {
         public void visit(VariableAssignmentExpression expression) {
             super.visit(expression);
 
-            var decl = resolvedReferences.get(expression.getTargetNameExpr());
+            var decl = resolvedReferences.get(expression.getTargetExpr());
 
             if (decl == null)
-                throw new ValidationException(expression.getTargetNameExpr().getSpan(), "Unresolved identifier");
+                throw new ValidationException(expression.getTargetExpr().getSpan(), "Unresolved identifier");
             if (!(decl instanceof IVariableDeclaration varDecl))
-                throw new ValidationException(expression.getTargetNameExpr().getSpan(), "Identifier is not a variable");
+                throw new ValidationException(expression.getTargetExpr().getSpan(), "Identifier is not a variable");
 
             var type = resolvedExpressionTypes.get(expression.getExpr());
             if (!type.equals(varDecl.getTypeExpr().getType()))

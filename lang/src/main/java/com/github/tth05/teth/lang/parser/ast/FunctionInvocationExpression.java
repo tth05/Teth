@@ -5,6 +5,8 @@ import com.github.tth05.teth.lang.parser.ExpressionList;
 import com.github.tth05.teth.lang.span.ISpan;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
+import java.util.Objects;
+
 public class FunctionInvocationExpression extends Expression {
 
     private final Expression target;
@@ -13,7 +15,7 @@ public class FunctionInvocationExpression extends Expression {
     public FunctionInvocationExpression(ISpan span, Expression target, ExpressionList parameters) {
         super(span);
         this.target = target;
-        this.parameters = parameters;
+        this.parameters = Objects.requireNonNull(parameters);
     }
 
     public Expression getTarget() {
