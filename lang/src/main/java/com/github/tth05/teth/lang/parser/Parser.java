@@ -60,6 +60,7 @@ public class Parser {
             return switch (keyword) {
                 case "if" -> parseIfStatement();
                 case "loop" -> parseLoopStatement();
+                case "struct" -> parseStructDeclaration();
                 case "fn" -> parseFunctionDeclaration();
                 case "return" -> parseReturnStatement();
                 case "let" -> parseVariableDeclaration();
@@ -95,6 +96,7 @@ public class Parser {
 
     private LoopStatement parseLoopStatement() {
         var firstSpan = this.stream.consumeType(TokenType.KEYWORD).span();
+        consumeLineBreaks();
 
         // Infinite loop with no header
         if (!this.stream.peek().is(TokenType.L_PAREN)) {
@@ -103,6 +105,7 @@ public class Parser {
         }
 
         this.stream.consumeType(TokenType.L_PAREN);
+        consumeLineBreaks();
 
         var variableDeclarations = new ArrayList<VariableDeclaration>();
         Expression condition = null;
@@ -110,6 +113,8 @@ public class Parser {
 
         var hasCondition = true;
         while (this.stream.peek().value().equals("let")) {
+            consumeLineBreaks();
+
             hasCondition = false;
             variableDeclarations.add(parseVariableDeclaration());
 
@@ -128,6 +133,7 @@ public class Parser {
         }
 
         this.stream.consumeType(TokenType.R_PAREN);
+        consumeLineBreaks();
 
         var body = parseBlock();
         return new LoopStatement(Span.of(firstSpan, body.getSpan()), variableDeclarations, condition, body, advance);
@@ -208,6 +214,42 @@ public class Parser {
                 new IdentifierExpression(functionName.span(), functionName.value()),
                 returnType,
                 parameters, body
+        );
+    }
+
+    private StructDeclaration parseStructDeclaration() {
+        var firstSpan = this.stream.consumeType(TokenType.KEYWORD).span();
+        consumeLineBreaks();
+        var structName = this.stream.consumeType(TokenType.IDENTIFIER);
+        consumeLineBreaks();
+        this.stream.consumeType(TokenType.L_CURLY_PAREN);
+        consumeLineBreaks();
+
+        var fields = new ArrayList<StructDeclaration.FieldDeclaration>();
+        var functions = new ArrayList<FunctionDeclaration>();
+
+        while (!this.stream.peek().is(TokenType.R_CURLY_PAREN)) {
+            var token = this.stream.peek();
+            if (token.is(TokenType.IDENTIFIER)) {
+                var name = this.stream.consumeType(TokenType.IDENTIFIER);
+                this.stream.consumeType(TokenType.COLON);
+                var type = parseType();
+                fields.add(new StructDeclaration.FieldDeclaration(Span.of(name.span(), type.getSpan()), type, new IdentifierExpression(name.span(), name.value())));
+            } else if (token.is(TokenType.KEYWORD) && token.value().equals("fn")) {
+                functions.add(parseFunctionDeclaration());
+            } else {
+                throw new UnexpectedTokenException(token.span(), "Expected field or function declaration");
+            }
+
+            consumeLineBreaks();
+        }
+
+        var endSpan = this.stream.consumeType(TokenType.R_CURLY_PAREN).span();
+        return new StructDeclaration(
+                Span.of(firstSpan, endSpan),
+                new IdentifierExpression(structName.span(), structName.value()),
+                fields,
+                functions
         );
     }
 

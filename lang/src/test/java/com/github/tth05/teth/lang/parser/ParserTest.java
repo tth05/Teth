@@ -584,6 +584,59 @@ public class ParserTest extends AbstractParserTest {
     }
 
     @Test
+    public void testParseStructDeclaration() {
+        createAST("""
+                struct Foo {
+                    a: long
+                    
+                    fn bar(b: string) string return
+                    
+                    c: double
+                }
+                """);
+        assertEquals(
+                new SourceFileUnit(
+                        List.of(
+                                new StructDeclaration(
+                                        null,
+                                        new IdentifierExpression(null, "Foo"),
+                                        List.of(
+                                                new StructDeclaration.FieldDeclaration(
+                                                        null,
+                                                        new TypeExpression(null, Type.LONG),
+                                                        new IdentifierExpression(null, "a")
+                                                ),
+                                                new StructDeclaration.FieldDeclaration(
+                                                        null,
+                                                        new TypeExpression(null, Type.DOUBLE),
+                                                        new IdentifierExpression(null, "c")
+                                                )
+                                        ),
+                                        List.of(
+                                                new FunctionDeclaration(
+                                                        null,
+                                                        new IdentifierExpression(null, "bar"),
+                                                        new TypeExpression(null, Type.STRING),
+                                                        List.of(
+                                                                new FunctionDeclaration.ParameterDeclaration(null, new TypeExpression(null, Type.STRING), new IdentifierExpression(null, "b"), 0)
+                                                        ),
+                                                        new BlockStatement(
+                                                                null,
+                                                                StatementList.of(
+                                                                        new ReturnStatement(null, null)
+                                                                )
+                                                        )
+                                                )
+                                        )
+                                )
+                        )
+                ),
+                this.unit
+        );
+        assertStreamsEmpty();
+    }
+
+    @Test
     public void testParseMemberAccess() {
         createAST("""
                 a.b().c().d
@@ -651,6 +704,18 @@ public class ParserTest extends AbstractParserTest {
                         a
                     }
                  }
+                loop 
+                (
+                let
+                a = 5
+                ,
+                b < 
+                5
+                ,
+                c = c+1
+                )
+                {
+                }
                 """);
         assertStreamsEmpty();
     }

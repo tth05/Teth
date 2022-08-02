@@ -52,6 +52,17 @@ public abstract class ASTVisitor {
         parameter.getNameExpr().accept(this);
     }
 
+    public void visit(StructDeclaration declaration) {
+        declaration.getNameExpr().accept(this);
+        declaration.getFields().forEach(p -> p.accept(this));
+        declaration.getFunctions().forEach(p -> p.accept(this));
+    }
+
+    public void visit(StructDeclaration.FieldDeclaration declaration) {
+        declaration.getTypeExpr().accept(this);
+        declaration.getNameExpr().accept(this);
+    }
+
     public void visit(FunctionInvocationExpression invocation) {
         invocation.getTarget().accept(this);
         invocation.getParameters().forEach(e -> e.accept(this));

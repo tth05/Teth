@@ -67,7 +67,7 @@ public class FunctionDeclaration extends Statement {
         builder.startBlock();
         builder.appendAttribute("name");
         this.nameExpr.dump(builder);
-        builder.appendAttribute("returnType");
+        builder.newLine().appendAttribute("returnType");
         if (this.returnTypeExpr != null)
             this.returnTypeExpr.dump(builder);
         else
