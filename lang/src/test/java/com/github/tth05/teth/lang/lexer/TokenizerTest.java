@@ -221,6 +221,25 @@ public class TokenizerTest extends AbstractTokenizerTest {
         assertStreamsEmpty();
     }
 
+    @Test
+    public void testStruct() {
+        createStreams("struct b {} let a = new b()");
+        assertIterableEquals(tokenList(
+                new Token(makeSpan(0, 6), "struct", TokenType.KEYWORD),
+                new Token(makeSpan(7, 8), "b", TokenType.IDENTIFIER),
+                new Token(makeSpan(9, 10), "{", TokenType.L_CURLY_PAREN),
+                new Token(makeSpan(10, 11), "}", TokenType.R_CURLY_PAREN),
+                new Token(makeSpan(12, 15), "let", TokenType.KEYWORD),
+                new Token(makeSpan(16, 17), "a", TokenType.IDENTIFIER),
+                new Token(makeSpan(18, 19), "=", TokenType.EQUAL),
+                new Token(makeSpan(20, 23), "new", TokenType.KEYWORD),
+                new Token(makeSpan(24, 25), "b", TokenType.IDENTIFIER),
+                new Token(makeSpan(25, 26), "(", TokenType.L_PAREN),
+                new Token(makeSpan(26, 27), ")", TokenType.R_PAREN)
+                ), tokensIntoList());
+        assertStreamsEmpty();
+    }
+
     private static List<Token> tokenList(Token... tokens) {
         List<Token> list = new ArrayList<>(Arrays.asList(tokens));
 
