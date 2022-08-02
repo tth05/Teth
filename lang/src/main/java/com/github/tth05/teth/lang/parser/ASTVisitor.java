@@ -63,6 +63,11 @@ public abstract class ASTVisitor {
         declaration.getNameExpr().accept(this);
     }
 
+    public void visit(ObjectCreationExpression expression) {
+        expression.getTargetNameExpr().accept(this);
+        expression.getParameters().forEach(p -> p.accept(this));
+    }
+
     public void visit(FunctionInvocationExpression invocation) {
         invocation.getTarget().accept(this);
         invocation.getParameters().forEach(e -> e.accept(this));

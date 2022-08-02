@@ -64,6 +64,7 @@ public class Parser {
                 case "fn" -> parseFunctionDeclaration();
                 case "return" -> parseReturnStatement();
                 case "let" -> parseVariableDeclaration();
+                case "new" -> parseObjectCreationExpression();
                 default -> throw new UnexpectedTokenException(current.span(), "Keyword '%s' not allowed here", keyword);
             };
         } else if (current.is(TokenType.L_CURLY_PAREN)) { // Block statement
@@ -285,6 +286,22 @@ public class Parser {
         return head;
     }
 
+    private ObjectCreationExpression parseObjectCreationExpression() {
+        var firstSpan = this.stream.consumeType(TokenType.KEYWORD).span();
+        consumeLineBreaks();
+        var name = this.stream.consumeType(TokenType.IDENTIFIER);
+        consumeLineBreaks();
+        this.stream.consumeType(TokenType.L_PAREN);
+        var parameters = parseParameterList();
+        var secondSpan = this.stream.consumeType(TokenType.R_PAREN).span();
+
+        return new ObjectCreationExpression(
+                Span.of(firstSpan, secondSpan),
+                new IdentifierExpression(name.span(), name.value()),
+                parameters
+        );
+    }
+
     /**
      * Literals, variable access, method calls
      */
@@ -292,7 +309,8 @@ public class Parser {
         consumeLineBreaks();
         Expression expr;
 
-        var currentType = this.stream.peek().type();
+        var currentToken = this.stream.peek();
+        var currentType = currentToken.type();
         var operator = UnaryExpression.Operator.fromTokenType(currentType);
         if (currentType == TokenType.L_PAREN) {
             expr = parseParenthesisedExpression();
@@ -300,6 +318,8 @@ public class Parser {
             var firstSpan = this.stream.consume().span();
             expr = parsePrimaryExpression();
             expr = new UnaryExpression(Span.of(firstSpan, expr.getSpan()), expr, UnaryExpression.Operator.fromTokenType(currentType));
+        } else if (currentType == TokenType.KEYWORD && currentToken.value().equals("new")) {
+            expr = parseObjectCreationExpression();
         } else {
             expr = parseLiteralExpression();
         }
@@ -337,6 +357,13 @@ public class Parser {
     private Expression parseFunctionInvocation(Expression target) {
         this.stream.consumeType(TokenType.L_PAREN);
         consumeLineBreaks();
+        ExpressionList parameters = parseParameterList();
+
+        var secondSpan = this.stream.consumeType(TokenType.R_PAREN).span();
+        return new FunctionInvocationExpression(Span.of(target.getSpan(), secondSpan), target, parameters);
+    }
+
+    private ExpressionList parseParameterList() {
         var parameters = new ExpressionList();
         while (true) {
             var token = this.stream.peek();
@@ -347,9 +374,7 @@ public class Parser {
 
             parameters.add(parseExpression());
         }
-
-        var secondSpan = this.stream.consumeType(TokenType.R_PAREN).span();
-        return new FunctionInvocationExpression(Span.of(target.getSpan(), secondSpan), target, parameters);
+        return parameters;
     }
 
     private Expression parseParenthesisedExpression() {

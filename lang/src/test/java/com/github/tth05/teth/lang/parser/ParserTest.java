@@ -637,6 +637,30 @@ public class ParserTest extends AbstractParserTest {
     }
 
     @Test
+    public void testParseObjectCreation() {
+        createAST("""
+                new Foo(1, 2, 3)
+                """);
+        assertEquals(
+                new SourceFileUnit(
+                        List.of(
+                                new ObjectCreationExpression(
+                                        null,
+                                        new IdentifierExpression(null, "Foo"),
+                                        ExpressionList.of(
+                                                new LongLiteralExpression(null, 1),
+                                                new LongLiteralExpression(null, 2),
+                                                new LongLiteralExpression(null, 3)
+                                        )
+                                )
+                        )
+                ),
+                this.unit
+        );
+        assertStreamsEmpty();
+    }
+
+    @Test
     public void testParseMemberAccess() {
         createAST("""
                 a.b().c().d
