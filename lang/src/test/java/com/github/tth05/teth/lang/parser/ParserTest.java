@@ -683,6 +683,21 @@ public class ParserTest extends AbstractParserTest {
     }
 
     @Test
+    public void testParseInvalidStructDeclaration() {
+        assertThrows(RuntimeException.class, () -> createAST("""
+                struct d {
+                    a: long
+                    a: long
+                }
+                """));
+        assertThrows(RuntimeException.class, () -> createAST("""
+                struct d {
+                    5
+                }
+                """));
+    }
+
+    @Test
     public void testParseObjectCreation() {
         createAST("""
                 new Foo(1, 2, 3)

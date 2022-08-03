@@ -235,6 +235,10 @@ public class Parser {
                 var name = this.stream.consumeType(TokenType.IDENTIFIER);
                 this.stream.consumeType(TokenType.COLON);
                 var type = parseType();
+
+                if (fields.stream().anyMatch(f -> f.getNameExpr().getValue().equals(name.value())))
+                    throw new UnexpectedTokenException(name.span(), "Duplicate field name");
+
                 fields.add(new StructDeclaration.FieldDeclaration(Span.of(name.span(), type.getSpan()), type, new IdentifierExpression(name.span(), name.value())));
             } else if (token.is(TokenType.KEYWORD) && token.value().equals("fn")) {
                 functions.add(parseFunctionDeclaration());
