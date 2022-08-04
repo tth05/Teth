@@ -38,19 +38,22 @@ public class Type {
     }
 
     public boolean isSubtypeOf(Type other) {
-        if (this == other)
-            return true;
         if (this == VOID)
             return false;
-        if (other == ANY)
+
+        if (this == other)
             return true;
-        if (this == ANY)
+        if (other == ANY) // long, double etc. are subtypes of any
+            return true;
+        if (this == ANY) // any is not a subtype of anything, except for any
             return false;
-        if (this.innerType != null ^ other.innerType != null)
+        if (this.innerType != null ^ other.innerType != null) // One is a list, the other isn't
             return false;
-        if (this.innerType != null)
-            return this.innerType.isSubtypeOf(other.innerType);
-        return false;
+        if (!Objects.equals(this.name, other.name)) // Different types
+            return false;
+        if (this.innerType != null && !this.innerType.isSubtypeOf(other.innerType)) // Different inner types
+            return false;
+        return true;
     }
 
     @Override

@@ -136,7 +136,7 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
 
     @Test
     public void testVariableDeclaration() {
-        var problems = analyze("let a: long[] = [1, 2, 3]");
+        var problems = analyze("let a: long[][] = [[1], [2], [3]]");
 
         assertTrue(problems.isEmpty());
 
@@ -147,6 +147,21 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
         problems = analyze("let d: double = 5.0");
 
         assertTrue(problems.isEmpty());
+    }
+
+    @Test
+    public void testVariableDeclarationUnknownType() {
+        var problems = analyze("let a: longg[][] = 5");
+
+        assertFalse(problems.isEmpty());
+        assertEquals(1, problems.size());
+        assertEquals("Unknown type longg", problems.get(0).message());
+
+        problems = analyze("let a: test = 5");
+
+        assertFalse(problems.isEmpty());
+        assertEquals(1, problems.size());
+        assertEquals("Unknown type test", problems.get(0).message());
     }
 
     @Test
@@ -269,6 +284,33 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
     @Test
     public void testFunctionParameterTypesMismatch() {
         var problems = analyze("fn f(a: long, s: string, l: long) {}f(5, \"\", 5.0)");
+
+        assertFalse(problems.isEmpty());
+        assertEquals(1, problems.size());
+        assertEquals("Parameter type mismatch. Expected long, got double", problems.get(0).message());
+    }
+
+    @Test
+    public void testObjectCreation() {
+        var problems = analyze("struct a {} let b: a = new a()");
+
+        assertTrue(problems.isEmpty());
+
+        problems = analyze("""
+                struct a {}
+                struct b {
+                    a: a
+                }
+                
+                let d: a = new b(new a()).a
+                """);
+
+        assertTrue(problems.isEmpty());
+    }
+
+    @Test
+    public void testObjectCreationParameterTypesMismatch() {
+        var problems = analyze("struct a {b:long} new a(5.0)");
 
         assertFalse(problems.isEmpty());
         assertEquals(1, problems.size());

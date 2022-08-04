@@ -101,6 +101,6 @@ public class StandardLibrary {
                type == Type.FUNCTION ||
                type == Type.VOID ||
                type == Type.ANY ||
-               (type.isList() && isBuiltinType(type.getInnerType()));
+               type.isList();
     }
 }

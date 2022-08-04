@@ -5,6 +5,7 @@ import com.github.tth05.teth.lang.parser.ASTVisitor;
 import com.github.tth05.teth.lang.parser.SourceFileUnit;
 import com.github.tth05.teth.lang.parser.Type;
 import com.github.tth05.teth.lang.parser.ast.*;
+import com.github.tth05.teth.lang.span.ISpan;
 import com.github.tth05.teth.lang.stdlib.StandardLibrary;
 
 import java.util.*;
@@ -132,18 +133,75 @@ public class Analyzer {
         }
 
         @Override
+        public void visit(StructDeclaration declaration) {
+            { // Don't want to visit struct name here
+                declaration.getFields().forEach(p -> p.accept(this));
+                declaration.getFunctions().forEach(p -> p.accept(this));
+            }
+        }
+
+        @Override
+        public void visit(StructDeclaration.FieldDeclaration declaration) {
+            { // Don't want to visit field name here
+                declaration.getTypeExpr().accept(this);
+            }
+        }
+
+        @Override
+        public void visit(ObjectCreationExpression expression) {
+            super.visit(expression);
+
+            var type = resolvedExpressionTypes.get(expression.getTargetNameExpr());
+            var struct = resolvedReferences.get(expression.getTargetNameExpr());
+            if (!(struct instanceof StructDeclaration structDeclaration))
+                throw new ValidationException(expression.getTargetNameExpr().getSpan(), "Object creation target must be a struct");
+
+            var parameters = expression.getParameters();
+            if (parameters.size() != structDeclaration.getFields().size())
+                throw new ValidationException(
+                        parameters.getSpanOrDefault(expression.getSpan()),
+                        "Wrong number of parameters for object creation. Expected " + structDeclaration.getFields().size() + ", got " + parameters.size()
+                );
+
+            for (int i = 0; i < parameters.size(); i++) {
+                var parameterType = resolvedExpressionTypes.get(parameters.get(i));
+                var fieldType = structDeclaration.getFields().get(i).getTypeExpr().getType();
+
+                if (!parameterType.isSubtypeOf(fieldType))
+                    throw new ValidationException(
+                            parameters.get(i).getSpan(),
+                            "Parameter type mismatch. Expected " + fieldType + ", got " + parameterType
+                    );
+            }
+
+            resolvedReferences.put(expression, struct);
+            resolvedExpressionTypes.put(expression, type);
+        }
+
+        @Override
         public void visit(MemberAccessExpression expression) {
             { // Don't want to visit member name here
                 expression.getTarget().accept(this);
             }
 
             var type = resolvedExpressionTypes.get(expression.getTarget());
-            var member = StandardLibrary.getMemberOfType(type, expression.getMemberNameExpr().getValue());
+            Statement member;
+            if (StandardLibrary.isBuiltinType(type)) {
+                member = StandardLibrary.getMemberOfType(type, expression.getMemberNameExpr().getValue());
+            } else {
+                var decl = this.declarationStack.resolveIdentifier(type.toString());
+                if (!(decl instanceof StructDeclaration structDeclaration))
+                    throw new IllegalStateException("Declaration not found");
+
+                member = structDeclaration.getMember(expression.getMemberNameExpr().getValue());
+            }
+
             if (member == null)
                 throw new TypeResolverException(expression.getMemberNameExpr().getSpan(), "Member " + expression.getMemberNameExpr().getValue() + " not found in type " + type);
 
             resolvedExpressionTypes.put(expression, switch (member) {
                 case FunctionDeclaration ignored -> Type.FUNCTION;
+                case StructDeclaration.FieldDeclaration field -> field.getTypeExpr().getType();
                 default -> throw new IllegalStateException();
             });
             resolvedReferences.put(expression, member);
@@ -325,8 +383,9 @@ public class Analyzer {
                 case VariableDeclaration declaration -> declaration.getTypeExpr().getType();
                 case FunctionDeclaration ignored -> Type.FUNCTION;
                 case FunctionDeclaration.ParameterDeclaration declaration -> declaration.getTypeExpr().getType();
+                case StructDeclaration structDeclaration -> new Type(structDeclaration.getNameExpr().getValue());
                 default ->
-                        throw new ValidationException(identifierExpression.getSpan(), "Identifier is not a variable or function");
+                        throw new ValidationException(identifierExpression.getSpan(), "Identifier is not a variable, function or struct");
             };
 
             resolvedExpressionTypes.put(identifierExpression, type);

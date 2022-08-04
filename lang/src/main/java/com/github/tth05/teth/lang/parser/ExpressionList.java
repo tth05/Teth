@@ -2,6 +2,8 @@ package com.github.tth05.teth.lang.parser;
 
 import com.github.tth05.teth.lang.parser.ast.Expression;
 import com.github.tth05.teth.lang.parser.ast.Statement;
+import com.github.tth05.teth.lang.span.ISpan;
+import com.github.tth05.teth.lang.span.Span;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
 import java.util.ArrayList;
@@ -20,6 +22,14 @@ public class ExpressionList extends ArrayList<Expression> implements IDumpable {
             builder.newLine();
         }
         builder.endBlock().append("]");
+    }
+
+    public ISpan getSpanOrDefault(ISpan span) {
+        if (this.size() > 0) {
+            return Span.of(this.get(0).getSpan(), this.get(this.size() - 1).getSpan());
+        } else {
+            return span;
+        }
     }
 
     public static ExpressionList of(Expression... statements) {

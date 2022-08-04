@@ -83,6 +83,10 @@ public class AnalyzerValidatorTest extends AbstractAnalyzerTest {
         var problems = analyze("let f: function = (5).toString");
 
         assertTrue(problems.isEmpty());
+
+        problems = analyze("struct a {b:long} new a(5).b");
+
+        assertTrue(problems.isEmpty());
     }
 
     @Test
@@ -92,6 +96,12 @@ public class AnalyzerValidatorTest extends AbstractAnalyzerTest {
         assertFalse(problems.isEmpty());
         assertEquals(1, problems.size());
         assertEquals("Member toStringg not found in type long", problems.get(0).message());
+
+        problems = analyze("struct b {a:long} new b(5).b");
+
+        assertFalse(problems.isEmpty());
+        assertEquals(1, problems.size());
+        assertEquals("Member b not found in type b", problems.get(0).message());
     }
 
     @Test
@@ -113,5 +123,31 @@ public class AnalyzerValidatorTest extends AbstractAnalyzerTest {
         assertFalse(problems.isEmpty());
         assertEquals(1, problems.size());
         assertEquals("Wrong number of parameters for function invocation. Expected 0, got 2", problems.get(0).message());
+    }
+
+    @Test
+    public void testObjectCreation() {
+        var problems = analyze("struct a {} new a()");
+
+        assertTrue(problems.isEmpty());
+
+        problems = analyze("struct a {b:long} new a(5)");
+
+        assertTrue(problems.isEmpty());
+    }
+
+    @Test
+    public void testIncorrectObjectCreation() {
+        var problems = analyze("let a = 5 new a()");
+
+        assertFalse(problems.isEmpty());
+        assertEquals(1, problems.size());
+        assertEquals("Object creation target must be a struct", problems.get(0).message());
+
+        problems = analyze("struct a {} new a(5)");
+
+        assertFalse(problems.isEmpty());
+        assertEquals(1, problems.size());
+        assertEquals("Wrong number of parameters for object creation. Expected 0, got 1", problems.get(0).message());
     }
 }
