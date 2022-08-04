@@ -541,7 +541,7 @@ public class ParserTest extends AbstractParserTest {
     @Test
     public void testParseFunctionDeclaration() {
         createAST("""
-                fn foo(a: type, b: long) {
+                fn foo(self: type, b: long) {
                     fn bar() string {
                         return "hello"
                     }
@@ -556,8 +556,8 @@ public class ParserTest extends AbstractParserTest {
                                         new IdentifierExpression(null, "foo"),
                                         null,
                                         List.of(
-                                                new FunctionDeclaration.ParameterDeclaration(null, new TypeExpression(null, Type.fromString("type")), new IdentifierExpression(null, "a"), 0),
-                                                new FunctionDeclaration.ParameterDeclaration(null, new TypeExpression(null, Type.fromString("long")), new IdentifierExpression(null, "b"), 1)
+                                                new FunctionDeclaration.ParameterDeclaration(null, new TypeExpression(null, Type.fromString("type")), new IdentifierExpression(null, "self")),
+                                                new FunctionDeclaration.ParameterDeclaration(null, new TypeExpression(null, Type.fromString("long")), new IdentifierExpression(null, "b"))
                                         ),
                                         new BlockStatement(
                                                 null,
@@ -572,11 +572,13 @@ public class ParserTest extends AbstractParserTest {
                                                                         StatementList.of(
                                                                                 new ReturnStatement(null, new StringLiteralExpression(null, "hello"))
                                                                         )
-                                                                )
+                                                                ),
+                                                                false
                                                         ),
                                                         new ReturnStatement(null, null)
                                                 )
-                                        )
+                                        ),
+                                        false
                                 )
                         )
                 ),
@@ -664,14 +666,15 @@ public class ParserTest extends AbstractParserTest {
                                                         new IdentifierExpression(null, "bar"),
                                                         new TypeExpression(null, Type.STRING),
                                                         List.of(
-                                                                new FunctionDeclaration.ParameterDeclaration(null, new TypeExpression(null, Type.STRING), new IdentifierExpression(null, "b"), 0)
+                                                                new FunctionDeclaration.ParameterDeclaration(null, new TypeExpression(null, Type.STRING), new IdentifierExpression(null, "b"))
                                                         ),
                                                         new BlockStatement(
                                                                 null,
                                                                 StatementList.of(
                                                                         new ReturnStatement(null, null)
                                                                 )
-                                                        )
+                                                        ),
+                                                        true
                                                 )
                                         )
                                 )
@@ -699,6 +702,11 @@ public class ParserTest extends AbstractParserTest {
         assertThrows(RuntimeException.class, () -> createAST("""
                 struct d {
                     5
+                }
+                """));
+        assertThrows(RuntimeException.class, () -> createAST("""
+                struct d {
+                    fn test(self: long) {}
                 }
                 """));
     }

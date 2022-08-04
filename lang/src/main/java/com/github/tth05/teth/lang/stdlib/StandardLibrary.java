@@ -84,12 +84,12 @@ public class StandardLibrary {
     private static FunctionDeclaration createFakeFunctionDeclaration(String name, Type returnType, Type... argTypes) {
         var args = new ArrayList<FunctionDeclaration.ParameterDeclaration>(argTypes.length);
         for (int i = 0; i < argTypes.length; i++)
-            args.add(new FunctionDeclaration.ParameterDeclaration(null, new TypeExpression(null, argTypes[i]), new IdentifierExpression(null, "arg" + i), i));
+            args.add(new FunctionDeclaration.ParameterDeclaration(null, new TypeExpression(null, argTypes[i]), new IdentifierExpression(null, "arg" + i)));
 
         return new FunctionDeclaration(null,
                 new IdentifierExpression(null, name),
                 new TypeExpression(null, returnType),
-                args, null, true
+                args, null, false, true
         );
     }
 

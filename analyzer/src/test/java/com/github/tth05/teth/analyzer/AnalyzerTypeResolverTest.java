@@ -291,6 +291,34 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
     }
 
     @Test
+    public void testStructUsingSelfParameter() {
+        var problems = analyze("""
+                struct S {
+                    a: long
+                    fn t() {
+                        self.a = 5
+                        let l: long = self.a
+                    }
+                }
+                """);
+
+        assertTrue(problems.isEmpty());
+    }
+
+    @Test
+    public void testStructUsingSelfParameterNotAvailable() {
+        var problems = analyze("""
+                fn t() {
+                    self.a = 5
+                }
+                """);
+
+        assertFalse(problems.isEmpty());
+        assertEquals(1, problems.size());
+        assertEquals("Unresolved identifier", problems.get(0).message());
+    }
+
+    @Test
     public void testObjectCreation() {
         var problems = analyze("struct a {} let b: a = new a()");
 

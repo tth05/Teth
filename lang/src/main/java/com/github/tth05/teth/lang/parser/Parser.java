@@ -63,7 +63,7 @@ public class Parser {
                 case "if" -> parseIfStatement();
                 case "loop" -> parseLoopStatement();
                 case "struct" -> parseStructDeclaration();
-                case "fn" -> parseFunctionDeclaration();
+                case "fn" -> parseFunctionDeclaration(false);
                 case "return" -> parseReturnStatement();
                 case "let" -> parseVariableDeclaration();
                 case "new" -> parseExpression();
@@ -184,12 +184,13 @@ public class Parser {
         );
     }
 
-    private FunctionDeclaration parseFunctionDeclaration() {
+    private FunctionDeclaration parseFunctionDeclaration(boolean instanceMethod) {
         var firstSpan = this.stream.consumeType(TokenType.KEYWORD).span();
         consumeLineBreaks();
         var functionName = this.stream.consumeType(TokenType.IDENTIFIER);
         consumeLineBreaks();
         this.stream.consumeType(TokenType.L_PAREN);
+
         var parameters = new ArrayList<FunctionDeclaration.ParameterDeclaration>();
         while (true) {
             var token = this.stream.peek();
@@ -200,12 +201,15 @@ public class Parser {
 
             consumeLineBreaks();
             var nameToken = this.stream.consumeType(TokenType.IDENTIFIER);
+            if (instanceMethod && nameToken.value().equals("self"))
+                throw new UnexpectedTokenException(nameToken.span(), "Parameter name 'self' is not allowed for instance methods");
+
             consumeLineBreaks();
             this.stream.consumeType(TokenType.COLON);
             consumeLineBreaks();
             var type = parseType();
             consumeLineBreaks();
-            parameters.add(new FunctionDeclaration.ParameterDeclaration(type, new IdentifierExpression(nameToken.span(), nameToken.value()), parameters.size()));
+            parameters.add(new FunctionDeclaration.ParameterDeclaration(type, new IdentifierExpression(nameToken.span(), nameToken.value())));
         }
 
         this.stream.consumeType(TokenType.R_PAREN);
@@ -216,7 +220,7 @@ public class Parser {
                 Span.of(firstSpan, body.getSpan()),
                 new IdentifierExpression(functionName.span(), functionName.value()),
                 returnType,
-                parameters, body
+                parameters, body, instanceMethod
         );
     }
 
@@ -247,7 +251,7 @@ public class Parser {
                 checkDuplicateDeclaration.accept(name.span(), name.value());
                 fields.add(new StructDeclaration.FieldDeclaration(Span.of(name.span(), type.getSpan()), type, new IdentifierExpression(name.span(), name.value())));
             } else if (token.is(TokenType.KEYWORD) && token.value().equals("fn")) {
-                var function = parseFunctionDeclaration();
+                var function = parseFunctionDeclaration(true);
 
                 checkDuplicateDeclaration.accept(function.getNameExpr().getSpan(), function.getNameExpr().getValue());
                 functions.add(function);

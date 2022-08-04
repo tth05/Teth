@@ -11,24 +11,26 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-public class FunctionDeclaration extends Statement implements IDeclaration{
+public class FunctionDeclaration extends Statement implements IDeclaration {
 
     private final IdentifierExpression nameExpr;
     private final TypeExpression returnTypeExpr;
     private final List<ParameterDeclaration> parameters;
     private final BlockStatement body;
+    private final boolean instanceMethod;
     private final boolean intrinsic;
 
-    public FunctionDeclaration(ISpan span, IdentifierExpression nameExpr, TypeExpression returnTypeExpr, List<ParameterDeclaration> parameters, BlockStatement body) {
-        this(span, nameExpr, returnTypeExpr, parameters, body, false);
+    public FunctionDeclaration(ISpan span, IdentifierExpression nameExpr, TypeExpression returnTypeExpr, List<ParameterDeclaration> parameters, BlockStatement body, boolean instanceMethod) {
+        this(span, nameExpr, returnTypeExpr, parameters, body, instanceMethod, false);
     }
 
-    public FunctionDeclaration(ISpan span, IdentifierExpression nameExpr, TypeExpression returnTypeExpr, List<ParameterDeclaration> parameters, BlockStatement body, boolean intrinsic) {
+    public FunctionDeclaration(ISpan span, IdentifierExpression nameExpr, TypeExpression returnTypeExpr, List<ParameterDeclaration> parameters, BlockStatement body, boolean instanceMethod, boolean intrinsic) {
         super(span);
         this.nameExpr = nameExpr;
         this.returnTypeExpr = returnTypeExpr;
         this.parameters = parameters;
         this.body = body;
+        this.instanceMethod = instanceMethod;
         this.intrinsic = intrinsic;
     }
 
@@ -53,6 +55,10 @@ public class FunctionDeclaration extends Statement implements IDeclaration{
         return this.body;
     }
 
+    public boolean isInstanceMethod() {
+        return this.instanceMethod;
+    }
+
     public boolean isIntrinsic() {
         return this.intrinsic;
     }
@@ -65,8 +71,7 @@ public class FunctionDeclaration extends Statement implements IDeclaration{
     @Override
     public void dump(ASTDumpBuilder builder) {
         builder.append("FunctionDeclaration {").newLine();
-        builder.startBlock();
-        builder.appendAttribute("name");
+        builder.startBlock().appendAttribute("name");
         this.nameExpr.dump(builder);
         builder.newLine().appendAttribute("returnType");
         if (this.returnTypeExpr != null)
@@ -80,6 +85,8 @@ public class FunctionDeclaration extends Statement implements IDeclaration{
         });
         builder.endBlock().append("]").newLine().appendAttribute("body");
         this.body.dump(builder);
+        builder.newLine().appendAttribute("isInstanceMethod", String.valueOf(this.instanceMethod));
+        builder.newLine().appendAttribute("isInstrinsic", String.valueOf(this.intrinsic));
         builder.endBlock().newLine().append("}");
     }
 
@@ -98,6 +105,10 @@ public class FunctionDeclaration extends Statement implements IDeclaration{
             return false;
         if (!this.parameters.equals(that.parameters))
             return false;
+        if (this.instanceMethod != that.instanceMethod)
+            return false;
+        if (this.intrinsic != that.intrinsic)
+            return false;
         return this.body.equals(that.body);
     }
 
@@ -107,6 +118,8 @@ public class FunctionDeclaration extends Statement implements IDeclaration{
         result = 31 * result + (this.returnTypeExpr != null ? this.returnTypeExpr.hashCode() : 0);
         result = 31 * result + this.parameters.hashCode();
         result = 31 * result + this.body.hashCode();
+        result = 31 * result + (this.instanceMethod ? 1 : 0);
+        result = 31 * result + (this.intrinsic ? 1 : 0);
         return result;
     }
 
@@ -114,17 +127,15 @@ public class FunctionDeclaration extends Statement implements IDeclaration{
 
         private final TypeExpression type;
         private final IdentifierExpression name;
-        private final int index;
 
-        public ParameterDeclaration(ISpan span, TypeExpression type, IdentifierExpression name, int index) {
+        public ParameterDeclaration(ISpan span, TypeExpression type, IdentifierExpression name) {
             super(span);
             this.type = type;
             this.name = name;
-            this.index = index;
         }
 
-        public ParameterDeclaration(TypeExpression type, IdentifierExpression name, int index) {
-            this(Span.of(type.getSpan(), name.getSpan()), type, name, index);
+        public ParameterDeclaration(TypeExpression type, IdentifierExpression name) {
+            this(Span.of(type.getSpan(), name.getSpan()), type, name);
         }
 
         @Override
@@ -150,10 +161,6 @@ public class FunctionDeclaration extends Statement implements IDeclaration{
             return this.name;
         }
 
-        public int getIndex() {
-            return this.index;
-        }
-
         @Override
         public boolean equals(Object obj) {
             if (obj == this)
@@ -162,13 +169,12 @@ public class FunctionDeclaration extends Statement implements IDeclaration{
                 return false;
             var that = (ParameterDeclaration) obj;
             return Objects.equals(this.type, that.type) &&
-                   Objects.equals(this.name, that.name) &&
-                   this.index == that.index;
+                   Objects.equals(this.name, that.name);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(this.type, this.name, this.index);
+            return Objects.hash(this.type, this.name);
         }
     }
 }

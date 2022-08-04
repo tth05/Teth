@@ -12,7 +12,7 @@ import java.util.*;
 
 public class Analyzer {
 
-    public static final FunctionDeclaration GLOBAL_FUNCTION = new FunctionDeclaration(null, null, null, null, null);
+    public static final FunctionDeclaration GLOBAL_FUNCTION = new FunctionDeclaration(null, null, null, null, null, false);
 
     private final Map<Expression, Type> resolvedExpressionTypes = new IdentityHashMap<>();
     private final Map<IDeclarationReference, Statement> resolvedReferences = new IdentityHashMap<>();
@@ -57,8 +57,9 @@ public class Analyzer {
         }
 
         private final DeclarationStack declarationStack = new DeclarationStack();
-
         private final Deque<FunctionDeclaration> currentFunctionStack = new ArrayDeque<>(5);
+
+        private StructDeclaration currentStruct;
 
         @Override
         public void visit(SourceFileUnit unit) {
@@ -77,16 +78,28 @@ public class Analyzer {
 
         @Override
         public void visit(FunctionDeclaration declaration) {
+            var oldCurrentStruct = this.currentStruct;
+            this.currentStruct = null;
+
             // Add nested functions to outer scope, as if this were a variable declaration
             if (this.currentFunctionStack.size() != 1)
                 this.declarationStack.addDeclaration(declaration.getNameExpr().getValue(), declaration);
 
             beginFunctionDeclaration(declaration);
-            // Don't want to visit function name here
-            declaration.getParameters().forEach(p -> p.accept(this));
-            var returnTypeExpr = declaration.getReturnTypeExpr();
-            if (returnTypeExpr != null)
-                returnTypeExpr.accept(this);
+            if (oldCurrentStruct != null) {
+                this.declarationStack.addDeclaration("self", new FunctionDeclaration.ParameterDeclaration(
+                        null,
+                        new TypeExpression(null, new Type(oldCurrentStruct.getNameExpr().getValue())),
+                        new IdentifierExpression(null, "self")
+                ));
+            }
+
+            { // Don't want to visit function name here
+                declaration.getParameters().forEach(p -> p.accept(this));
+                var returnTypeExpr = declaration.getReturnTypeExpr();
+                if (returnTypeExpr != null)
+                    returnTypeExpr.accept(this);
+            }
 
             // Add self to inner scope, to allow nested functions to access themselves
             if (this.currentFunctionStack.size() > 1)
@@ -95,6 +108,8 @@ public class Analyzer {
             declaration.getBody().accept(this);
             this.declarationStack.endScope();
             this.currentFunctionStack.removeLast();
+
+            this.currentStruct = oldCurrentStruct;
         }
 
         @Override
@@ -134,10 +149,12 @@ public class Analyzer {
 
         @Override
         public void visit(StructDeclaration declaration) {
+            this.currentStruct = declaration;
             { // Don't want to visit struct name here
                 declaration.getFields().forEach(p -> p.accept(this));
                 declaration.getFunctions().forEach(p -> p.accept(this));
             }
+            this.currentStruct = null;
         }
 
         @Override
