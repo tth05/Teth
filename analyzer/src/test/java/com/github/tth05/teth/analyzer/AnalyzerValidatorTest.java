@@ -70,6 +70,29 @@ public class AnalyzerValidatorTest extends AbstractAnalyzerTest {
     }
 
     @Test
+    public void testFunctionReturnInAllCases() {
+        var problems = analyze("""
+                fn f() long {
+                    {{if(true) return 5}}
+                }
+                """);
+
+        assertFalse(problems.isEmpty());
+        assertEquals(1, problems.size());
+        assertEquals("Block needs to return in all cases", problems.get(0).message());
+
+        problems = analyze("""
+                fn f() long {
+                    
+                }
+                """);
+
+        assertFalse(problems.isEmpty());
+        assertEquals(1, problems.size());
+        assertEquals("Block needs to return in all cases", problems.get(0).message());
+    }
+
+    @Test
     public void testInvalidReturnValue() {
         var problems = analyze("fn a() {return 5}");
 

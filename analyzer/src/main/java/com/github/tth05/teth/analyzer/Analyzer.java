@@ -106,6 +106,13 @@ public class Analyzer {
                 this.declarationStack.addDeclaration(declaration.getNameExpr().getValue(), declaration);
             // TODO: Validate body returns something in all cases
             declaration.getBody().accept(this);
+
+            if (declaration.getReturnTypeExpr() != null) {
+                ScopeExitHelper.doesExitInAllCases(declaration.getBody()).ifPresent(offendingStatement -> {
+                    throw new ValidationException(offendingStatement.getSpan(), "Block needs to return in all cases");
+                });
+            }
+
             this.declarationStack.endScope();
             this.currentFunctionStack.removeLast();
 

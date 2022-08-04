@@ -10,9 +10,9 @@ public class IfStatement extends Statement {
 
     private final Expression condition;
     private final BlockStatement body;
-    private final Statement elseStatement;
+    private final BlockStatement elseStatement;
 
-    public IfStatement(ISpan span, Expression condition, BlockStatement body, Statement elseStatement) {
+    public IfStatement(ISpan span, Expression condition, BlockStatement body, BlockStatement elseStatement) {
         super(span);
         this.condition = condition;
         this.body = body;
@@ -27,7 +27,7 @@ public class IfStatement extends Statement {
         return this.body;
     }
 
-    public Statement getElseStatement() {
+    public BlockStatement getElseStatement() {
         return this.elseStatement;
     }
 
