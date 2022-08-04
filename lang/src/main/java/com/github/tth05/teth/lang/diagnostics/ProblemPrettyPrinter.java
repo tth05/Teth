@@ -56,7 +56,7 @@ public class ProblemPrettyPrinter {
                 i = end + 1;
             }
 
-            if (i != source.length - 1 && includeSurroundingLines)
+            if (i < source.length - 1 && includeSurroundingLines)
                 this.lines.add(new Line(i, CharArrayUtils.getLineEnd(source, i)));
         }
 
