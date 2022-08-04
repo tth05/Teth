@@ -692,6 +692,12 @@ public class ParserTest extends AbstractParserTest {
                 """));
         assertThrows(RuntimeException.class, () -> createAST("""
                 struct d {
+                    a: long
+                    fn a() {}
+                }
+                """));
+        assertThrows(RuntimeException.class, () -> createAST("""
+                struct d {
                     5
                 }
                 """));

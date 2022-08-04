@@ -10,7 +10,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-public class StructDeclaration extends Statement {
+public class StructDeclaration extends Statement implements IDeclaration {
 
     private final IdentifierExpression nameExpr;
     private final List<FieldDeclaration> fields;
@@ -23,6 +23,7 @@ public class StructDeclaration extends Statement {
         this.functions = Collections.unmodifiableList(Objects.requireNonNull(functions));
     }
 
+    @Override
     public IdentifierExpression getNameExpr() {
         return this.nameExpr;
     }
@@ -33,6 +34,17 @@ public class StructDeclaration extends Statement {
 
     public List<FunctionDeclaration> getFunctions() {
         return this.functions;
+    }
+
+    public Statement getMember(String name) {
+        return this.fields.stream()
+                .filter(f -> f.getNameExpr().getValue().equals(name))
+                .map(Statement.class::cast)
+                .findFirst()
+                .orElse(this.functions.stream()
+                        .filter(f -> f.getNameExpr().getValue().equals(name))
+                        .findFirst()
+                        .orElse(null));
     }
 
     @Override

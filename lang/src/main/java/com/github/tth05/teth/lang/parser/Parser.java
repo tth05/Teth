@@ -6,11 +6,13 @@ import com.github.tth05.teth.lang.lexer.TokenStream;
 import com.github.tth05.teth.lang.lexer.TokenType;
 import com.github.tth05.teth.lang.lexer.Tokenizer;
 import com.github.tth05.teth.lang.parser.ast.*;
+import com.github.tth05.teth.lang.span.ISpan;
 import com.github.tth05.teth.lang.span.Span;
 import com.github.tth05.teth.lang.stream.CharStream;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 
 //TODO: Allow new-lines everywhere
@@ -64,7 +66,7 @@ public class Parser {
                 case "fn" -> parseFunctionDeclaration();
                 case "return" -> parseReturnStatement();
                 case "let" -> parseVariableDeclaration();
-                case "new" -> parseObjectCreationExpression();
+                case "new" -> parseExpression();
                 default -> throw new UnexpectedTokenException(current.span(), "Keyword '%s' not allowed here", keyword);
             };
         } else if (current.is(TokenType.L_CURLY_PAREN)) { // Block statement
@@ -229,6 +231,12 @@ public class Parser {
         var fields = new ArrayList<StructDeclaration.FieldDeclaration>();
         var functions = new ArrayList<FunctionDeclaration>();
 
+        var checkDuplicateDeclaration = (BiConsumer<ISpan, String>) (span, value) -> {
+            if (fields.stream().anyMatch(f -> f.getNameExpr().getValue().equals(value)) ||
+                functions.stream().anyMatch(f -> f.getNameExpr().getValue().equals(value)))
+                throw new UnexpectedTokenException(span, "Duplicate declaration");
+        };
+
         while (!this.stream.peek().is(TokenType.R_CURLY_PAREN)) {
             var token = this.stream.peek();
             if (token.is(TokenType.IDENTIFIER)) {
@@ -236,12 +244,13 @@ public class Parser {
                 this.stream.consumeType(TokenType.COLON);
                 var type = parseType();
 
-                if (fields.stream().anyMatch(f -> f.getNameExpr().getValue().equals(name.value())))
-                    throw new UnexpectedTokenException(name.span(), "Duplicate field name");
-
+                checkDuplicateDeclaration.accept(name.span(), name.value());
                 fields.add(new StructDeclaration.FieldDeclaration(Span.of(name.span(), type.getSpan()), type, new IdentifierExpression(name.span(), name.value())));
             } else if (token.is(TokenType.KEYWORD) && token.value().equals("fn")) {
-                functions.add(parseFunctionDeclaration());
+                var function = parseFunctionDeclaration();
+
+                checkDuplicateDeclaration.accept(function.getNameExpr().getSpan(), function.getNameExpr().getValue());
+                functions.add(function);
             } else {
                 throw new UnexpectedTokenException(token.span(), "Expected field or function declaration");
             }
