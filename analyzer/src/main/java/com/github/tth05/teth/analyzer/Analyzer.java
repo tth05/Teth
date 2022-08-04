@@ -367,8 +367,21 @@ public class Analyzer {
 
         @Override
         public void visit(TypeExpression typeExpression) {
-            if (!StandardLibrary.isBuiltinType(typeExpression.getType()))
-                throw new TypeResolverException(typeExpression.getSpan(), "Unknown type " + typeExpression.getType());
+            validateType(typeExpression.getSpan(), typeExpression.getType());
+        }
+
+        private void validateType(ISpan span, Type type) {
+            if (StandardLibrary.isBuiltinType(type)) {
+                if (type.isList())
+                    validateType(span, type.getInnerType());
+                return;
+            }
+
+            var decl = this.declarationStack.resolveIdentifier(type.toString());
+            if (decl == null)
+                throw new TypeResolverException(span, "Unknown type " + type);
+            if (!(decl instanceof StructDeclaration))
+                throw new TypeResolverException(span, "Type " + type + " is not a struct or builtin type");
         }
 
         @Override
