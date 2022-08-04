@@ -11,7 +11,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-public class FunctionDeclaration extends Statement {
+public class FunctionDeclaration extends Statement implements IDeclaration{
 
     private final IdentifierExpression nameExpr;
     private final TypeExpression returnTypeExpr;
@@ -32,6 +32,7 @@ public class FunctionDeclaration extends Statement {
         this.intrinsic = intrinsic;
     }
 
+    @Override
     public IdentifierExpression getNameExpr() {
         return this.nameExpr;
     }

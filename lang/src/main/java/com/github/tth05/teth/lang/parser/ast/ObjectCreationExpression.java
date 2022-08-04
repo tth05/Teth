@@ -5,7 +5,7 @@ import com.github.tth05.teth.lang.parser.ExpressionList;
 import com.github.tth05.teth.lang.span.ISpan;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
-public class ObjectCreationExpression extends Expression {
+public class ObjectCreationExpression extends Expression implements IDeclarationReference {
 
     private final IdentifierExpression targetNameExpr;
     private final ExpressionList parameters;
@@ -18,6 +18,11 @@ public class ObjectCreationExpression extends Expression {
 
     public IdentifierExpression getTargetNameExpr() {
         return this.targetNameExpr;
+    }
+
+    @Override
+    public IdentifierExpression getReferenceNameExpr() {
+        return getTargetNameExpr();
     }
 
     public ExpressionList getParameters() {

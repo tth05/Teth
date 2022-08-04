@@ -65,10 +65,10 @@ public class Analyzer {
             beginFunctionDeclaration(GLOBAL_FUNCTION);
             // Collect top level functions
             for (var decl : unit.getStatements()) {
-                if (!(decl instanceof FunctionDeclaration functionDeclaration))
+                if (!(decl instanceof IDeclaration namedDeclaration))
                     continue;
 
-                this.declarationStack.addDeclaration(functionDeclaration.getNameExpr().getValue(), functionDeclaration);
+                this.declarationStack.addDeclaration(namedDeclaration.getNameExpr().getValue(), decl);
             }
 
             super.visit(unit);
