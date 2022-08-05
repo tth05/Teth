@@ -108,7 +108,7 @@ public class Analyzer {
             declaration.getBody().accept(this);
 
             if (declaration.getReturnTypeExpr() != null) {
-                ScopeExitHelper.doesExitInAllCases(declaration.getBody()).ifPresent(offendingStatement -> {
+                ScopeExitHelper.validateLastChildReturns(declaration.getBody()).ifPresent(offendingStatement -> {
                     throw new ValidationException(offendingStatement.getSpan(), "Block needs to return in all cases");
                 });
             }

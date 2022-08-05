@@ -15,20 +15,20 @@ public class ScopeExitHelper {
      * @param block The block to check
      * @return The offending statement, or none if all paths may exit.
      */
-    public static Optional<Statement> doesExitInAllCases(BlockStatement block) {
+    public static Optional<Statement> validateLastChildReturns(BlockStatement block) {
         if (block.getStatements().isEmpty())
             return Optional.of(block);
 
-        var child = block.getStatements().get(block.getStatements().size() - 1);
-        return switch (child) {
-            case BlockStatement blockStatement -> doesExitInAllCases(blockStatement);
-            case IfStatement ifStatement -> doesExitInAllCases(ifStatement.getBody()).or(() -> {
+        var lastChild = block.getStatements().get(block.getStatements().size() - 1);
+        return switch (lastChild) {
+            case BlockStatement blockStatement -> validateLastChildReturns(blockStatement);
+            case IfStatement ifStatement -> validateLastChildReturns(ifStatement.getBody()).or(() -> {
                 if (ifStatement.getElseStatement() == null)
                     return Optional.of(ifStatement);
-                return doesExitInAllCases(ifStatement.getElseStatement());
+                return validateLastChildReturns(ifStatement.getElseStatement());
             });
             case ReturnStatement ignored -> Optional.empty();
-            case default -> Optional.of(child);
+            case default -> Optional.of(lastChild);
         };
     }
 }
