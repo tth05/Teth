@@ -24,6 +24,8 @@ public enum TokenType {
     MULTIPLY("*"),
     DIVIDE("/"),
     POW("^"),
+    AMPERSAND_AMPERSAND("&&"),
+    PIPE_PIPE("||"),
     L_PAREN("("),
     R_PAREN(")"),
     L_SQUARE_BRACKET("["),

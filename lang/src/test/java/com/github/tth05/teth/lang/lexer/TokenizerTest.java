@@ -98,7 +98,7 @@ public class TokenizerTest extends AbstractTokenizerTest {
 
     @Test
     public void testInvalidChars() {
-        var matcher = Pattern.compile("^[a-zA-Z0-9+\\-*/^_:.,=\\t\\r\\n<>! (){}\\[\\]]$").matcher("");
+        var matcher = Pattern.compile("^[a-zA-Z0-9+\\-*/^_:.,=\\t\\r\\n<>! &|(){}\\[\\]]$").matcher("");
         for (int i = 1; i < 1000; i++) {
             var str = "" + (char) i;
             if (matcher.reset(str).matches())
@@ -170,6 +170,22 @@ public class TokenizerTest extends AbstractTokenizerTest {
                 new Token(makeSpan(12, 13), "{", TokenType.L_CURLY_PAREN),
                 new Token(makeSpan(14, 15), "3", TokenType.LONG_LITERAL),
                 new Token(makeSpan(16, 17), "}", TokenType.R_CURLY_PAREN)
+        ), tokensIntoList());
+        assertStreamsEmpty();
+
+        createStreams("if (a && b || c) { 3 }");
+        assertIterableEquals(tokenList(
+                new Token(makeSpan(0, 2), "if", TokenType.KEYWORD),
+                new Token(makeSpan(3, 4), "(", TokenType.L_PAREN),
+                new Token(makeSpan(4, 5), "a", TokenType.IDENTIFIER),
+                new Token(makeSpan(6, 8), "&&", TokenType.AMPERSAND_AMPERSAND),
+                new Token(makeSpan(9, 10), "b", TokenType.IDENTIFIER),
+                new Token(makeSpan(11, 13), "||", TokenType.PIPE_PIPE),
+                new Token(makeSpan(14, 15), "c", TokenType.IDENTIFIER),
+                new Token(makeSpan(15, 16), ")", TokenType.R_PAREN),
+                new Token(makeSpan(17, 18), "{", TokenType.L_CURLY_PAREN),
+                new Token(makeSpan(19, 20), "3", TokenType.LONG_LITERAL),
+                new Token(makeSpan(21, 22), "}", TokenType.R_CURLY_PAREN)
         ), tokensIntoList());
         assertStreamsEmpty();
 

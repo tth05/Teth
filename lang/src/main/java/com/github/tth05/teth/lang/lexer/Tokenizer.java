@@ -178,6 +178,22 @@ public class Tokenizer {
                     emit(">", TokenType.GREATER);
                 }
             }
+            case '&' -> {
+                if (this.stream.peek() == '&') {
+                    this.stream.consume();
+                    emit("&&", TokenType.AMPERSAND_AMPERSAND);
+                } else {
+                    throw new UnexpectedCharException(this.stream.createCurrentIndexSpan(), "Invalid character '&', did you mean '&&'");
+                }
+            }
+            case '|' -> {
+                if (this.stream.peek() == '|') {
+                    this.stream.consume();
+                    emit("||", TokenType.PIPE_PIPE);
+                } else {
+                    throw new UnexpectedCharException(this.stream.createCurrentIndexSpan(), "Invalid character '|', did you mean '||'");
+                }
+            }
             case '+' -> emit("+", TokenType.PLUS);
             case '-' -> emit("-", TokenType.MINUS);
             case '*' -> emit("*", TokenType.MULTIPLY);
@@ -220,7 +236,7 @@ public class Tokenizer {
     }
 
     private static boolean isOperator(char c) {
-        return c == '=' || c == '+' || c == '-' || c == '*' || c == '/' || c == '^' || c == '>' || c == '<' || c == '!';
+        return c == '=' || c == '+' || c == '-' || c == '*' || c == '/' || c == '^' || c == '>' || c == '<' || c == '!' || c == '&' || c == '|';
     }
 
     private static boolean isQuote(char c) {
