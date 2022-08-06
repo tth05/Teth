@@ -17,20 +17,20 @@ public class FunctionDeclaration extends Statement implements IDeclaration {
     private final TypeExpression returnTypeExpr;
     private final List<ParameterDeclaration> parameters;
     private final BlockStatement body;
-    private final boolean instanceMethod;
+    private final boolean instanceFunction;
     private final boolean intrinsic;
 
-    public FunctionDeclaration(ISpan span, IdentifierExpression nameExpr, TypeExpression returnTypeExpr, List<ParameterDeclaration> parameters, BlockStatement body, boolean instanceMethod) {
-        this(span, nameExpr, returnTypeExpr, parameters, body, instanceMethod, false);
+    public FunctionDeclaration(ISpan span, IdentifierExpression nameExpr, TypeExpression returnTypeExpr, List<ParameterDeclaration> parameters, BlockStatement body, boolean instanceFunction) {
+        this(span, nameExpr, returnTypeExpr, parameters, body, instanceFunction, false);
     }
 
-    public FunctionDeclaration(ISpan span, IdentifierExpression nameExpr, TypeExpression returnTypeExpr, List<ParameterDeclaration> parameters, BlockStatement body, boolean instanceMethod, boolean intrinsic) {
+    public FunctionDeclaration(ISpan span, IdentifierExpression nameExpr, TypeExpression returnTypeExpr, List<ParameterDeclaration> parameters, BlockStatement body, boolean instanceFunction, boolean intrinsic) {
         super(span);
         this.nameExpr = nameExpr;
         this.returnTypeExpr = returnTypeExpr;
         this.parameters = parameters;
         this.body = body;
-        this.instanceMethod = instanceMethod;
+        this.instanceFunction = instanceFunction;
         this.intrinsic = intrinsic;
     }
 
@@ -55,8 +55,8 @@ public class FunctionDeclaration extends Statement implements IDeclaration {
         return this.body;
     }
 
-    public boolean isInstanceMethod() {
-        return this.instanceMethod;
+    public boolean isInstanceFunction() {
+        return this.instanceFunction;
     }
 
     public boolean isIntrinsic() {
@@ -85,7 +85,7 @@ public class FunctionDeclaration extends Statement implements IDeclaration {
         });
         builder.endBlock().append("]").newLine().appendAttribute("body");
         this.body.dump(builder);
-        builder.newLine().appendAttribute("isInstanceMethod", String.valueOf(this.instanceMethod));
+        builder.newLine().appendAttribute("isInstanceMethod", String.valueOf(this.instanceFunction));
         builder.newLine().appendAttribute("isInstrinsic", String.valueOf(this.intrinsic));
         builder.endBlock().newLine().append("}");
     }
@@ -105,7 +105,7 @@ public class FunctionDeclaration extends Statement implements IDeclaration {
             return false;
         if (!this.parameters.equals(that.parameters))
             return false;
-        if (this.instanceMethod != that.instanceMethod)
+        if (this.instanceFunction != that.instanceFunction)
             return false;
         if (this.intrinsic != that.intrinsic)
             return false;
@@ -118,7 +118,7 @@ public class FunctionDeclaration extends Statement implements IDeclaration {
         result = 31 * result + (this.returnTypeExpr != null ? this.returnTypeExpr.hashCode() : 0);
         result = 31 * result + this.parameters.hashCode();
         result = 31 * result + this.body.hashCode();
-        result = 31 * result + (this.instanceMethod ? 1 : 0);
+        result = 31 * result + (this.instanceFunction ? 1 : 0);
         result = 31 * result + (this.intrinsic ? 1 : 0);
         return result;
     }

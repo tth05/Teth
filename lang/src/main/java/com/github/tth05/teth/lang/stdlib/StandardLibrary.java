@@ -42,7 +42,10 @@ public class StandardLibrary {
             return LONG_FUNCTIONS;
         } else if (type == Type.STRING) {
             if (STRING_FUNCTIONS == null)
-                STRING_FUNCTIONS = new FunctionDeclaration[]{createFakeFunctionDeclaration("string.len", Type.LONG)};
+                STRING_FUNCTIONS = new FunctionDeclaration[]{
+                        createFakeFunctionDeclaration("string.len", Type.LONG),
+                        createFakeFunctionDeclaration("string.concat", Type.STRING, Type.STRING),
+            };
 
             return STRING_FUNCTIONS;
         } else if (type.isList()) {

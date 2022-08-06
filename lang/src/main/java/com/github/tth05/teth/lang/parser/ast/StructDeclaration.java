@@ -92,17 +92,22 @@ public class StructDeclaration extends Statement implements IDeclaration {
     public static class FieldDeclaration extends Statement implements IVariableDeclaration {
 
         private final IdentifierExpression nameExpr;
-
+        private final int index;
         private final TypeExpression type;
 
-        public FieldDeclaration(ISpan span, TypeExpression type, IdentifierExpression nameExpr) {
+        public FieldDeclaration(ISpan span, TypeExpression type, IdentifierExpression nameExpr, int index) {
             super(span);
             this.type = type;
             this.nameExpr = nameExpr;
+            this.index = index;
         }
 
         public IdentifierExpression getNameExpr() {
             return this.nameExpr;
+        }
+
+        public int getIndex() {
+            return this.index;
         }
 
         @Override

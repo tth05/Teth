@@ -249,7 +249,7 @@ public class Parser {
                 var type = parseType();
 
                 checkDuplicateDeclaration.accept(name.span(), name.value());
-                fields.add(new StructDeclaration.FieldDeclaration(Span.of(name.span(), type.getSpan()), type, new IdentifierExpression(name.span(), name.value())));
+                fields.add(new StructDeclaration.FieldDeclaration(Span.of(name.span(), type.getSpan()), type, new IdentifierExpression(name.span(), name.value()), fields.size()));
             } else if (token.is(TokenType.KEYWORD) && token.value().equals("fn")) {
                 var function = parseFunctionDeclaration(true);
 
