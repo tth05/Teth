@@ -9,8 +9,8 @@ public class INVOKE_Insn implements IInstrunction {
     private final int localsCount;
     private final int absoluteJumpAddress;
 
-    public INVOKE_Insn(boolean instanceFunction, int paramCount, int localsCount, int absoluteJumpAddress) {
-        this.instanceFunction = instanceFunction;
+    public INVOKE_Insn(boolean instanceMethod, int paramCount, int localsCount, int absoluteJumpAddress) {
+        this.instanceFunction = instanceMethod;
         this.paramCount = paramCount;
         this.localsCount = localsCount;
         this.absoluteJumpAddress = absoluteJumpAddress;

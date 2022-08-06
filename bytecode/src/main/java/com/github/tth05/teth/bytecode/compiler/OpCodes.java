@@ -234,6 +234,20 @@ public interface OpCodes {
      * </code></pre>
      */
     byte CREATE_LIST = 21;
+    /**
+     * Pushes a new object instance onto the stack.
+     * <br>
+     * Stack (before, after):
+     * <pre><code>
+     * -> instance
+     * </code></pre>
+     * Encoding:
+     * <ul>
+     *   <li>1 byte op code</li>
+     *   <li>2 byte object field count</li>
+     * </ul>
+     */
+    byte CREATE_OBJECT = 28;
     byte LOAD_LOCAL = 22;
     byte STORE_LOCAL = 23;
     /**
@@ -241,16 +255,29 @@ public interface OpCodes {
      * <br>
      * Stack (before, after):
      * <pre><code>
-     * instance -> member
+     * instance -> value
      * </code></pre>
      * Encoding:
      * <ul>
      *   <li>1 byte op code</li>
-     *   <li>4 byte member name length</li>
-     *   <li><strong>n</strong> bytes member name</li>
+     *   <li>2 byte member index</li>
      * </ul>
      */
     byte LOAD_MEMBER = 24;
+    /**
+     * Stores a value from the stack into a member of an instance.
+     * <br>
+     * Stack (before, after):
+     * <pre><code>
+     * instance, value ->
+     * </code></pre>
+     * Encoding:
+     * <ul>
+     *   <li>1 byte op code</li>
+     *   <li>2 byte member index</li>
+     * </ul>
+     */
+    byte STORE_MEMBER = 29;
     byte EXIT = 25;
     byte DUP = 26;
 }

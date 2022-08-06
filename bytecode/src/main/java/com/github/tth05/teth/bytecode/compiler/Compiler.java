@@ -68,7 +68,12 @@ public class Compiler {
                 var function = placeholder.target;
                 var offset = functionOffsets.get(function);
 
-                insns[j] = new INVOKE_Insn(false, function.getParameters().size(), this.analyzer.functionLocalsCount(function), offset - 1);
+                insns[j] = new INVOKE_Insn(
+                        function.isInstanceFunction(),
+                        function.getParameters().size() + (function.isInstanceFunction() ? 1 : 0),
+                        this.analyzer.functionLocalsCount(function),
+                        offset - 1
+                );
             }
 
             // "Invoke" global function
@@ -90,6 +95,10 @@ public class Compiler {
             var parentLocals = this.currentFunctionLocals;
             this.currentFunctionInsn = new ArrayList<>();
             this.currentFunctionLocals = new HashMap<>();
+
+            // Add hidden 'self' parameter
+            if (declaration.isInstanceFunction())
+                this.currentFunctionLocals.put("self", 0);
             // Add parameters to locals
             for (var parameter : declaration.getParameters())
                 this.currentFunctionLocals.put(parameter.getNameExpr().getValue(), this.currentFunctionLocals.size());
@@ -118,6 +127,16 @@ public class Compiler {
         }
 
         @Override
+        public void visit(ObjectCreationExpression expression) {
+            { // Avoid generating code for the target name
+                expression.getParameters().forEach(p -> p.accept(this));
+            }
+
+            var structDeclaration = (StructDeclaration) this.analyzer.resolvedReference(expression.getTargetNameExpr());
+            this.currentFunctionInsn.add(new CREATE_OBJECT_Insn((short) structDeclaration.getFields().size()));
+        }
+
+        @Override
         public void visit(VariableDeclaration declaration) {
             {
                 declaration.getInitializerExpr().accept(this);
@@ -134,12 +153,34 @@ public class Compiler {
                 expression.getExpr().accept(this);
             }
 
-            if (!(expression.getTargetExpr() instanceof IdentifierExpression ident))
-                //TODO: member access
-                throw new UnsupportedOperationException();
+            if (expression.getTargetExpr() instanceof IdentifierExpression identifierExpression) {
+                var idx = this.currentFunctionLocals.get(identifierExpression.getValue());
+                this.currentFunctionInsn.add(new STORE_LOCAL_Insn(idx));
+            } else if (expression.getTargetExpr() instanceof MemberAccessExpression memberAccessExpression) {
+                memberAccessExpression.getTarget().accept(this);
 
-            var idx = this.currentFunctionLocals.get(ident.getValue());
-            this.currentFunctionInsn.add(new STORE_LOCAL_Insn(idx));
+                var field = (StructDeclaration.FieldDeclaration) this.analyzer.resolvedReference(memberAccessExpression);
+                this.currentFunctionInsn.add(new STORE_MEMBER_Insn((short) field.getIndex()));
+            } else {
+                throw new UnsupportedOperationException("Cannot assign to " + expression.getTargetExpr());
+            }
+        }
+
+        @Override
+        public void visit(MemberAccessExpression expression) {
+            {
+                expression.getTarget().accept(this);
+            }
+
+            var member = this.analyzer.resolvedReference(expression);
+
+            if (member instanceof StructDeclaration.FieldDeclaration field) {
+                this.currentFunctionInsn.add(new LOAD_MEMBER_Insn((short) field.getIndex()));
+            } else if (member instanceof FunctionDeclaration) {
+                // NO OP, handled by FunctionInvocationExpression
+            } else {
+                throw new UnsupportedOperationException();
+            }
         }
 
         @Override
@@ -249,11 +290,11 @@ public class Compiler {
         public void visit(IdentifierExpression identifierExpression) {
             var reference = this.analyzer.resolvedReference(identifierExpression);
             if (!(reference instanceof IVariableDeclaration varDecl))
-                return;
+                return; //TODO: Looks like a bad idea
 
             var varIndex = this.currentFunctionLocals.get(varDecl.getNameExpr().getValue());
             if (varIndex == null)
-                throw new IllegalStateException("Variable not found");
+                throw new IllegalStateException("Variable not found " + varDecl);
 
             this.currentFunctionInsn.add(new LOAD_LOCAL_Insn(varIndex));
         }
