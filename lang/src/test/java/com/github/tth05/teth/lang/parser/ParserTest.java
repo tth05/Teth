@@ -224,6 +224,29 @@ public class ParserTest extends AbstractParserTest {
                 )
         ), this.unit);
         assertStreamsEmpty();
+
+        createAST("a && b || c && d");
+        assertEquals(new SourceFileUnit(
+                List.of(
+                        new BinaryExpression(
+                                null,
+                                new BinaryExpression(
+                                        null,
+                                        new IdentifierExpression(null, "a"),
+                                        new IdentifierExpression(null, "b"),
+                                        BinaryExpression.Operator.OP_AND
+                                ),
+                                new BinaryExpression(
+                                        null,
+                                        new IdentifierExpression(null, "c"),
+                                        new IdentifierExpression(null, "d"),
+                                        BinaryExpression.Operator.OP_AND
+                                ),
+                                BinaryExpression.Operator.OP_OR
+                        )
+                )
+        ), this.unit);
+        assertStreamsEmpty();
     }
 
     @Test
@@ -652,12 +675,14 @@ public class ParserTest extends AbstractParserTest {
                                                 new StructDeclaration.FieldDeclaration(
                                                         null,
                                                         new TypeExpression(null, Type.LONG),
-                                                        new IdentifierExpression(null, "a")
+                                                        new IdentifierExpression(null, "a"),
+                                                        0
                                                 ),
                                                 new StructDeclaration.FieldDeclaration(
                                                         null,
                                                         new TypeExpression(null, Type.DOUBLE),
-                                                        new IdentifierExpression(null, "c")
+                                                        new IdentifierExpression(null, "c"),
+                                                        1
                                                 )
                                         ),
                                         List.of(

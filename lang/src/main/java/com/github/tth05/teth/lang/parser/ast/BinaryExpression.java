@@ -112,7 +112,9 @@ public class BinaryExpression extends Expression {
         OP_GREATER(3),
         OP_GREATER_EQUAL(3),
         OP_EQUAL(4),
-        OP_NOT_EQUAL(4);
+        OP_NOT_EQUAL(4),
+        OP_AND(5),
+        OP_OR(6);
 
         private final int precedence;
 
@@ -128,7 +130,8 @@ public class BinaryExpression extends Expression {
          * @return {@code true} if this operator evaluates to a boolean value, {@code false} otherwise.
          */
         public boolean producesBoolean() {
-            return this == OP_EQUAL || this == OP_NOT_EQUAL || this == OP_LESS || this == OP_LESS_EQUAL || this == OP_GREATER || this == OP_GREATER_EQUAL;
+            return this == OP_EQUAL || this == OP_NOT_EQUAL || this == OP_LESS || this == OP_LESS_EQUAL ||
+                   this == OP_GREATER || this == OP_GREATER_EQUAL || this == OP_AND || this == OP_OR;
         }
 
         public static Operator fromTokenType(TokenType type) {
@@ -144,6 +147,8 @@ public class BinaryExpression extends Expression {
                 case GREATER_EQUAL -> Operator.OP_GREATER_EQUAL;
                 case EQUAL_EQUAL -> Operator.OP_EQUAL;
                 case NOT_EQUAL -> Operator.OP_NOT_EQUAL;
+                case AMPERSAND_AMPERSAND -> Operator.OP_AND;
+                case PIPE_PIPE -> Operator.OP_OR;
                 default -> null;
             };
         }
@@ -161,6 +166,8 @@ public class BinaryExpression extends Expression {
                 case OP_GREATER_EQUAL -> ">=";
                 case OP_EQUAL -> "==";
                 case OP_NOT_EQUAL -> "!=";
+                case OP_AND -> "&&";
+                case OP_OR -> "||";
             };
         }
     }
