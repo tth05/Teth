@@ -167,8 +167,6 @@ public class InstructionsImpl {
                 case OpCodes.INVOKE -> {
                     var invokeInsn = (INVOKE_Insn) insn;
                     var paramCount = invokeInsn.getParamCount();
-                    if (invokeInsn.isInstanceFunction())
-                        throw new UnsupportedOperationException();
 
                     interpreter.initLocalsFromStack(paramCount, invokeInsn.getLocalsCount());
                     interpreter.saveReturnAddress();
@@ -182,6 +180,26 @@ public class InstructionsImpl {
                     //TODO: Get intrinsic function instance from analyzer or lang core?
                     var argCount = name.equals("print") || name.equals("long.toString") ? 1 : name.equals("list.set") ? 3 : 2;
                     intrinsic.accept(interpreter, collectFunctionArguments(interpreter, argCount));
+                }
+                case OpCodes.CREATE_OBJECT -> {
+                    var createInsn = (CREATE_OBJECT_Insn) insn;
+                    var fields = new Object[createInsn.getFieldCount()];
+                    for (int i = 0; i < fields.length; i++)
+                        fields[i] = interpreter.pop();
+                    interpreter.push(new ObjectValue(fields));
+                }
+                case OpCodes.LOAD_MEMBER -> {
+                    var loadMemberInsn = (LOAD_MEMBER_Insn) insn;
+                    var object = ((ObjectValue) interpreter.pop());
+                    var fieldIndex = loadMemberInsn.getFieldIndex();
+                    interpreter.push(object.getField(fieldIndex));
+                }
+                case OpCodes.STORE_MEMBER -> {
+                    var storeMemberInsn = (STORE_MEMBER_Insn) insn;
+                    var object = ((ObjectValue) interpreter.pop());
+                    var value = interpreter.pop();
+                    var fieldIndex = storeMemberInsn.getFieldIndex();
+                    object.setField(fieldIndex, value);
                 }
                 case OpCodes.RETURN -> {
                     var shouldReturnValue = ((RETURN_Insn) insn).shouldReturnValue();
