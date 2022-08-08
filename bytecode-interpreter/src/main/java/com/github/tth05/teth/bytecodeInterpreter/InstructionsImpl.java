@@ -67,6 +67,16 @@ public class InstructionsImpl {
                     var value = ((B_CONST_Insn) insn).getValue();
                     interpreter.push(value);
                 }
+                case OpCodes.B_AND -> {
+                    var right = (Boolean) interpreter.pop();
+                    var left = (Boolean) interpreter.pop();
+                    interpreter.push(left && right);
+                }
+                case OpCodes.B_OR -> {
+                    var right = (Boolean) interpreter.pop();
+                    var left = (Boolean) interpreter.pop();
+                    interpreter.push(left || right);
+                }
                 case OpCodes.LD_NEGATE -> {
                     var value = (Number) interpreter.pop();
                     if (value instanceof Long)

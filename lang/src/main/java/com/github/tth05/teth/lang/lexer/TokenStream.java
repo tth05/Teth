@@ -50,14 +50,10 @@ public class TokenStream {
     }
 
     public Token peek() {
-        return peek(0);
-    }
-
-    public Token peek(int offset) {
-        if (!isValidIndex(offset))
+        if (!isValidIndex(0))
             return EOF;
 
-        return this.tokens.get(offset);
+        return this.tokens.peekFirst();
     }
 
     public List<Token> toList() {

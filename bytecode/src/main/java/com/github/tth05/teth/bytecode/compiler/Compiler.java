@@ -262,6 +262,8 @@ public class Compiler {
                     this.currentFunctionInsn.add(new LD_EQUAL_Insn());
                     this.currentFunctionInsn.add(new B_INVERT_Insn());
                 }
+                case OP_AND -> this.currentFunctionInsn.add(new B_AND_Insn());
+                case OP_OR -> this.currentFunctionInsn.add(new B_OR_Insn());
                 default -> throw new UnsupportedOperationException("Unsupported operator: " + expression.getOperator());
             }
         }
