@@ -53,7 +53,10 @@ public class Analyzer {
             var all = BinaryExpression.Operator.values();
             BINARY_OPERATORS_ALLOWED_TYPES.put(Type.LONG, all);
             BINARY_OPERATORS_ALLOWED_TYPES.put(Type.DOUBLE, all);
-            BINARY_OPERATORS_ALLOWED_TYPES.put(Type.BOOLEAN, new BinaryExpression.Operator[]{BinaryExpression.Operator.OP_EQUAL, BinaryExpression.Operator.OP_NOT_EQUAL});
+            BINARY_OPERATORS_ALLOWED_TYPES.put(Type.BOOLEAN, new BinaryExpression.Operator[]{
+                    BinaryExpression.Operator.OP_EQUAL, BinaryExpression.Operator.OP_NOT_EQUAL,
+                    BinaryExpression.Operator.OP_AND, BinaryExpression.Operator.OP_OR
+            });
         }
 
         private final DeclarationStack declarationStack = new DeclarationStack();
