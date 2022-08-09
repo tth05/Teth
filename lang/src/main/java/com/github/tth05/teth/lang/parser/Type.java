@@ -79,12 +79,16 @@ public class Type {
 
         Type type = (Type) o;
 
-        return Objects.equals(this.name, type.name);
+        if (!this.name.equals(type.name))
+            return false;
+        return Objects.equals(this.genericBounds, type.genericBounds);
     }
 
     @Override
     public int hashCode() {
-        return this.name.hashCode();
+        int result = this.name.hashCode();
+        result = 31 * result + (this.genericBounds != null ? this.genericBounds.hashCode() : 0);
+        return result;
     }
 
     @Override

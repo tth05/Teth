@@ -170,7 +170,7 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
 
         assertFalse(problems.isEmpty());
         assertEquals(1, problems.size());
-        assertEquals("Cannot assign value of type string[] to variable of type long[]", problems.get(0).message());
+        assertEquals("Cannot assign value of type list<string> to variable of type list<long>", problems.get(0).message());
 
         problems = analyze("let d: double = 6");
 

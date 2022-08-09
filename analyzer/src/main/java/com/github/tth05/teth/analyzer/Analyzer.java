@@ -174,7 +174,7 @@ public class Analyzer {
                     throw new ValidationException(expression.getSpan(), "Parameter type mismatch. Expected " + paramType + ", got " + expressionType);
             }
 
-            var returnType = resolveTypeOrBind(genericParameterInfo, decl.getReturnTypeExpr(), null);
+            var returnType = decl.getReturnTypeExpr() != null ? resolveTypeOrBind(genericParameterInfo, decl.getReturnTypeExpr(), null) : Type.VOID;
             if (returnType == null)
                 throw new ValidationException(invocation.getSpan(), "Return type is generic, but not bound");
 
@@ -268,7 +268,7 @@ public class Analyzer {
             var valueExpr = returnStatement.getValueExpr();
             var type = valueExpr == null ? Type.VOID : resolvedExpressionTypes.get(valueExpr);
             var currentFunction = this.currentFunctionStack.getLast();
-            if (!type.equals(currentFunction.getReturnType()))
+            if (!type.isSubtypeOf(currentFunction.getReturnType()))
                 throw new TypeResolverException(returnStatement.getSpan(), "Cannot return " + type + " from function returning " + currentFunction.getReturnType());
         }
 
@@ -307,7 +307,7 @@ public class Analyzer {
 
             var type = resolvedExpressionTypes.get(expression.getExpr());
             if (!type.equals(getVariableDeclarationType(varDecl)))
-                throw new TypeResolverException(expression.getExpr().getSpan(), "Cannot assign expression of type " + type + " to variable of type " + varDecl.getTypeExpr().getName());
+                throw new TypeResolverException(expression.getExpr().getSpan(), "Cannot assign expression of type " + type + " to variable of type " + getVariableDeclarationType(varDecl));
 
             resolvedExpressionTypes.put(expression, type);
         }

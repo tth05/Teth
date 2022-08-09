@@ -11,8 +11,7 @@ public class TypeTest {
     @Test
     public void testIsSubTypeOfAnyAndVoid() {
         var anySubTypes = List.of(Type.BOOLEAN, Type.DOUBLE, Type.LONG, Type.FUNCTION, Type.ANY,
-                Type.STRING, new Type("Struct"), new Type("T", true),
-                new Type("T", List.of(Type.LONG)));
+                Type.STRING, new Type("Struct"), new Type("T", List.of(Type.LONG)));
         for (var t : anySubTypes) {
             assertTrue(t.isSubtypeOf(Type.ANY), () -> "Type " + t + " is not subtype of any");
 
@@ -33,12 +32,6 @@ public class TypeTest {
     public void testIsSubTypeOfGenerics() {
         assertFalse(new Type("T", List.of(Type.LONG)).isSubtypeOf(new Type("T", List.of(Type.DOUBLE))));
         assertTrue(new Type("T", List.of(Type.LONG)).isSubtypeOf(new Type("T", List.of(Type.LONG))));
-
-        assertFalse(new Type("T", true).isSubtypeOf(new Type("T", List.of(Type.LONG))));
-        assertFalse(new Type("T", List.of(Type.LONG)).isSubtypeOf(new Type("T", true)));
-
-        assertTrue(new Type("T", true).isSubtypeOf(new Type("T", true)));
-        assertFalse(new Type("T", true).isSubtypeOf(new Type("T", false)));
-        assertFalse(new Type("T", false).isSubtypeOf(new Type("T", true)));
+        assertTrue(new Type("T", List.of(Type.LONG)).isSubtypeOf(new Type("T", List.of(Type.ANY))));
     }
 }

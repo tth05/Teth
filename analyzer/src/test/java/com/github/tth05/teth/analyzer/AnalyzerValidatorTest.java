@@ -185,8 +185,6 @@ public class AnalyzerValidatorTest extends AbstractAnalyzerTest {
                 print([a])
                 """);
 
-        System.out.println(problems.prettyPrint(true));
-
         assertTrue(problems.isEmpty());
 
     }
@@ -195,14 +193,31 @@ public class AnalyzerValidatorTest extends AbstractAnalyzerTest {
     public void test2() {
         var problems = analyze("""
                 fn test<T>(t: T) T[][] {
-                    let l = [t]
+                    let l = [[t]]
                     return l
                 }
-                
+                                
+                let a: long[][] = test(5)
+                print([a])
+                                
+                """);
+
+        System.out.println(problems.prettyPrint(true));
+        assertTrue(problems.isEmpty());
+    }
+
+    @Test
+    public void test3() {
+        var problems = analyze("""
                 let a: long[] = test(5)
                 print([a])
                 
+                fn test<T>(t: T) T[][] {
+                    let l = [t]
+                    return l
+                }               
                 """);
-        System.out.println(problems.prettyPrint(true));
+
+        assertTrue(problems.isEmpty());
     }
 }
