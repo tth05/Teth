@@ -7,17 +7,17 @@ import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 import java.util.Objects;
 
 
-public class IdentifierExpression extends Expression implements IDeclarationReference, IAssignmentTarget {
+public class GenericParameterDeclaration extends Statement {
 
-    private final String value;
+    private final String name;
 
-    public IdentifierExpression(ISpan span, String value) {
+    public GenericParameterDeclaration(ISpan span, String name) {
         super(span);
-        this.value = value;
+        this.name = name;
     }
 
-    public String getValue() {
-        return this.value;
+    public String getName() {
+        return this.name;
     }
 
     @Override
@@ -32,19 +32,19 @@ public class IdentifierExpression extends Expression implements IDeclarationRefe
         if (o == null || getClass() != o.getClass())
             return false;
 
-        return Objects.equals(this.value, ((IdentifierExpression) o).value);
+        return Objects.equals(this.name, ((GenericParameterDeclaration) o).name);
     }
 
     @Override
     public int hashCode() {
         int result = super.hashCode();
-        result = 31 * result + this.value.hashCode();
+        result = 31 * result + this.name.hashCode();
         return result;
     }
 
     @Override
     public void dump(ASTDumpBuilder builder) {
-        builder.append(this.value);
+        builder.append(this.name);
     }
 
     @Override

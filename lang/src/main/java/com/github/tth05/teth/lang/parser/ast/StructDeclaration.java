@@ -2,7 +2,6 @@ package com.github.tth05.teth.lang.parser.ast;
 
 import com.github.tth05.teth.lang.parser.ASTVisitor;
 import com.github.tth05.teth.lang.parser.StatementList;
-import com.github.tth05.teth.lang.parser.Type;
 import com.github.tth05.teth.lang.span.ISpan;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
@@ -111,10 +110,6 @@ public class StructDeclaration extends Statement implements IDeclaration {
         }
 
         @Override
-        public void setInferredType(Type type) {
-            throw new UnsupportedOperationException();
-        }
-
         public TypeExpression getTypeExpr() {
             return this.type;
         }

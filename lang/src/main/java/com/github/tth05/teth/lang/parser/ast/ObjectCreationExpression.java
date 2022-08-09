@@ -20,11 +20,6 @@ public class ObjectCreationExpression extends Expression implements IDeclaration
         return this.targetNameExpr;
     }
 
-    @Override
-    public IdentifierExpression getReferenceNameExpr() {
-        return getTargetNameExpr();
-    }
-
     public ExpressionList getParameters() {
         return this.parameters;
     }

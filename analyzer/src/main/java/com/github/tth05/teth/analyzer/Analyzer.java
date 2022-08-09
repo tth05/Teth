@@ -5,16 +5,16 @@ import com.github.tth05.teth.lang.parser.ASTVisitor;
 import com.github.tth05.teth.lang.parser.SourceFileUnit;
 import com.github.tth05.teth.lang.parser.Type;
 import com.github.tth05.teth.lang.parser.ast.*;
-import com.github.tth05.teth.lang.span.ISpan;
 import com.github.tth05.teth.lang.stdlib.StandardLibrary;
 
 import java.util.*;
 
 public class Analyzer {
 
-    public static final FunctionDeclaration GLOBAL_FUNCTION = new FunctionDeclaration(null, null, null, null, null, false);
+    public static final FunctionDeclaration GLOBAL_FUNCTION = new FunctionDeclaration(null, null, List.of(), List.of(), null, null, false);
 
     private final Map<Expression, Type> resolvedExpressionTypes = new IdentityHashMap<>();
+    private final Map<Expression, GenericParameterInfo> genericParameterInfos = new IdentityHashMap<>();
     private final Map<IDeclarationReference, Statement> resolvedReferences = new IdentityHashMap<>();
     private final Map<FunctionDeclaration, Integer> functionLocalsCount = new IdentityHashMap<>();
 
@@ -89,10 +89,23 @@ public class Analyzer {
                 this.declarationStack.addDeclaration(declaration.getNameExpr().getValue(), declaration);
 
             beginFunctionDeclaration(declaration);
+            // Generic parameters
+            {
+                for (var p1 : declaration.getGenericParameters()) {
+                    for (var p2 : declaration.getGenericParameters()) {
+                        if (p1 == p2)
+                            continue;
+                        if (p1.getName().equals(p2.getName()))
+                            throw new ValidationException(p2.getSpan(), "Duplicate generic parameter name");
+                    }
+                }
+                declaration.getGenericParameters().forEach(p -> p.accept(this));
+            }
+
             if (oldCurrentStruct != null) {
                 this.declarationStack.addDeclaration("self", new FunctionDeclaration.ParameterDeclaration(
                         null,
-                        new TypeExpression(null, new Type(oldCurrentStruct.getNameExpr().getValue())),
+                        new TypeExpression(null, oldCurrentStruct.getNameExpr().getValue()),
                         new IdentifierExpression(null, "self")
                 ));
             }
@@ -145,16 +158,27 @@ public class Analyzer {
             if (decl.getParameters().size() != invocation.getParameters().size())
                 throw new ValidationException(invocation.getSpan(), "Wrong number of parameters for function invocation. Expected " + decl.getParameters().size() + ", got " + invocation.getParameters().size());
 
+            GenericParameterInfo genericParameterInfo = null;
+            if (!decl.getGenericParameters().isEmpty())
+                genericParameterInfos.put(invocation, genericParameterInfo = new GenericParameterInfo());
+
             for (int i = 0; i < decl.getParameters().size(); i++) {
                 var param = decl.getParameters().get(i);
-                var paramType = param.getTypeExpr().getType();
-                var paramExpr = invocation.getParameters().get(i);
-                var paramExprType = resolvedExpressionTypes.get(paramExpr);
-                if (!paramExprType.isSubtypeOf(paramType))
-                    throw new ValidationException(paramExpr.getSpan(), "Parameter type mismatch. Expected " + paramType + ", got " + paramExprType);
+                var paramTypeExpr = param.getTypeExpr();
+                var expression = invocation.getParameters().get(i);
+                var expressionType = resolvedExpressionTypes.get(expression);
+
+                var paramType = resolveTypeOrBind(genericParameterInfo, paramTypeExpr, expressionType);
+
+                if (!expressionType.isSubtypeOf(paramType))
+                    throw new ValidationException(expression.getSpan(), "Parameter type mismatch. Expected " + paramType + ", got " + expressionType);
             }
 
-            resolvedExpressionTypes.put(invocation, decl.getReturnType());
+            var returnType = resolveTypeOrBind(genericParameterInfo, decl.getReturnTypeExpr(), null);
+            if (returnType == null)
+                throw new ValidationException(invocation.getSpan(), "Return type is generic, but not bound");
+
+            resolvedExpressionTypes.put(invocation, returnType);
         }
 
         @Override
@@ -192,7 +216,7 @@ public class Analyzer {
 
             for (int i = 0; i < parameters.size(); i++) {
                 var parameterType = resolvedExpressionTypes.get(parameters.get(i));
-                var fieldType = structDeclaration.getFields().get(i).getTypeExpr().getType();
+                var fieldType = structDeclaration.getFields().get(i).getTypeExpr().asType();
 
                 if (!parameterType.isSubtypeOf(fieldType))
                     throw new ValidationException(
@@ -228,7 +252,7 @@ public class Analyzer {
 
             resolvedExpressionTypes.put(expression, switch (member) {
                 case FunctionDeclaration ignored -> Type.FUNCTION;
-                case StructDeclaration.FieldDeclaration field -> field.getTypeExpr().getType();
+                case StructDeclaration.FieldDeclaration field -> field.getTypeExpr().asType();
                 default -> throw new IllegalStateException();
             });
             resolvedReferences.put(expression, member);
@@ -260,14 +284,12 @@ public class Analyzer {
             // This will increase the count even if a local is re-declared, but that's fine for now.
             functionLocalsCount.merge(this.currentFunctionStack.getLast(), 1, Integer::sum);
 
-            var varType = declaration.getTypeExpr();
+            var varTypeExpr = declaration.getTypeExpr();
             var expression = declaration.getInitializerExpr();
-            var resolvedType = resolvedExpressionTypes.get(expression);
-            if (varType == null) {
-                declaration.setInferredType(resolvedType);
-            } else {
-                if (!resolvedType.isSubtypeOf(varType.getType()))
-                    throw new TypeResolverException(expression.getSpan(), "Cannot assign value of type " + resolvedType + " to variable of type " + varType.getType());
+            if (varTypeExpr != null) {
+                var resolvedType = resolvedExpressionTypes.get(expression);
+                if (!resolvedType.isSubtypeOf(varTypeExpr.asType()))
+                    throw new TypeResolverException(expression.getSpan(), "Cannot assign value of type " + resolvedType + " to variable of type " + varTypeExpr);
             }
 
             this.declarationStack.addDeclaration(declaration.getNameExpr().getValue(), declaration);
@@ -278,15 +300,14 @@ public class Analyzer {
             super.visit(expression);
 
             var decl = resolvedReferences.get(expression.getTargetExpr());
-
             if (decl == null)
                 throw new ValidationException(expression.getTargetExpr().getSpan(), "Unresolved identifier");
             if (!(decl instanceof IVariableDeclaration varDecl))
                 throw new ValidationException(expression.getTargetExpr().getSpan(), "Identifier is not a variable");
 
             var type = resolvedExpressionTypes.get(expression.getExpr());
-            if (!type.equals(varDecl.getTypeExpr().getType()))
-                throw new TypeResolverException(expression.getExpr().getSpan(), "Cannot assign expression of type " + type + " to variable of type " + varDecl.getTypeExpr().getType());
+            if (!type.equals(getVariableDeclarationType(varDecl)))
+                throw new TypeResolverException(expression.getExpr().getSpan(), "Cannot assign expression of type " + type + " to variable of type " + varDecl.getTypeExpr().getName());
 
             resolvedExpressionTypes.put(expression, type);
         }
@@ -359,7 +380,7 @@ public class Analyzer {
             super.visit(listLiteralExpression);
 
             if (listLiteralExpression.getInitializers().isEmpty()) {
-                resolvedExpressionTypes.put(listLiteralExpression, new Type(Type.ANY));
+                resolvedExpressionTypes.put(listLiteralExpression, Type.list(Type.ANY));
                 return;
             }
 
@@ -369,7 +390,7 @@ public class Analyzer {
                     throw new TypeResolverException(initializer.getSpan(), "List element type mismatch");
             }
 
-            resolvedExpressionTypes.put(listLiteralExpression, new Type(elementType));
+            resolvedExpressionTypes.put(listLiteralExpression, Type.list(elementType));
         }
 
         @Override
@@ -393,22 +414,30 @@ public class Analyzer {
         }
 
         @Override
-        public void visit(TypeExpression typeExpression) {
-            validateType(typeExpression.getSpan(), typeExpression.getType());
+        public void visit(GenericParameterDeclaration declaration) {
+            this.declarationStack.addDeclaration(declaration.getName(), declaration);
         }
 
-        private void validateType(ISpan span, Type type) {
-            if (StandardLibrary.isBuiltinType(type)) {
-                if (type.isList())
-                    validateType(span, type.getInnerType());
-                return;
-            }
+        @Override
+        public void visit(TypeExpression typeExpression) {
+            validateType(typeExpression);
+        }
 
-            var decl = this.declarationStack.resolveIdentifier(type.toString());
+        private void validateType(TypeExpression typeExpression) {
+            var span = typeExpression.getSpan();
+            var type = typeExpression.getName();
+            typeExpression.getGenericBounds().forEach(this::validateType);
+
+            if (StandardLibrary.isBuiltinType(typeExpression.asType()))
+                return;
+
+            var decl = this.declarationStack.resolveIdentifier(type);
             if (decl == null)
                 throw new TypeResolverException(span, "Unknown type " + type);
-            if (!(decl instanceof StructDeclaration))
+            if (!(decl instanceof StructDeclaration) && !(decl instanceof GenericParameterDeclaration))
                 throw new TypeResolverException(span, "Type " + type + " is not a struct or builtin type");
+
+            resolvedReferences.put(typeExpression, decl);
         }
 
         @Override
@@ -420,9 +449,9 @@ public class Analyzer {
                 throw new ValidationException(identifierExpression.getSpan(), "Unresolved identifier");
 
             var type = switch (decl) {
-                case VariableDeclaration declaration -> declaration.getTypeExpr().getType();
+                case VariableDeclaration declaration -> getVariableDeclarationType(declaration);
                 case FunctionDeclaration ignored -> Type.FUNCTION;
-                case FunctionDeclaration.ParameterDeclaration declaration -> declaration.getTypeExpr().getType();
+                case FunctionDeclaration.ParameterDeclaration declaration -> declaration.getTypeExpr().asType();
                 case StructDeclaration structDeclaration -> new Type(structDeclaration.getNameExpr().getValue());
                 default ->
                         throw new ValidationException(identifierExpression.getSpan(), "Identifier is not a variable, function or struct");
@@ -430,6 +459,45 @@ public class Analyzer {
 
             resolvedExpressionTypes.put(identifierExpression, type);
             resolvedReferences.put(identifierExpression, decl);
+        }
+
+        private Type resolveTypeOrBind(GenericParameterInfo genericParameterInfo, TypeExpression typeExpr, Type fallbackType) {
+            Type paramType;
+            if (referencesGenericParameter(typeExpr)) {
+                var actualType = genericParameterInfo.getBoundGenericParameter(typeExpr.getName());
+                if (actualType == null) {
+                    if (fallbackType == null)
+                        return null;
+
+                    genericParameterInfo.bindGenericParameter(typeExpr.getName(), actualType = fallbackType);
+                }
+                paramType = actualType;
+            } else {
+                // This resolves inner generic parameters when converting the expression to a type. Allows list<T> to
+                // become list<long>
+                paramType = typeExpr.asType((expr) -> {
+                    if (referencesGenericParameter(expr))
+                        return resolveTypeOrBind(genericParameterInfo, expr, null);
+                    else
+                        return expr.asType();
+                });
+            }
+
+            return paramType;
+        }
+
+        private boolean referencesGenericParameter(TypeExpression typeExpression) {
+            return resolvedReferences.get(typeExpression) instanceof GenericParameterDeclaration;
+        }
+
+        private Type getVariableDeclarationType(IVariableDeclaration declaration) {
+            if (declaration.getTypeExpr() != null) {
+                return declaration.getTypeExpr().asType();
+            } else {
+                if (!(declaration instanceof VariableDeclaration varDecl))
+                    throw new IllegalStateException();
+                return resolvedExpressionTypes.get(varDecl.getInitializerExpr());
+            }
         }
 
         private void beginFunctionDeclaration(FunctionDeclaration declaration) {

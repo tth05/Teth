@@ -19,16 +19,24 @@ public class FunctionDeclaration extends Statement implements IDeclaration {
     private final BlockStatement body;
     private final boolean instanceFunction;
     private final boolean intrinsic;
+    private final List<GenericParameterDeclaration> genericParameters;
 
-    public FunctionDeclaration(ISpan span, IdentifierExpression nameExpr, TypeExpression returnTypeExpr, List<ParameterDeclaration> parameters, BlockStatement body, boolean instanceFunction) {
-        this(span, nameExpr, returnTypeExpr, parameters, body, instanceFunction, false);
+    public FunctionDeclaration(ISpan span, IdentifierExpression nameExpr,
+                               List<GenericParameterDeclaration> genericParameters,
+                               List<ParameterDeclaration> parameters, TypeExpression returnTypeExpr,
+                               BlockStatement body, boolean instanceFunction) {
+        this(span, nameExpr, genericParameters, parameters, returnTypeExpr, body, instanceFunction, false);
     }
 
-    public FunctionDeclaration(ISpan span, IdentifierExpression nameExpr, TypeExpression returnTypeExpr, List<ParameterDeclaration> parameters, BlockStatement body, boolean instanceFunction, boolean intrinsic) {
+    public FunctionDeclaration(ISpan span, IdentifierExpression nameExpr,
+                               List<GenericParameterDeclaration> genericParameters,
+                               List<ParameterDeclaration> parameters, TypeExpression returnTypeExpr,
+                               BlockStatement body, boolean instanceFunction, boolean intrinsic) {
         super(span);
         this.nameExpr = nameExpr;
+        this.genericParameters = Collections.unmodifiableList(Objects.requireNonNull(genericParameters));
+        this.parameters = Collections.unmodifiableList(Objects.requireNonNull(parameters));
         this.returnTypeExpr = returnTypeExpr;
-        this.parameters = parameters;
         this.body = body;
         this.instanceFunction = instanceFunction;
         this.intrinsic = intrinsic;
@@ -39,16 +47,20 @@ public class FunctionDeclaration extends Statement implements IDeclaration {
         return this.nameExpr;
     }
 
+    public List<GenericParameterDeclaration> getGenericParameters() {
+        return this.genericParameters;
+    }
+
+    public List<ParameterDeclaration> getParameters() {
+        return this.parameters;
+    }
+
     public TypeExpression getReturnTypeExpr() {
         return this.returnTypeExpr;
     }
 
     public Type getReturnType() {
-        return this.returnTypeExpr == null ? Type.VOID : this.returnTypeExpr.getType();
-    }
-
-    public List<ParameterDeclaration> getParameters() {
-        return Collections.unmodifiableList(this.parameters);
+        return this.returnTypeExpr == null ? Type.VOID : this.returnTypeExpr.asType();
     }
 
     public BlockStatement getBody() {
@@ -149,10 +161,6 @@ public class FunctionDeclaration extends Statement implements IDeclaration {
         }
 
         @Override
-        public void setInferredType(Type type) {
-            throw new UnsupportedOperationException("Cannot set inferred type of parameter");
-        }
-
         public TypeExpression getTypeExpr() {
             return this.type;
         }

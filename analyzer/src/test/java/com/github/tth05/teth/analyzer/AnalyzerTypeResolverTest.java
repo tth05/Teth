@@ -95,22 +95,22 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
         var problems = analyze("[]");
 
         assertTrue(problems.isEmpty());
-        assertEquals(new Type(Type.ANY), this.analyzer.resolvedType(((Expression) this.unit.getStatements().get(0))));
+        assertEquals(Type.list(Type.ANY), this.analyzer.resolvedType(((Expression) this.unit.getStatements().get(0))));
 
         problems = analyze("[-56, 5, 1]");
 
         assertTrue(problems.isEmpty());
-        assertEquals(new Type(Type.LONG), this.analyzer.resolvedType(((Expression) this.unit.getStatements().get(0))));
+        assertEquals(Type.list(Type.LONG), this.analyzer.resolvedType(((Expression) this.unit.getStatements().get(0))));
 
         problems = analyze("[\"5\", \"1\", \"2\"]");
 
         assertTrue(problems.isEmpty());
-        assertEquals(new Type(Type.STRING), this.analyzer.resolvedType(((Expression) this.unit.getStatements().get(0))));
+        assertEquals(Type.list(Type.STRING), this.analyzer.resolvedType(((Expression) this.unit.getStatements().get(0))));
 
         problems = analyze("[[5]]");
 
         assertTrue(problems.isEmpty());
-        assertEquals(new Type(new Type(Type.LONG)), this.analyzer.resolvedType(((Expression) this.unit.getStatements().get(0))));
+        assertEquals(Type.list(Type.list(Type.LONG)), this.analyzer.resolvedType(((Expression) this.unit.getStatements().get(0))));
     }
 
     @Test
@@ -343,5 +343,14 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
         assertFalse(problems.isEmpty());
         assertEquals(1, problems.size());
         assertEquals("Parameter type mismatch. Expected long, got double", problems.get(0).message());
+    }
+
+    @Test
+    public void testInferGenericReturnType() {
+        // For all generic bois, try to infer using parameters, then return type if left side is annotated, then require specifying at call site
+        var problems = analyze("fn f<T>(t: T) T {return t} let l: long = f(5)");
+
+        System.out.println(problems.prettyPrint(true));
+        assertTrue(problems.isEmpty());
     }
 }

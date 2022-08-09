@@ -24,11 +24,6 @@ public class MemberAccessExpression extends Expression implements IDeclarationRe
     }
 
     @Override
-    public IdentifierExpression getReferenceNameExpr() {
-        return getMemberNameExpr();
-    }
-
-    @Override
     public void accept(ASTVisitor visitor) {
         visitor.visit(this);
     }

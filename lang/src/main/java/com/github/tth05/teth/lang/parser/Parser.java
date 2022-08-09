@@ -189,6 +189,22 @@ public class Parser {
         consumeLineBreaks();
         var functionName = this.stream.consumeType(TokenType.IDENTIFIER);
         consumeLineBreaks();
+
+        var genericParameters = new ArrayList<GenericParameterDeclaration>();
+        if (this.stream.peek().is(TokenType.LESS)) {
+            this.stream.consumeType(TokenType.LESS);
+            do {
+                if (!genericParameters.isEmpty())
+                    this.stream.consumeType(TokenType.COMMA);
+
+                consumeLineBreaks();
+                var parameterName = this.stream.consumeType(TokenType.IDENTIFIER);
+                consumeLineBreaks();
+                genericParameters.add(new GenericParameterDeclaration(parameterName.span(), parameterName.value()));
+            } while (!this.stream.peek().is(TokenType.GREATER));
+            this.stream.consumeType(TokenType.GREATER);
+        }
+
         this.stream.consumeType(TokenType.L_PAREN);
 
         var parameters = new ArrayList<FunctionDeclaration.ParameterDeclaration>();
@@ -213,14 +229,15 @@ public class Parser {
         }
 
         this.stream.consumeType(TokenType.R_PAREN);
+
         consumeLineBreaks();
+
         var returnType = this.stream.peek().is(TokenType.IDENTIFIER) ? parseType() : null;
         var body = parseBlock();
         return new FunctionDeclaration(
                 Span.of(firstSpan, body.getSpan()),
                 new IdentifierExpression(functionName.span(), functionName.value()),
-                returnType,
-                parameters, body, instanceMethod
+                genericParameters, parameters, returnType, body, instanceMethod
         );
     }
 
@@ -443,7 +460,9 @@ public class Parser {
 
         var firstSpan = current.span();
         var secondSpan = firstSpan;
-        var type = Type.fromString(current.value());
+        var typeName = current.value();
+
+        var count = 0;
 
         while (this.stream.peek().is(TokenType.L_SQUARE_BRACKET)) {
             this.stream.consume();
@@ -453,10 +472,17 @@ public class Parser {
                 throw new UnexpectedTokenException(rBracket.span(), "Expected a closing square bracket");
 
             secondSpan = rBracket.span();
-            type = new Type(type);
+            count++;
         }
 
-        return new TypeExpression(Span.of(firstSpan, secondSpan), type);
+        var genericBounds = new ArrayList<TypeExpression>();
+        for (int i = 0; i < count; i++) {
+            var newB = new ArrayList<TypeExpression>();
+            newB.add(new TypeExpression(Span.of(firstSpan, secondSpan), i == 0 ? typeName : "list", genericBounds));
+            genericBounds = newB;
+        }
+
+        return new TypeExpression(Span.of(firstSpan, secondSpan), count > 0 ? "list" : typeName, genericBounds);
     }
 
     public static ParserResult fromString(String source) {

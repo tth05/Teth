@@ -173,4 +173,36 @@ public class AnalyzerValidatorTest extends AbstractAnalyzerTest {
         assertEquals(1, problems.size());
         assertEquals("Wrong number of parameters for object creation. Expected 0, got 1", problems.get(0).message());
     }
+
+    @Test
+    public void test() {
+        var problems = analyze("""
+                fn test<T>(t: T) T {
+                return t
+                }
+                                
+                let a: long = test(5)
+                print([a])
+                """);
+
+        System.out.println(problems.prettyPrint(true));
+
+        assertTrue(problems.isEmpty());
+
+    }
+
+    @Test
+    public void test2() {
+        var problems = analyze("""
+                fn test<T>(t: T) T[][] {
+                    let l = [t]
+                    return l
+                }
+                
+                let a: long[] = test(5)
+                print([a])
+                
+                """);
+        System.out.println(problems.prettyPrint(true));
+    }
 }

@@ -1,7 +1,6 @@
 package com.github.tth05.teth.lang.parser.ast;
 
 import com.github.tth05.teth.lang.parser.ASTVisitor;
-import com.github.tth05.teth.lang.parser.Type;
 import com.github.tth05.teth.lang.span.ISpan;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
@@ -12,7 +11,7 @@ public class VariableDeclaration extends Statement implements IVariableDeclarati
     private final IdentifierExpression nameExpr;
     private final Expression initializer;
 
-    private TypeExpression type;
+    private final TypeExpression type;
 
     public VariableDeclaration(ISpan span, TypeExpression type, IdentifierExpression nameExpr, Expression initializer) {
         super(span);
@@ -26,13 +25,6 @@ public class VariableDeclaration extends Statement implements IVariableDeclarati
     }
 
     @Override
-    public void setInferredType(Type type) {
-        if (this.type != null)
-            throw new UnsupportedOperationException("Cannot override existing type");
-
-        this.type = new TypeExpression(this.nameExpr.getSpan(), type);
-    }
-
     public TypeExpression getTypeExpr() {
         return this.type;
     }

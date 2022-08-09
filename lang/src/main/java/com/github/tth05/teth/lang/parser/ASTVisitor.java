@@ -40,6 +40,7 @@ public abstract class ASTVisitor {
 
     public void visit(FunctionDeclaration declaration) {
         declaration.getNameExpr().accept(this);
+        declaration.getGenericParameters().forEach(param -> param.accept(this));
         declaration.getParameters().forEach(p -> p.accept(this));
         var expr = declaration.getReturnTypeExpr();
         if (expr != null)
@@ -120,6 +121,9 @@ public abstract class ASTVisitor {
     }
 
     public void visit(IdentifierExpression identifierExpression) {
+    }
+
+    public void visit(GenericParameterDeclaration declaration) {
     }
 
     public void visit(TypeExpression typeExpression) {

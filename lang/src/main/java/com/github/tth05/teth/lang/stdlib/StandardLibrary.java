@@ -7,6 +7,8 @@ import com.github.tth05.teth.lang.parser.ast.Statement;
 import com.github.tth05.teth.lang.parser.ast.TypeExpression;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class StandardLibrary {
 
@@ -44,18 +46,18 @@ public class StandardLibrary {
             if (STRING_FUNCTIONS == null)
                 STRING_FUNCTIONS = new FunctionDeclaration[]{
                         createFakeFunctionDeclaration("string.len", Type.LONG),
-                        createFakeFunctionDeclaration("string.concat", Type.STRING, Type.STRING),
+                        createFakeFunctionDeclaration("string.concat", Type.STRING, typeExpr(Type.STRING)),
             };
 
             return STRING_FUNCTIONS;
-        } else if (type.isList()) {
+        } else if (type.isList()) { //TODO: Generic types
             if (LIST_FUNCTIONS == null)
                 LIST_FUNCTIONS = new FunctionDeclaration[]{
                         createFakeFunctionDeclaration("list.len", Type.LONG),
-                        createFakeFunctionDeclaration("list.add", Type.VOID, Type.ANY),
-                        createFakeFunctionDeclaration("list.remove", Type.VOID, Type.LONG),
-                        createFakeFunctionDeclaration("list.get", Type.ANY, Type.LONG),
-                        createFakeFunctionDeclaration("list.set", Type.VOID, Type.LONG, Type.ANY),
+                        createFakeFunctionDeclaration("list.add", Type.VOID, typeExpr(Type.ANY)),
+                        createFakeFunctionDeclaration("list.remove", Type.VOID, typeExpr(Type.LONG)),
+                        createFakeFunctionDeclaration("list.get", Type.ANY, typeExpr(Type.LONG)),
+                        createFakeFunctionDeclaration("list.set", Type.VOID, typeExpr(Type.LONG), typeExpr(Type.ANY)),
                 };
 
             return LIST_FUNCTIONS;
@@ -76,23 +78,23 @@ public class StandardLibrary {
     public static Statement[] getGlobalFunctions() {
         if (GLOBAL_FUNCTIONS == null) {
             GLOBAL_FUNCTIONS = new FunctionDeclaration[]{
-                    createFakeFunctionDeclaration("print", Type.VOID, new Type(Type.ANY)),
-                    createFakeFunctionDeclaration("println", Type.VOID, new Type(Type.ANY)),
+                    createFakeFunctionDeclaration("print", Type.VOID, typeExpr(new Type("list"), Type.ANY)),
+                    createFakeFunctionDeclaration("println", Type.VOID, typeExpr(new Type("list"), Type.ANY)),
             };
         }
 
         return GLOBAL_FUNCTIONS;
     }
 
-    private static FunctionDeclaration createFakeFunctionDeclaration(String name, Type returnType, Type... argTypes) {
+    private static FunctionDeclaration createFakeFunctionDeclaration(String name, Type returnType, TypeExpression... argTypes) {
         var args = new ArrayList<FunctionDeclaration.ParameterDeclaration>(argTypes.length);
         for (int i = 0; i < argTypes.length; i++)
-            args.add(new FunctionDeclaration.ParameterDeclaration(null, new TypeExpression(null, argTypes[i]), new IdentifierExpression(null, "arg" + i)));
+            args.add(new FunctionDeclaration.ParameterDeclaration(null, argTypes[i], new IdentifierExpression(null, "arg" + i)));
 
         return new FunctionDeclaration(null,
                 new IdentifierExpression(null, name),
-                new TypeExpression(null, returnType),
-                args, null, false, true
+                List.of(), args, new TypeExpression(null, returnType.getName()),
+                null, false, true
         );
     }
 
@@ -105,5 +107,13 @@ public class StandardLibrary {
                type == Type.VOID ||
                type == Type.ANY ||
                type.isList();
+    }
+
+    private static TypeExpression typeExpr(Type type) {
+        return new TypeExpression(null, type.getName());
+    }
+
+    private static TypeExpression typeExpr(Type type, Type... genericTypes) {
+        return new TypeExpression(null, type.getName(), Arrays.stream(genericTypes).map(t -> new TypeExpression(null, t.getName())).toList());
     }
 }

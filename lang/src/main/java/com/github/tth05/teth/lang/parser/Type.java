@@ -1,6 +1,9 @@
 package com.github.tth05.teth.lang.parser;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class Type {
 
@@ -13,28 +16,35 @@ public class Type {
     public static final Type FUNCTION = new Type("function");
 
     private final String name;
-    private final Type innerType;
+    private final List<Type> genericBounds;
 
     public Type(String name) {
+        this(name, null);
+    }
+
+    public Type(String name, List<Type> genericBounds) {
         this.name = name;
-        this.innerType = null;
+        this.genericBounds = genericBounds;
     }
 
-    public Type(Type innerType) {
-        this.name = null;
-        this.innerType = innerType;
-    }
-
-    public Type getInnerType() {
-        return this.innerType;
+    public String getName() {
+        return this.name;
     }
 
     public boolean isList() {
-        return this.innerType != null;
+        return this.name.equals("list");
     }
 
     public boolean isNumber() {
         return this == LONG || this == DOUBLE;
+    }
+
+    public boolean hasGenericBounds() {
+        return this.genericBounds != null;
+    }
+
+    public List<Type> getGenericBounds() {
+        return Collections.unmodifiableList(this.genericBounds);
     }
 
     public boolean isSubtypeOf(Type other) {
@@ -47,12 +57,16 @@ public class Type {
             return true;
         if (this == ANY) // any is not a subtype of anything, except for any
             return false;
-        if (this.innerType != null ^ other.innerType != null) // One is a list, the other isn't
-            return false;
         if (!Objects.equals(this.name, other.name)) // Different types
             return false;
-        if (this.innerType != null && !this.innerType.isSubtypeOf(other.innerType)) // Different inner types
+        if (hasGenericBounds() ^ other.hasGenericBounds()) // One has generic bounds, the other doesn't
             return false;
+        if (hasGenericBounds()) { // Different generic bounds
+            for (int i = 0; i < this.genericBounds.size(); i++) {
+                if (!this.genericBounds.get(i).isSubtypeOf(other.genericBounds.get(i)))
+                    return false;
+            }
+        }
         return true;
     }
 
@@ -65,32 +79,36 @@ public class Type {
 
         Type type = (Type) o;
 
-        return Objects.equals(this.name, type.name) && Objects.equals(this.innerType, type.innerType);
+        return Objects.equals(this.name, type.name);
     }
 
     @Override
     public int hashCode() {
-        int result = this.name != null ? this.name.hashCode() : 0;
-        result = 31 * result + (this.innerType != null ? this.innerType.hashCode() : 0);
-        return result;
+        return this.name.hashCode();
     }
 
     @Override
     public String toString() {
-        if (this.innerType != null)
-            return this.innerType + "[]";
-        return this.name;
+        return this.name + (!hasGenericBounds() ? "" : "<" + this.genericBounds.stream().map(Type::toString).collect(Collectors.joining(", ")) + ">");
     }
 
-    public static Type fromString(String type) {
-        return switch (type) {
+    public static Type list(Type type) {
+        return new Type("list", List.of(type));
+    }
+
+    public static Type fromName(String name) {
+        return switch (name) {
             case "long" -> Type.LONG;
             case "double" -> Type.DOUBLE;
             case "bool" -> Type.BOOLEAN;
             case "string" -> Type.STRING;
             case "function" -> Type.FUNCTION;
             case "any" -> Type.ANY;
-            default -> new Type(type);
+            default -> new Type(name);
         };
+    }
+
+    public static Type fromNameWithGenericBounds(String type, List<Type> genericBounds) {
+        return new Type(type, genericBounds);
     }
 }
