@@ -68,58 +68,85 @@ public class Analyzer {
         public void visit(SourceFileUnit unit) {
             // Begin global scope
             beginFunctionDeclaration(GLOBAL_FUNCTION);
-            // Collect top level functions
-            for (var decl : unit.getStatements()) {
-                if (!(decl instanceof IDeclaration namedDeclaration))
-                    continue;
 
-                this.declarationStack.addDeclaration(namedDeclaration.getNameExpr().getValue(), decl);
-            }
+            var statements = new ArrayList<>(unit.getStatements());
+            statements.sort(Comparator.comparingInt(s -> switch (s) {
+                case StructDeclaration sd -> 0;
+                case FunctionDeclaration fd -> 1;
+                default -> 2;
+            }));
+            // Pre-process 1: Collect all declarations
+            statements.stream()
+                    .filter(s -> s instanceof ITopLevelDeclaration)
+                    .forEach(this::addDeclaration);
+
+            // Pre-process 2: Analyze headers of top level functions and structs
+            statements.stream()
+                    .filter(s -> s instanceof ITopLevelDeclaration)
+                    .forEach(decl -> {
+                        switch (decl) {
+                            case StructDeclaration structDeclaration -> {
+                                this.declarationStack.beginScope(false);
+                                // TODO: Add struct generic params to scope
+                                structDeclaration.getFields().forEach(f -> visit(f.getTypeExpr()));
+                                structDeclaration.getFunctions().forEach(this::visitFunctionDeclarationHeader);
+                                this.declarationStack.endScope();
+                            }
+                            case FunctionDeclaration functionDeclaration -> visitFunctionDeclarationHeader(functionDeclaration);
+                            default -> throw new IllegalStateException();
+                        }
+                    });
 
             super.visit(unit);
         }
 
         @Override
         public void visit(FunctionDeclaration declaration) {
+            visitFunctionDeclarationBody(declaration);
+        }
+
+        private void visitFunctionDeclarationHeader(FunctionDeclaration declaration) {
+            for (var p1 : declaration.getGenericParameters()) {
+                for (var p2 : declaration.getGenericParameters()) {
+                    if (p1 == p2)
+                        continue;
+                    if (p1.getName().equals(p2.getName()))
+                        throw new ValidationException(p2.getSpan(), "Duplicate generic parameter name");
+                }
+            }
+            declaration.getGenericParameters().forEach(p -> p.accept(this));
+
+            declaration.getParameters().forEach(p -> p.accept(this));
+
+            var returnTypeExpr = declaration.getReturnTypeExpr();
+            if (returnTypeExpr != null)
+                returnTypeExpr.accept(this);
+        }
+
+        private void visitFunctionDeclarationBody(FunctionDeclaration declaration) {
             var oldCurrentStruct = this.currentStruct;
             this.currentStruct = null;
 
             // Add nested functions to outer scope, as if this were a variable declaration
-            if (this.currentFunctionStack.size() != 1)
-                this.declarationStack.addDeclaration(declaration.getNameExpr().getValue(), declaration);
+            if (this.currentFunctionStack.size() > 1)
+                addDeclaration(declaration);
 
             beginFunctionDeclaration(declaration);
-            // Generic parameters
-            {
-                for (var p1 : declaration.getGenericParameters()) {
-                    for (var p2 : declaration.getGenericParameters()) {
-                        if (p1 == p2)
-                            continue;
-                        if (p1.getName().equals(p2.getName()))
-                            throw new ValidationException(p2.getSpan(), "Duplicate generic parameter name");
-                    }
-                }
-                declaration.getGenericParameters().forEach(p -> p.accept(this));
-            }
+            // Parameters
+            declaration.getGenericParameters().forEach(this::addDeclaration);
+            declaration.getParameters().forEach(this::addDeclaration);
 
             if (oldCurrentStruct != null) {
-                this.declarationStack.addDeclaration("self", new FunctionDeclaration.ParameterDeclaration(
+                addDeclaration(new FunctionDeclaration.ParameterDeclaration(
                         null,
                         new TypeExpression(null, oldCurrentStruct.getNameExpr().getValue()),
                         new IdentifierExpression(null, "self")
                 ));
             }
 
-            { // Don't want to visit function name here
-                declaration.getParameters().forEach(p -> p.accept(this));
-                var returnTypeExpr = declaration.getReturnTypeExpr();
-                if (returnTypeExpr != null)
-                    returnTypeExpr.accept(this);
-            }
-
             // Add self to inner scope, to allow nested functions to access themselves
             if (this.currentFunctionStack.size() > 1)
-                this.declarationStack.addDeclaration(declaration.getNameExpr().getValue(), declaration);
+                addDeclaration(declaration);
             // TODO: Validate body returns something in all cases
             declaration.getBody().accept(this);
 
@@ -140,8 +167,6 @@ public class Analyzer {
             { // Don't want to visit parameter name here
                 parameter.getTypeExpr().accept(this);
             }
-
-            this.declarationStack.addDeclaration(parameter.getNameExpr().getValue(), parameter);
         }
 
         @Override
@@ -193,9 +218,7 @@ public class Analyzer {
 
         @Override
         public void visit(StructDeclaration.FieldDeclaration declaration) {
-            { // Don't want to visit field name here
-                declaration.getTypeExpr().accept(this);
-            }
+            // Pre-process 2 did this already
         }
 
         @Override
@@ -292,7 +315,7 @@ public class Analyzer {
                     throw new TypeResolverException(expression.getSpan(), "Cannot assign value of type " + resolvedType + " to variable of type " + varTypeExpr);
             }
 
-            this.declarationStack.addDeclaration(declaration.getNameExpr().getValue(), declaration);
+            addDeclaration(declaration);
         }
 
         @Override
@@ -415,7 +438,7 @@ public class Analyzer {
 
         @Override
         public void visit(GenericParameterDeclaration declaration) {
-            this.declarationStack.addDeclaration(declaration.getName(), declaration);
+            addDeclaration(declaration);
         }
 
         @Override
@@ -459,6 +482,16 @@ public class Analyzer {
 
             resolvedExpressionTypes.put(identifierExpression, type);
             resolvedReferences.put(identifierExpression, decl);
+        }
+
+        private void addDeclaration(Statement declaration) {
+            var name = switch (declaration) {
+                case IVariableDeclaration decl -> decl.getNameExpr().getValue();
+                case ITopLevelDeclaration decl -> decl.getNameExpr().getValue();
+                case GenericParameterDeclaration decl -> decl.getName();
+                default -> throw new IllegalArgumentException();
+            };
+            this.declarationStack.addDeclaration(name, declaration);
         }
 
         private Type resolveTypeOrBind(GenericParameterInfo genericParameterInfo, TypeExpression typeExpr, Type fallbackType) {

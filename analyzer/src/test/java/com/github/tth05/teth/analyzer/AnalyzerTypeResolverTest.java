@@ -329,7 +329,7 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
                 struct b {
                     a: a
                 }
-                
+                                
                 let d: a = new b(new a()).a
                 """);
 
@@ -346,11 +346,62 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
     }
 
     @Test
-    public void testInferGenericReturnType() {
-        // For all generic bois, try to infer using parameters, then return type if left side is annotated, then require specifying at call site
-        var problems = analyze("fn f<T>(t: T) T {return t} let l: long = f(5)");
+    public void testFunctionInferGenericParam() {
+        var problems = analyze("""
+                fn test<T>(t: T) T {
+                return t
+                }
+                                
+                let a: long = test(5)
+                print([a])
+                """);
 
-        System.out.println(problems.prettyPrint(true));
         assertTrue(problems.isEmpty());
+    }
+
+    @Test
+    public void testFunctionInferNestedGenericParam() {
+        var problems = analyze("""
+                let a: long[][] = test(5)
+                print([a])
+                                
+                fn test<T>(t: T) T[][] {
+                    let l = [[t]]
+                    return l
+                }
+                """);
+
+        assertTrue(problems.isEmpty());
+    }
+
+    @Test
+    public void testFunctionReturningIncorrectGenericType() {
+        var problems = analyze("""
+                fn test<T>(t: T) T[][] {
+                    let l = [t]
+                    return l
+                }
+                """);
+
+        assertFalse(problems.isEmpty());
+        assertEquals(1, problems.size());
+        assertEquals("Cannot return list<T> from function returning list<list<T>>", problems.get(0).message());
+    }
+
+    @Test
+    public void testFunctionResolvedToCorrectNonGenericType() {
+        var problems = analyze("""
+                let a: long[] = test(5)
+                print([a])
+                                
+                fn test<T>(t: T) T[][] {
+                    let l = [[t]]
+                    return l
+                }
+                """);
+
+        assertFalse(problems.isEmpty());
+        assertEquals(1, problems.size());
+        assertEquals("Cannot assign value of type list<list<long>> to variable of type list<long>", problems.get(0).message());
     }
 }

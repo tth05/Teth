@@ -24,7 +24,7 @@ public class TypeTest {
             assertFalse(t.isSubtypeOf(Type.ANY), () -> "Type " + t + " is subtype of any");
 
         assertFalse(Type.VOID.isSubtypeOf(Type.ANY), () -> "Type void is subtype of any");
-        assertFalse(Type.VOID.isSubtypeOf(Type.VOID), () -> "Type void is subtype of void");
+        assertTrue(Type.VOID.isSubtypeOf(Type.VOID), () -> "Type void is not subtype of void");
         assertFalse(Type.ANY.isSubtypeOf(Type.VOID), () -> "Type any is subtype of void");
     }
 

@@ -9,7 +9,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-public class StructDeclaration extends Statement implements IDeclaration {
+public class StructDeclaration extends Statement implements ITopLevelDeclaration {
 
     private final IdentifierExpression nameExpr;
     private final List<FieldDeclaration> fields;

@@ -1,6 +1,8 @@
 package com.github.tth05.teth.lang.parser.ast;
 
-public interface IVariableDeclaration extends IDeclaration {
+public interface IVariableDeclaration {
+
+    IdentifierExpression getNameExpr();
 
     TypeExpression getTypeExpr();
 }

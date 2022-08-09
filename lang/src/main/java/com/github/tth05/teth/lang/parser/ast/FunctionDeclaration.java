@@ -11,7 +11,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-public class FunctionDeclaration extends Statement implements IDeclaration {
+public class FunctionDeclaration extends Statement implements ITopLevelDeclaration {
 
     private final IdentifierExpression nameExpr;
     private final TypeExpression returnTypeExpr;

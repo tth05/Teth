@@ -107,7 +107,10 @@ public class AnalyzerValidatorTest extends AbstractAnalyzerTest {
 
         assertTrue(problems.isEmpty());
 
-        problems = analyze("struct a {b:long} new a(5).b");
+        problems = analyze("""
+                new a(5).b
+                struct a {b:long}
+                """);
 
         assertTrue(problems.isEmpty());
     }
@@ -150,11 +153,17 @@ public class AnalyzerValidatorTest extends AbstractAnalyzerTest {
 
     @Test
     public void testObjectCreation() {
-        var problems = analyze("struct a {} new a()");
+        var problems = analyze("""
+                new a()
+                struct a {}
+                """);
 
         assertTrue(problems.isEmpty());
 
-        problems = analyze("struct a {b:long} new a(5)");
+        problems = analyze("""
+                new a(5)
+                struct a {b:long}
+                """);
 
         assertTrue(problems.isEmpty());
     }
@@ -175,49 +184,14 @@ public class AnalyzerValidatorTest extends AbstractAnalyzerTest {
     }
 
     @Test
-    public void test() {
+    public void testDuplicateGenericParameters() {
         var problems = analyze("""
-                fn test<T>(t: T) T {
-                return t
+                fn test<T, D, A, T>() {
                 }
-                                
-                let a: long = test(5)
-                print([a])
                 """);
 
-        assertTrue(problems.isEmpty());
-
-    }
-
-    @Test
-    public void test2() {
-        var problems = analyze("""
-                fn test<T>(t: T) T[][] {
-                    let l = [[t]]
-                    return l
-                }
-                                
-                let a: long[][] = test(5)
-                print([a])
-                                
-                """);
-
-        System.out.println(problems.prettyPrint(true));
-        assertTrue(problems.isEmpty());
-    }
-
-    @Test
-    public void test3() {
-        var problems = analyze("""
-                let a: long[] = test(5)
-                print([a])
-                
-                fn test<T>(t: T) T[][] {
-                    let l = [t]
-                    return l
-                }               
-                """);
-
-        assertTrue(problems.isEmpty());
+        assertFalse(problems.isEmpty());
+        assertEquals(1, problems.size());
+        assertEquals("Duplicate generic parameter name", problems.get(0).message());
     }
 }

@@ -49,7 +49,7 @@ public class Type {
 
     public boolean isSubtypeOf(Type other) {
         if (this == VOID)
-            return false;
+            return other == VOID;
 
         if (this == other)
             return true;
