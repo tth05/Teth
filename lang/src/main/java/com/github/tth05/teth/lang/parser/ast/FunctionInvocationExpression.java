@@ -5,21 +5,29 @@ import com.github.tth05.teth.lang.parser.ExpressionList;
 import com.github.tth05.teth.lang.span.ISpan;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 
 public class FunctionInvocationExpression extends Expression {
 
     private final Expression target;
+    private final List<TypeExpression> genericBounds;
     private final ExpressionList parameters;
 
-    public FunctionInvocationExpression(ISpan span, Expression target, ExpressionList parameters) {
+    public FunctionInvocationExpression(ISpan span, Expression target, List<TypeExpression> genericBounds, ExpressionList parameters) {
         super(span);
         this.target = target;
+        this.genericBounds = genericBounds != null ? Collections.unmodifiableList(genericBounds) : null;
         this.parameters = Objects.requireNonNull(parameters);
     }
 
     public Expression getTarget() {
         return this.target;
+    }
+
+    public List<TypeExpression> getGenericBounds() {
+        return this.genericBounds;
     }
 
     public ExpressionList getParameters() {

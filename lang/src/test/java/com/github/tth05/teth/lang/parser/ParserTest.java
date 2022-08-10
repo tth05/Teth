@@ -479,6 +479,7 @@ public class ParserTest extends AbstractParserTest {
                                         new FunctionInvocationExpression(
                                                 null,
                                                 new IdentifierExpression(null, "print"),
+                                                null,
                                                 ExpressionList.of(
                                                         new ListLiteralExpression(null, ExpressionList.of(new IdentifierExpression(null, "a")))
                                                 )
@@ -550,6 +551,7 @@ public class ParserTest extends AbstractParserTest {
                                                                         )
                                                                 )
                                                         ),
+                                                        null,
                                                         ExpressionList.of()
                                                 )
                                         ),
@@ -565,7 +567,7 @@ public class ParserTest extends AbstractParserTest {
     @Test
     public void testParseFunctionDeclaration() {
         createAST("""
-                fn foo(self: type, b: long) {
+                fn foo<T, Z>(self: type, b: long) {
                     fn bar() string {
                         return "hello"
                     }
@@ -578,7 +580,10 @@ public class ParserTest extends AbstractParserTest {
                                 new FunctionDeclaration(
                                         null,
                                         new IdentifierExpression(null, "foo"),
-                                        List.of(),
+                                        List.of(
+                                                new GenericParameterDeclaration(null, "T"),
+                                                new GenericParameterDeclaration(null, "Z")
+                                        ),
                                         List.of(
                                                 new FunctionDeclaration.ParameterDeclaration(null, new TypeExpression(null, "type"), new IdentifierExpression(null, "self")),
                                                 new FunctionDeclaration.ParameterDeclaration(null, new TypeExpression(null, "long"), new IdentifierExpression(null, "b"))
@@ -614,7 +619,7 @@ public class ParserTest extends AbstractParserTest {
     public void testParseFunctionInvocation() {
         createAST("""
                 1 + (foo(1, 2))("hello world")
-                bar()()
+                bar<|list, double>()()
                 """);
         assertEquals(
                 new SourceFileUnit(
@@ -627,11 +632,13 @@ public class ParserTest extends AbstractParserTest {
                                                 new FunctionInvocationExpression(
                                                         null,
                                                         new IdentifierExpression(null, "foo"),
+                                                        null,
                                                         ExpressionList.of(
                                                                 new LongLiteralExpression(null, 1),
                                                                 new LongLiteralExpression(null, 2)
                                                         )
                                                 ),
+                                                null,
                                                 ExpressionList.of(
                                                         new StringLiteralExpression(null, "hello world")
                                                 )
@@ -643,8 +650,13 @@ public class ParserTest extends AbstractParserTest {
                                         new FunctionInvocationExpression(
                                                 null,
                                                 new IdentifierExpression(null, "bar"),
+                                                List.of(
+                                                        new TypeExpression(null, "list", List.of(new TypeExpression(null, "long"))),
+                                                        new TypeExpression(null, "long")
+                                                ),
                                                 ExpressionList.of()
                                         ),
+                                        null,
                                         ExpressionList.of()
                                 )
                         )
@@ -783,9 +795,11 @@ public class ParserTest extends AbstractParserTest {
                                                                         new IdentifierExpression(null, "b"),
                                                                         new IdentifierExpression(null, "a")
                                                                 ),
+                                                                null,
                                                                 ExpressionList.of()
                                                         )
                                                 ),
+                                                null,
                                                 ExpressionList.of()
                                         )
                                 )
@@ -803,10 +817,17 @@ public class ParserTest extends AbstractParserTest {
                 +
                 a
                 -
-                b / d 
+                b / d
                 * c ^ d
                 fn 
                 a
+                <
+                a
+                ,
+                b
+                ,
+                c
+                >
                 (a: a,
                  b: b
                  ) a

@@ -12,8 +12,10 @@ import com.github.tth05.teth.lang.stream.CharStream;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 //TODO: Allow new-lines everywhere
 public class Parser {
@@ -193,29 +195,18 @@ public class Parser {
         var genericParameters = new ArrayList<GenericParameterDeclaration>();
         if (this.stream.peek().is(TokenType.LESS)) {
             this.stream.consumeType(TokenType.LESS);
-            do {
-                if (!genericParameters.isEmpty())
-                    this.stream.consumeType(TokenType.COMMA);
-
-                consumeLineBreaks();
+            parseList(() -> {
                 var parameterName = this.stream.consumeType(TokenType.IDENTIFIER);
                 consumeLineBreaks();
-                genericParameters.add(new GenericParameterDeclaration(parameterName.span(), parameterName.value()));
-            } while (!this.stream.peek().is(TokenType.GREATER));
+                return new GenericParameterDeclaration(parameterName.span(), parameterName.value());
+            }, () -> genericParameters, TokenType.GREATER);
             this.stream.consumeType(TokenType.GREATER);
         }
 
+        consumeLineBreaks();
         this.stream.consumeType(TokenType.L_PAREN);
 
-        var parameters = new ArrayList<FunctionDeclaration.ParameterDeclaration>();
-        while (true) {
-            var token = this.stream.peek();
-            if (token.is(TokenType.R_PAREN))
-                break;
-            if (!parameters.isEmpty())
-                this.stream.consumeType(TokenType.COMMA);
-
-            consumeLineBreaks();
+        var parameters = parseList(() -> {
             var nameToken = this.stream.consumeType(TokenType.IDENTIFIER);
             if (instanceMethod && nameToken.value().equals("self"))
                 throw new UnexpectedTokenException(nameToken.span(), "Parameter name 'self' is not allowed for instance methods");
@@ -224,9 +215,8 @@ public class Parser {
             this.stream.consumeType(TokenType.COLON);
             consumeLineBreaks();
             var type = parseType();
-            consumeLineBreaks();
-            parameters.add(new FunctionDeclaration.ParameterDeclaration(type, new IdentifierExpression(nameToken.span(), nameToken.value())));
-        }
+            return new FunctionDeclaration.ParameterDeclaration(type, new IdentifierExpression(nameToken.span(), nameToken.value()));
+        }, ArrayList::new, TokenType.R_PAREN);
 
         this.stream.consumeType(TokenType.R_PAREN);
 
@@ -239,6 +229,19 @@ public class Parser {
                 new IdentifierExpression(functionName.span(), functionName.value()),
                 genericParameters, parameters, returnType, body, instanceMethod
         );
+    }
+
+    private <T, R extends List<T>> R parseList(Supplier<T> expressionSupplier, Supplier<R> collector, TokenType endToken) {
+        var list = collector.get();
+        while (!this.stream.peek().is(endToken)) {
+            if (!list.isEmpty())
+                this.stream.consumeType(TokenType.COMMA);
+
+            consumeLineBreaks();
+            list.add(expressionSupplier.get());
+            consumeLineBreaks();
+        }
+        return list;
     }
 
     private StructDeclaration parseStructDeclaration() {
@@ -360,7 +363,7 @@ public class Parser {
 
         while (true) {
             currentType = this.stream.peek().type();
-            if (currentType == TokenType.L_PAREN) {
+            if (currentType == TokenType.L_PAREN || currentType == TokenType.LESS_PIPE) {
                 expr = parseFunctionInvocation(expr);
             } else if (currentType == TokenType.EQUAL) {
                 if (!(expr instanceof IAssignmentTarget))
@@ -389,26 +392,24 @@ public class Parser {
     }
 
     private Expression parseFunctionInvocation(Expression target) {
+        var genericBounds = new ArrayList<TypeExpression>();
+        if (this.stream.peek().is(TokenType.LESS_PIPE)) {
+            this.stream.consume();
+            parseList(this::parseType, () -> genericBounds, TokenType.GREATER);
+            this.stream.consumeType(TokenType.GREATER);
+            consumeLineBreaks();
+        }
+
         this.stream.consumeType(TokenType.L_PAREN);
         consumeLineBreaks();
-        ExpressionList parameters = parseParameterList();
+        var parameters = parseParameterList();
 
         var secondSpan = this.stream.consumeType(TokenType.R_PAREN).span();
-        return new FunctionInvocationExpression(Span.of(target.getSpan(), secondSpan), target, parameters);
+        return new FunctionInvocationExpression(Span.of(target.getSpan(), secondSpan), target, genericBounds, parameters);
     }
 
     private ExpressionList parseParameterList() {
-        var parameters = new ExpressionList();
-        while (true) {
-            var token = this.stream.peek();
-            if (token.is(TokenType.R_PAREN))
-                break;
-            if (!parameters.isEmpty())
-                this.stream.consumeType(TokenType.COMMA);
-
-            parameters.add(parseExpression());
-        }
-        return parameters;
+        return parseList(this::parseExpression, ExpressionList::new, TokenType.R_PAREN);
     }
 
     private Expression parseParenthesisedExpression() {
