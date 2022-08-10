@@ -149,6 +149,12 @@ public class AnalyzerValidatorTest extends AbstractAnalyzerTest {
         assertFalse(problems.isEmpty());
         assertEquals(1, problems.size());
         assertEquals("Wrong number of parameters for function invocation. Expected 0, got 2", problems.get(0).message());
+
+        problems = analyze("fn a<T, B>() {}a<|>()");
+
+        assertFalse(problems.isEmpty());
+        assertEquals(1, problems.size());
+        assertEquals("Wrong number of generic bounds. Expected 2, got 0", problems.get(0).message());
     }
 
     @Test

@@ -92,7 +92,8 @@ public class Analyzer {
                                 structDeclaration.getFunctions().forEach(this::visitFunctionDeclarationHeader);
                                 this.declarationStack.endScope();
                             }
-                            case FunctionDeclaration functionDeclaration -> visitFunctionDeclarationHeader(functionDeclaration);
+                            case FunctionDeclaration functionDeclaration ->
+                                    visitFunctionDeclarationHeader(functionDeclaration);
                             default -> throw new IllegalStateException();
                         }
                     });
@@ -184,8 +185,19 @@ public class Analyzer {
                 throw new ValidationException(invocation.getSpan(), "Wrong number of parameters for function invocation. Expected " + decl.getParameters().size() + ", got " + invocation.getParameters().size());
 
             GenericParameterInfo genericParameterInfo = null;
-            if (!decl.getGenericParameters().isEmpty())
+            if (!decl.getGenericParameters().isEmpty()) {
                 genericParameterInfos.put(invocation, genericParameterInfo = new GenericParameterInfo());
+
+                var genericBounds = invocation.getGenericBounds();
+                // Explicit generic bounds have priority over inferred generic bounds
+                if (genericBounds != null) {
+                    if (genericBounds.size() != decl.getGenericParameters().size())
+                        throw new ValidationException(invocation.getSpan(), "Wrong number of generic bounds. Expected " + decl.getGenericParameters().size() + ", got " + genericBounds.size());
+
+                    for (var i = 0; i < genericBounds.size(); i++)
+                        genericParameterInfo.bindGenericParameter(decl.getGenericParameters().get(i).getName(), genericBounds.get(i).asType());
+                }
+            }
 
             for (int i = 0; i < decl.getParameters().size(); i++) {
                 var param = decl.getParameters().get(i);

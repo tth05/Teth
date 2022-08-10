@@ -360,6 +360,20 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
     }
 
     @Test
+    public void testFunctionExplicitGenericParam() {
+        var problems = analyze("""
+                fn test<T>(t: T) T {
+                return t
+                }
+                                
+                let a: long = test<|long>(5)
+                print([a])
+                """);
+
+        assertTrue(problems.isEmpty());
+    }
+
+    @Test
     public void testFunctionInferNestedGenericParam() {
         var problems = analyze("""
                 let a: long[][] = test(5)
@@ -372,6 +386,21 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
                 """);
 
         assertTrue(problems.isEmpty());
+    }
+
+    @Test
+    public void testFunctionExplicitGenericTypeMismatch() {
+        var problems = analyze("""
+                fn test<T>(t: T) T {
+                    return t
+                }
+                
+                let a: long = test<|double>(5)
+                """);
+
+        assertFalse(problems.isEmpty());
+        assertEquals(1, problems.size());
+        assertEquals("Parameter type mismatch. Expected double, got long", problems.get(0).message());
     }
 
     @Test

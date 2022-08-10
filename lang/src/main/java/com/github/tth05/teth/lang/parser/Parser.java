@@ -392,10 +392,10 @@ public class Parser {
     }
 
     private Expression parseFunctionInvocation(Expression target) {
-        var genericBounds = new ArrayList<TypeExpression>();
+        List<TypeExpression> genericBounds = null;
         if (this.stream.peek().is(TokenType.LESS_PIPE)) {
             this.stream.consume();
-            parseList(this::parseType, () -> genericBounds, TokenType.GREATER);
+            genericBounds = parseList(this::parseType, ArrayList::new, TokenType.GREATER);
             this.stream.consumeType(TokenType.GREATER);
             consumeLineBreaks();
         }
