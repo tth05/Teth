@@ -252,7 +252,23 @@ public class TokenizerTest extends AbstractTokenizerTest {
                 new Token(makeSpan(24, 25), "b", TokenType.IDENTIFIER),
                 new Token(makeSpan(25, 26), "(", TokenType.L_PAREN),
                 new Token(makeSpan(26, 27), ")", TokenType.R_PAREN)
-                ), tokensIntoList());
+        ), tokensIntoList());
+        assertStreamsEmpty();
+    }
+
+    @Test
+    public void testInvocation() {
+        createStreams("a<|long, double>()");
+        assertIterableEquals(tokenList(
+                new Token(makeSpan(0, 1), "a", TokenType.IDENTIFIER),
+                new Token(makeSpan(1, 3), "<|", TokenType.LESS_PIPE),
+                new Token(makeSpan(3, 7), "long", TokenType.IDENTIFIER),
+                new Token(makeSpan(7, 8), ",", TokenType.COMMA),
+                new Token(makeSpan(9, 15), "double", TokenType.IDENTIFIER),
+                new Token(makeSpan(15, 16), ">", TokenType.GREATER),
+                new Token(makeSpan(16, 17), "(", TokenType.L_PAREN),
+                new Token(makeSpan(17, 18), ")", TokenType.R_PAREN)
+        ), tokensIntoList());
         assertStreamsEmpty();
     }
 

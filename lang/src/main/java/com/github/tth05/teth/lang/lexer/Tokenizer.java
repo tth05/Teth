@@ -163,11 +163,17 @@ public class Tokenizer {
                 }
             }
             case '<' -> {
-                if (this.stream.peek() == '=') {
-                    this.stream.consume();
-                    emit("<=", TokenType.LESS_EQUAL);
-                } else {
-                    emit("<", TokenType.LESS);
+                var next = this.stream.peek();
+                switch (next) {
+                    case '=' -> {
+                        this.stream.consume();
+                        emit(">=", TokenType.LESS_EQUAL);
+                    }
+                    case '|' -> {
+                        this.stream.consume();
+                        emit("<|", TokenType.LESS_PIPE);
+                    }
+                    default -> emit("<", TokenType.LESS);
                 }
             }
             case '>' -> {
