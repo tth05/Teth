@@ -192,16 +192,7 @@ public class Parser {
         var functionName = this.stream.consumeType(TokenType.IDENTIFIER);
         consumeLineBreaks();
 
-        var genericParameters = new ArrayList<GenericParameterDeclaration>();
-        if (this.stream.peek().is(TokenType.LESS)) {
-            this.stream.consumeType(TokenType.LESS);
-            parseList(() -> {
-                var parameterName = this.stream.consumeType(TokenType.IDENTIFIER);
-                consumeLineBreaks();
-                return new GenericParameterDeclaration(parameterName.span(), parameterName.value());
-            }, () -> genericParameters, TokenType.GREATER);
-            this.stream.consumeType(TokenType.GREATER);
-        }
+        var genericParameters = parseGenericParameterDeclarations();
 
         consumeLineBreaks();
         this.stream.consumeType(TokenType.L_PAREN);
@@ -231,6 +222,20 @@ public class Parser {
         );
     }
 
+    private List<GenericParameterDeclaration> parseGenericParameterDeclarations() {
+        var genericParameters = new ArrayList<GenericParameterDeclaration>();
+        if (this.stream.peek().is(TokenType.LESS)) {
+            this.stream.consumeType(TokenType.LESS);
+            parseList(() -> {
+                var parameterName = this.stream.consumeType(TokenType.IDENTIFIER);
+                consumeLineBreaks();
+                return new GenericParameterDeclaration(parameterName.span(), parameterName.value());
+            }, () -> genericParameters, TokenType.GREATER);
+            this.stream.consumeType(TokenType.GREATER);
+        }
+        return genericParameters;
+    }
+
     private <T, R extends List<T>> R parseList(Supplier<T> expressionSupplier, Supplier<R> collector, TokenType endToken) {
         var list = collector.get();
         while (!this.stream.peek().is(endToken)) {
@@ -248,6 +253,10 @@ public class Parser {
         var firstSpan = this.stream.consumeType(TokenType.KEYWORD).span();
         consumeLineBreaks();
         var structName = this.stream.consumeType(TokenType.IDENTIFIER);
+        consumeLineBreaks();
+
+        var genericParameters = parseGenericParameterDeclarations();
+
         consumeLineBreaks();
         this.stream.consumeType(TokenType.L_CURLY_PAREN);
         consumeLineBreaks();
@@ -286,6 +295,7 @@ public class Parser {
         return new StructDeclaration(
                 Span.of(firstSpan, endSpan),
                 new IdentifierExpression(structName.span(), structName.value()),
+                genericParameters,
                 fields,
                 functions
         );

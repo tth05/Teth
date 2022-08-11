@@ -669,7 +669,7 @@ public class ParserTest extends AbstractParserTest {
     @Test
     public void testParseStructDeclaration() {
         createAST("""
-                struct Foo {
+                struct Foo<T, A, B> {
                     a: long
                     
                     fn bar(b: string) string return
@@ -683,6 +683,11 @@ public class ParserTest extends AbstractParserTest {
                                 new StructDeclaration(
                                         null,
                                         new IdentifierExpression(null, "Foo"),
+                                        List.of(
+                                                new GenericParameterDeclaration(null, "T"),
+                                                new GenericParameterDeclaration(null, "A"),
+                                                new GenericParameterDeclaration(null, "B")
+                                        ),
                                         List.of(
                                                 new StructDeclaration.FieldDeclaration(
                                                         null,

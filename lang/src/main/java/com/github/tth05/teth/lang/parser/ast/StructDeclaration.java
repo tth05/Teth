@@ -12,12 +12,14 @@ import java.util.Objects;
 public class StructDeclaration extends Statement implements ITopLevelDeclaration {
 
     private final IdentifierExpression nameExpr;
+    private final List<GenericParameterDeclaration> genericParameters;
     private final List<FieldDeclaration> fields;
     private final List<FunctionDeclaration> functions;
 
-    public StructDeclaration(ISpan span, IdentifierExpression nameExpr, List<FieldDeclaration> fields, List<FunctionDeclaration> functions) {
+    public StructDeclaration(ISpan span, IdentifierExpression nameExpr, List<GenericParameterDeclaration> genericParameters, List<FieldDeclaration> fields, List<FunctionDeclaration> functions) {
         super(span);
         this.nameExpr = nameExpr;
+        this.genericParameters = Collections.unmodifiableList(Objects.requireNonNull(genericParameters));
         this.fields = Collections.unmodifiableList(Objects.requireNonNull(fields));
         this.functions = Collections.unmodifiableList(Objects.requireNonNull(functions));
     }
@@ -25,6 +27,10 @@ public class StructDeclaration extends Statement implements ITopLevelDeclaration
     @Override
     public IdentifierExpression getNameExpr() {
         return this.nameExpr;
+    }
+
+    public List<GenericParameterDeclaration> getGenericParameters() {
+        return this.genericParameters;
     }
 
     public List<FieldDeclaration> getFields() {
