@@ -70,6 +70,7 @@ public class Analyzer {
             beginFunctionDeclaration(GLOBAL_FUNCTION);
 
             var statements = new ArrayList<>(unit.getStatements());
+            // Note: This re-orders other statements as well, but that's fine because the sort is stable.
             statements.sort(Comparator.comparingInt(s -> switch (s) {
                 case StructDeclaration sd -> 0;
                 case FunctionDeclaration fd -> 1;
@@ -87,13 +88,16 @@ public class Analyzer {
                         switch (decl) {
                             case StructDeclaration structDeclaration -> {
                                 this.declarationStack.beginScope(false);
-                                // TODO: Add struct generic params to scope
+                                structDeclaration.getGenericParameters().forEach(this::addDeclaration);
                                 structDeclaration.getFields().forEach(f -> visit(f.getTypeExpr()));
                                 structDeclaration.getFunctions().forEach(this::visitFunctionDeclarationHeader);
                                 this.declarationStack.endScope();
                             }
-                            case FunctionDeclaration functionDeclaration ->
-                                    visitFunctionDeclarationHeader(functionDeclaration);
+                            case FunctionDeclaration functionDeclaration -> {
+                                this.declarationStack.beginScope(false);
+                                visitFunctionDeclarationHeader(functionDeclaration);
+                                this.declarationStack.endScope();
+                            }
                             default -> throw new IllegalStateException();
                         }
                     });
@@ -103,7 +107,19 @@ public class Analyzer {
 
         @Override
         public void visit(FunctionDeclaration declaration) {
+            var nested = this.currentFunctionStack.size() > 1;
+            // Add nested functions to outer scope, as if this were a variable declaration
+            if (nested)
+                addDeclaration(declaration);
+
+            beginFunctionDeclaration(declaration);
+
+            if (nested)
+                visitFunctionDeclarationHeader(declaration);
             visitFunctionDeclarationBody(declaration);
+
+            this.declarationStack.endScope();
+            this.currentFunctionStack.removeLast();
         }
 
         private void visitFunctionDeclarationHeader(FunctionDeclaration declaration) {
@@ -128,11 +144,6 @@ public class Analyzer {
             var oldCurrentStruct = this.currentStruct;
             this.currentStruct = null;
 
-            // Add nested functions to outer scope, as if this were a variable declaration
-            if (this.currentFunctionStack.size() > 1)
-                addDeclaration(declaration);
-
-            beginFunctionDeclaration(declaration);
             // Parameters
             declaration.getGenericParameters().forEach(this::addDeclaration);
             declaration.getParameters().forEach(this::addDeclaration);
@@ -156,9 +167,6 @@ public class Analyzer {
                     throw new ValidationException(offendingStatement.getSpan(), "Block needs to return in all cases");
                 });
             }
-
-            this.declarationStack.endScope();
-            this.currentFunctionStack.removeLast();
 
             this.currentStruct = oldCurrentStruct;
         }
@@ -547,7 +555,7 @@ public class Analyzer {
 
         private void beginFunctionDeclaration(FunctionDeclaration declaration) {
             this.currentFunctionStack.addLast(declaration);
-            this.declarationStack.beginScope(false);
+            this.declarationStack.beginScope(declaration.isInstanceFunction());
             functionLocalsCount.put(declaration, 0);
         }
     }

@@ -394,7 +394,7 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
                 fn test<T>(t: T) T {
                     return t
                 }
-                
+                                
                 let a: long = test<|double>(5)
                 """);
 
@@ -432,5 +432,23 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
         assertFalse(problems.isEmpty());
         assertEquals(1, problems.size());
         assertEquals("Cannot assign value of type list<list<long>> to variable of type list<long>", problems.get(0).message());
+    }
+
+    @Test
+    public void test() {
+        analyze("""
+                fn test<T>(t: T) T {
+                return t
+                }
+                                
+                struct B<T> {
+                        fn test(t: T) {
+                                fn test2(t: T) {}
+                        }
+                }
+                                
+                let a: long = test(5)
+                print([a])
+                """);
     }
 }
