@@ -107,17 +107,18 @@ public class StructDeclaration extends Statement implements ITopLevelDeclaration
             this.index = index;
         }
 
+        @Override
         public IdentifierExpression getNameExpr() {
             return this.nameExpr;
-        }
-
-        public int getIndex() {
-            return this.index;
         }
 
         @Override
         public TypeExpression getTypeExpr() {
             return this.type;
+        }
+
+        public int getIndex() {
+            return this.index;
         }
 
         @Override

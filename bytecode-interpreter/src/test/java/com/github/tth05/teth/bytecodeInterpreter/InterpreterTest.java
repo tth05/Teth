@@ -1,6 +1,5 @@
 package com.github.tth05.teth.bytecodeInterpreter;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -10,7 +9,6 @@ import static org.junit.jupiter.api.Assertions.*;
 public class InterpreterTest extends AbstractInterpreterTest {
 
     @Test
-    @Disabled("TODO")
     public void testVariableRedeclarationShouldNotLeakValueToOuterScope() {
         execute("""
                 let a = 5

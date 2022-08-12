@@ -32,11 +32,13 @@ public class Compiler {
 
     private static class BytecodeGeneratorVisitor extends ASTVisitor {
 
+        private static final FunctionDeclaration.ParameterDeclaration SELF_PLACEHOLDER = new FunctionDeclaration.ParameterDeclaration(null, null, new IdentifierExpression(null, "self"));
+
         private final Map<FunctionDeclaration, List<IInstrunction>> functionInsnMap = new IdentityHashMap<>();
         private final Analyzer analyzer;
 
         private List<IInstrunction> currentFunctionInsn = new ArrayList<>();
-        private Map<String, Integer> currentFunctionLocals = new HashMap<>();
+        private Map<IVariableDeclaration, Integer> currentFunctionLocals = new IdentityHashMap<>();
 
         public BytecodeGeneratorVisitor(Analyzer analyzer) {
             this.analyzer = analyzer;
@@ -98,10 +100,10 @@ public class Compiler {
 
             // Add hidden 'self' parameter
             if (declaration.isInstanceFunction())
-                this.currentFunctionLocals.put("self", 0);
+                this.currentFunctionLocals.put(SELF_PLACEHOLDER, 0);
             // Add parameters to locals
             for (var parameter : declaration.getParameters())
-                this.currentFunctionLocals.put(parameter.getNameExpr().getValue(), this.currentFunctionLocals.size());
+                this.currentFunctionLocals.put(parameter, this.currentFunctionLocals.size());
 
             this.functionInsnMap.put(declaration, this.currentFunctionInsn);
 
@@ -143,7 +145,7 @@ public class Compiler {
             }
 
             var idx = this.currentFunctionLocals.size();
-            this.currentFunctionLocals.put(declaration.getNameExpr().getValue(), idx);
+            this.currentFunctionLocals.put(declaration, idx);
             this.currentFunctionInsn.add(new STORE_LOCAL_Insn(idx));
         }
 
@@ -154,7 +156,7 @@ public class Compiler {
             }
 
             if (expression.getTargetExpr() instanceof IdentifierExpression identifierExpression) {
-                var idx = this.currentFunctionLocals.get(identifierExpression.getValue());
+                var idx = getLocalIndex(identifierExpression);
                 this.currentFunctionInsn.add(new STORE_LOCAL_Insn(idx));
             } else if (expression.getTargetExpr() instanceof MemberAccessExpression memberAccessExpression) {
                 memberAccessExpression.getTarget().accept(this);
@@ -292,11 +294,11 @@ public class Compiler {
         public void visit(IdentifierExpression identifierExpression) {
             var reference = this.analyzer.resolvedReference(identifierExpression);
             if (!(reference instanceof IVariableDeclaration varDecl))
-                return; //TODO: Looks like a bad idea
+                return; //TODO: Looks like a bad idea, seems to be added because of function invocations
 
-            var varIndex = this.currentFunctionLocals.get(varDecl.getNameExpr().getValue());
+            var varIndex = getLocalIndex(identifierExpression);
             if (varIndex == null)
-                throw new IllegalStateException("Variable not found " + varDecl);
+                throw new IllegalStateException("Variable not found " + identifierExpression + ": [" + identifierExpression.getSpan().getStartLine() + ":" + identifierExpression.getSpan().getStartColumn() + "]");
 
             this.currentFunctionInsn.add(new LOAD_LOCAL_Insn(varIndex));
         }
@@ -311,6 +313,14 @@ public class Compiler {
                 e.accept(this);
                 this.currentFunctionInsn.add(new INVOKE_INTRINSIC_Insn("list.add"));
             });
+        }
+
+        private Integer getLocalIndex(IdentifierExpression identifierExpression) {
+            // This only returns null for a reference to 'self' inside an instance function, because the instance of
+            // the self parameter declaration will be different from SELF_PLACEHOLDER. Therefore, the default is 0,
+            // which is the index if the 'self' parameter. All of this obviously assumes that the analyzer ran
+            // successfully.
+            return this.currentFunctionLocals.getOrDefault((IVariableDeclaration) this.analyzer.resolvedReference(identifierExpression), 0);
         }
     }
 
