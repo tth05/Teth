@@ -62,8 +62,6 @@ public class Analyzer {
         private final DeclarationStack declarationStack = new DeclarationStack();
         private final Deque<FunctionDeclaration> currentFunctionStack = new ArrayDeque<>(5);
 
-        private StructDeclaration currentStruct;
-
         @Override
         public void visit(SourceFileUnit unit) {
             // Begin global scope
@@ -141,17 +139,15 @@ public class Analyzer {
         }
 
         private void visitFunctionDeclarationBody(FunctionDeclaration declaration) {
-            var oldCurrentStruct = this.currentStruct;
-            this.currentStruct = null;
-
             // Parameters
             declaration.getGenericParameters().forEach(this::addDeclaration);
             declaration.getParameters().forEach(this::addDeclaration);
 
-            if (oldCurrentStruct != null) {
+            var currentStruct = this.declarationStack.getEnclosingStruct();
+            if (currentStruct != null) {
                 addDeclaration(new FunctionDeclaration.ParameterDeclaration(
                         null,
-                        new TypeExpression(null, oldCurrentStruct.getNameExpr().getValue()),
+                        new TypeExpression(null, currentStruct.getNameExpr().getValue()),
                         new IdentifierExpression(null, "self")
                 ));
             }
@@ -167,8 +163,6 @@ public class Analyzer {
                     throw new ValidationException(offendingStatement.getSpan(), "Block needs to return in all cases");
                 });
             }
-
-            this.currentStruct = oldCurrentStruct;
         }
 
         @Override
@@ -228,12 +222,12 @@ public class Analyzer {
 
         @Override
         public void visit(StructDeclaration declaration) {
-            this.currentStruct = declaration;
+            this.declarationStack.beginStructScope(declaration);
             { // Don't want to visit struct name here
                 declaration.getFields().forEach(p -> p.accept(this));
                 declaration.getFunctions().forEach(p -> p.accept(this));
             }
-            this.currentStruct = null;
+            this.declarationStack.endScope();
         }
 
         @Override

@@ -1,6 +1,7 @@
 package com.github.tth05.teth.analyzer;
 
 import com.github.tth05.teth.lang.parser.ast.Statement;
+import com.github.tth05.teth.lang.parser.ast.StructDeclaration;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -27,12 +28,29 @@ public class DeclarationStack {
         return this.stack.peekFirst().declarations.get(ident);
     }
 
+    public StructDeclaration getEnclosingStruct() {
+        for (var it = this.stack.descendingIterator(); it.hasNext(); ) {
+            var scope = it.next();
+            if (scope.struct != null)
+                return scope.struct;
+
+            if (!scope.subScope)
+                break;
+        }
+
+        return null;
+    }
+
     public void addDeclaration(String value, Statement declaration) {
         this.stack.getLast().declarations.put(value, declaration);
     }
 
     public void beginScope(boolean subScope) {
-        this.stack.addLast(new Scope(subScope));
+        this.stack.addLast(new Scope(null, subScope));
+    }
+
+    public void beginStructScope(StructDeclaration struct) {
+        this.stack.addLast(new Scope(struct, false));
     }
 
     public void endScope() {
@@ -45,9 +63,11 @@ public class DeclarationStack {
     private final class Scope {
 
         private final Map<String, Statement> declarations = new HashMap<>();
+        private final StructDeclaration struct;
         private final boolean subScope;
 
-        private Scope(boolean subScope) {
+        private Scope(StructDeclaration struct, boolean subScope) {
+            this.struct = struct;
             this.subScope = subScope;
         }
     }
