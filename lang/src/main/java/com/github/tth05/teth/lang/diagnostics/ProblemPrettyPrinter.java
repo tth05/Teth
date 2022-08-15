@@ -47,7 +47,7 @@ public class ProblemPrettyPrinter {
         private Context(char[] source, int offset, int offsetEnd, boolean includeSurroundingLines) {
             var start = CharArrayUtils.getLineStart(source, offset);
             if (start != 0 && includeSurroundingLines)
-                this.lines.add(new Line(CharArrayUtils.getLineStart(source, offset) - 1, start));
+                this.lines.add(new Line(CharArrayUtils.getLineStart(source, offset - 1), start));
 
             var i = start;
             while (i < offsetEnd) {
@@ -71,7 +71,7 @@ public class ProblemPrettyPrinter {
             if (offset < this.lines.get(0).offset || offset > this.lines.get(this.lines.size() - 1).offsetEnd)
                 throw new IllegalArgumentException("Offset out of bounds");
 
-            var line = this.lines.stream().filter(l -> l.offset <= offset && offset <= l.offsetEnd).findFirst().orElseThrow();
+            var line = this.lines.stream().filter(l -> l.offset <= offset && offset < l.offsetEnd).findFirst().orElseThrow();
             var index = this.lines.indexOf(line);
             if (this.messages.stream().anyMatch(m -> m.lineIndex == index))
                 throw new IllegalArgumentException("Line already has a message");

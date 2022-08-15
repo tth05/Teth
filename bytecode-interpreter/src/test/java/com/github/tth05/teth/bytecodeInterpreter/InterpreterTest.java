@@ -19,7 +19,6 @@ public class InterpreterTest extends AbstractInterpreterTest {
                 print([a])
                 """);
 
-        // Currently prints 10 and 10
         assertLinesMatch(List.of("10", "5"), getSystemOutputLines());
     }
 
