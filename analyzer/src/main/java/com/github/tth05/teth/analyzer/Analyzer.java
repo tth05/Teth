@@ -2,6 +2,7 @@ package com.github.tth05.teth.analyzer;
 
 import com.github.tth05.teth.lang.diagnostics.ProblemList;
 import com.github.tth05.teth.lang.parser.ASTVisitor;
+import com.github.tth05.teth.lang.parser.ExpressionList;
 import com.github.tth05.teth.lang.parser.SourceFileUnit;
 import com.github.tth05.teth.lang.parser.Type;
 import com.github.tth05.teth.lang.parser.ast.*;
@@ -122,14 +123,7 @@ public class Analyzer {
         }
 
         private void visitFunctionDeclarationHeader(FunctionDeclaration declaration) {
-            for (var p1 : declaration.getGenericParameters()) {
-                for (var p2 : declaration.getGenericParameters()) {
-                    if (p1 == p2)
-                        continue;
-                    if (p1.getName().equals(p2.getName()))
-                        throw new ValidationException(p2.getSpan(), "Duplicate generic parameter name");
-                }
-            }
+            validateGenericParameterDeclarations(declaration.getGenericParameters());
             declaration.getGenericParameters().forEach(p -> p.accept(this));
 
             declaration.getParameters().forEach(p -> p.accept(this));
@@ -184,45 +178,25 @@ public class Analyzer {
             if (!(func instanceof FunctionDeclaration decl))
                 throw new ValidationException(invocation.getTarget().getSpan(), "Function invocation target must be a function");
 
-            if (decl.getParameters().size() != invocation.getParameters().size())
-                throw new ValidationException(invocation.getSpan(), "Wrong number of parameters for function invocation. Expected " + decl.getParameters().size() + ", got " + invocation.getParameters().size());
-
-            GenericParameterInfo genericParameterInfo = null;
-            if (!decl.getGenericParameters().isEmpty()) {
-                genericParameterInfos.put(invocation, genericParameterInfo = new GenericParameterInfo());
-
-                var genericParameters = invocation.getGenericParameters();
-                // Explicit generic bounds have priority over inferred generic bounds
-                if (genericParameters != null) {
-                    if (genericParameters.size() != decl.getGenericParameters().size())
-                        throw new ValidationException(invocation.getSpan(), "Wrong number of generic bounds. Expected " + decl.getGenericParameters().size() + ", got " + genericParameters.size());
-
-                    for (var i = 0; i < genericParameters.size(); i++)
-                        genericParameterInfo.bindGenericParameter(decl.getGenericParameters().get(i).getName(), genericParameters.get(i).asType());
-                }
-            }
-
-            for (int i = 0; i < decl.getParameters().size(); i++) {
-                var param = decl.getParameters().get(i);
-                var paramTypeExpr = param.getTypeExpr();
-                var expression = invocation.getParameters().get(i);
-                var expressionType = resolvedExpressionTypes.get(expression);
-
-                var paramType = resolveTypeOrBind(genericParameterInfo, paramTypeExpr, expressionType);
-
-                if (!expressionType.isSubtypeOf(paramType))
-                    throw new ValidationException(expression.getSpan(), "Parameter type mismatch. Expected " + paramType + ", got " + expressionType);
-            }
+            //TODO: Obtain generic parameter info from invocation target
+            var genericParameterInfo = typeCheckInvocationExpression(
+                    invocation,
+                    new GenericParameterInfo(),
+                    decl.getGenericParameters(), invocation.getGenericParameters(),
+                    decl.getParameters(), invocation.getParameters()
+            );
 
             var returnType = decl.getReturnTypeExpr() != null ? resolveTypeOrBind(genericParameterInfo, decl.getReturnTypeExpr(), null) : Type.VOID;
             if (returnType == null)
-                throw new ValidationException(invocation.getSpan(), "Return type is generic, but not bound");
+                throw new TypeResolverException(invocation.getSpan(), "Return type is generic, but not bound");
 
             resolvedExpressionTypes.put(invocation, returnType);
         }
 
         @Override
         public void visit(StructDeclaration declaration) {
+            validateGenericParameterDeclarations(declaration.getGenericParameters());
+
             this.declarationStack.beginStructScope(declaration);
             { // Don't want to visit struct name here
                 declaration.getFields().forEach(p -> p.accept(this));
@@ -247,26 +221,25 @@ public class Analyzer {
             if (!(struct instanceof StructDeclaration structDeclaration))
                 throw new ValidationException(expression.getTargetNameExpr().getSpan(), "Object creation target must be a struct");
 
-            var parameters = expression.getParameters();
-            if (parameters.size() != structDeclaration.getFields().size())
-                throw new ValidationException(
-                        Span.of(parameters, expression.getSpan()),
-                        "Wrong number of parameters for object creation. Expected " + structDeclaration.getFields().size() + ", got " + parameters.size()
-                );
+            var genericParameterInfo = typeCheckInvocationExpression(
+                    expression,
+                    new GenericParameterInfo(),
+                    structDeclaration.getGenericParameters(), expression.getGenericParameters(),
+                    structDeclaration.getFields(), expression.getParameters()
+            );
 
-            for (int i = 0; i < parameters.size(); i++) {
-                var parameterType = resolvedExpressionTypes.get(parameters.get(i));
-                var fieldType = structDeclaration.getFields().get(i).getTypeExpr().asType();
-
-                if (!parameterType.isSubtypeOf(fieldType))
-                    throw new ValidationException(
-                            parameters.get(i).getSpan(),
-                            "Parameter type mismatch. Expected " + fieldType + ", got " + parameterType
-                    );
-            }
+            // These will allow us to construct a new type for the struct with all generic parameters resolved
+            var resolvedGenericParameters = structDeclaration.getGenericParameters().isEmpty() ?
+                    null :
+                    structDeclaration.getGenericParameters().stream().map(p -> {
+                        var bound = genericParameterInfo.getBoundGenericParameter(p.getName());
+                        if (bound == null)
+                            throw new IllegalStateException();
+                        return bound;
+                    }).toList();
 
             resolvedReferences.put(expression, struct);
-            resolvedExpressionTypes.put(expression, type);
+            resolvedExpressionTypes.put(expression, resolvedGenericParameters == null ? type : new Type(type.getName(), resolvedGenericParameters));
         }
 
         @Override
@@ -280,7 +253,7 @@ public class Analyzer {
             if (StandardLibrary.isBuiltinType(type)) {
                 member = StandardLibrary.getMemberOfType(type, expression.getMemberNameExpr().getValue());
             } else {
-                var decl = this.declarationStack.resolveIdentifier(type.toString());
+                var decl = this.declarationStack.resolveIdentifier(type.getName());
                 if (!(decl instanceof StructDeclaration structDeclaration))
                     throw new IllegalStateException("Declaration not found");
 
@@ -463,30 +436,6 @@ public class Analyzer {
             validateType(typeExpression);
         }
 
-        private void validateType(TypeExpression typeExpression) {
-            var span = typeExpression.getSpan();
-            var type = typeExpression.getName();
-            var genericParameters = typeExpression.getGenericParameters();
-            genericParameters.forEach(this::validateType);
-
-            if (StandardLibrary.isBuiltinType(typeExpression.asType()))
-                return;
-
-            var decl = this.declarationStack.resolveIdentifier(type);
-            if (decl == null)
-                throw new TypeResolverException(span, "Unknown type " + type);
-            if (!(decl instanceof StructDeclaration) && !(decl instanceof GenericParameterDeclaration))
-                throw new TypeResolverException(span, "Type " + type + " is not a struct or builtin type");
-            // Ensure all generic parameters are bound
-            if (decl instanceof StructDeclaration struct) {
-                var genericParameterDeclarations = struct.getGenericParameters();
-                if (genericParameterDeclarations.size() != genericParameters.size())
-                    throw new ValidationException(Span.of(genericParameters, span), "Wrong number of generic parameters. Expected %d, got %d".formatted(genericParameterDeclarations.size(), genericParameters.size()));
-            }
-
-            resolvedReferences.put(typeExpression, decl);
-        }
-
         @Override
         public void visit(IdentifierExpression identifierExpression) {
             var decl = this.declarationStack.resolveIdentifier(identifierExpression.getValue());
@@ -541,6 +490,85 @@ public class Analyzer {
             }
 
             return paramType;
+        }
+
+        private void validateType(TypeExpression typeExpression) {
+            var span = typeExpression.getSpan();
+            var type = typeExpression.getName();
+            var genericParameters = typeExpression.getGenericParameters();
+            genericParameters.forEach(this::validateType);
+
+            if (StandardLibrary.isBuiltinType(typeExpression.asType()))
+                return;
+
+            var decl = this.declarationStack.resolveIdentifier(type);
+            if (decl == null)
+                throw new TypeResolverException(span, "Unknown type " + type);
+            if (!(decl instanceof StructDeclaration) && !(decl instanceof GenericParameterDeclaration))
+                throw new TypeResolverException(span, "Type " + type + " is not a struct or builtin type");
+            // Ensure all generic parameters are bound
+            if (decl instanceof StructDeclaration struct) {
+                var genericParameterDeclarations = struct.getGenericParameters();
+                if (genericParameterDeclarations.size() != genericParameters.size())
+                    throw new ValidationException(Span.of(genericParameters, span), "Wrong number of generic parameters. Expected %d, got %d".formatted(genericParameterDeclarations.size(), genericParameters.size()));
+            }
+
+            resolvedReferences.put(typeExpression, decl);
+        }
+
+        private <T extends IVariableDeclaration> GenericParameterInfo typeCheckInvocationExpression(
+                Expression invocation,
+                GenericParameterInfo genericParameterInfo,
+                List<GenericParameterDeclaration> genericParameterDeclarations,
+                List<TypeExpression> explicitGenericParameters,
+                List<T> parameterDeclarations,
+                ExpressionList parameters
+        ) {
+            if (!genericParameterDeclarations.isEmpty()) {
+                genericParameterInfos.put(invocation, genericParameterInfo);
+
+                // Explicit generic parameters have priority over inferred generic parameters
+                if (!explicitGenericParameters.isEmpty()) {
+                    if (explicitGenericParameters.size() != genericParameterDeclarations.size())
+                        throw new ValidationException(invocation.getSpan(), "Wrong number of generic bounds. Expected " + genericParameterDeclarations.size() + ", got " + explicitGenericParameters.size());
+
+                    for (var i = 0; i < explicitGenericParameters.size(); i++)
+                        genericParameterInfo.bindGenericParameter(genericParameterDeclarations.get(i).getName(), explicitGenericParameters.get(i).asType());
+                }
+            }
+
+            if (parameterDeclarations.size() != parameters.size())
+                throw new ValidationException(invocation.getSpan(), "Wrong number of parameters. Expected %d, got %d".formatted(parameterDeclarations.size(), parameters.size()));
+
+            for (int i = 0; i < parameterDeclarations.size(); i++) {
+                var param = parameterDeclarations.get(i);
+                var paramTypeExpr = param.getTypeExpr();
+                var expression = parameters.get(i);
+                var expressionType = resolvedExpressionTypes.get(expression);
+
+                var paramType = resolveTypeOrBind(genericParameterInfo, paramTypeExpr, expressionType);
+
+                if (!expressionType.isSubtypeOf(paramType))
+                    throw new TypeResolverException(expression.getSpan(), "Parameter type mismatch. Expected " + paramType + ", got " + expressionType);
+            }
+
+            for (var genericParameterDeclaration : genericParameterDeclarations) {
+                if (!genericParameterInfo.isGenericParameterBound(genericParameterDeclaration.getName()))
+                    throw new ValidationException(invocation.getSpan(), "Generic parameter " + genericParameterDeclaration.getName() + " is not bound");
+            }
+
+            return genericParameterInfo;
+        }
+
+        private void validateGenericParameterDeclarations(List<GenericParameterDeclaration> genericParameterDeclarations) {
+            for (var p1 : genericParameterDeclarations) {
+                for (var p2 : genericParameterDeclarations) {
+                    if (p1 == p2)
+                        continue;
+                    if (p1.getName().equals(p2.getName()))
+                        throw new ValidationException(p2.getSpan(), "Duplicate generic parameter name");
+                }
+            }
         }
 
         private boolean referencesGenericParameter(TypeExpression typeExpression) {

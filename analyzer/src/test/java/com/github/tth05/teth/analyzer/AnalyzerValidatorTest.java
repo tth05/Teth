@@ -148,13 +148,13 @@ public class AnalyzerValidatorTest extends AbstractAnalyzerTest {
 
         assertFalse(problems.isEmpty());
         assertEquals(1, problems.size());
-        assertEquals("Wrong number of parameters for function invocation. Expected 0, got 2", problems.get(0).message());
+        assertEquals("Wrong number of parameters. Expected 0, got 2", problems.get(0).message());
 
         problems = analyze("fn a<T, B>() {}a<|>()");
 
         assertFalse(problems.isEmpty());
         assertEquals(1, problems.size());
-        assertEquals("Wrong number of generic bounds. Expected 2, got 0", problems.get(0).message());
+        assertEquals("Generic parameter T is not bound", problems.get(0).message());
     }
 
     @Test
@@ -172,6 +172,15 @@ public class AnalyzerValidatorTest extends AbstractAnalyzerTest {
                 """);
 
         assertTrue(problems.isEmpty());
+
+        problems = analyze("""
+                new a(5)
+                new a<long>(5)
+                struct a<T> {b:T}
+                """);
+
+        System.out.println(problems.prettyPrint(true));
+        assertTrue(problems.isEmpty());
     }
 
     @Test
@@ -186,7 +195,7 @@ public class AnalyzerValidatorTest extends AbstractAnalyzerTest {
 
         assertFalse(problems.isEmpty());
         assertEquals(1, problems.size());
-        assertEquals("Wrong number of parameters for object creation. Expected 0, got 1", problems.get(0).message());
+        assertEquals("Wrong number of parameters. Expected 0, got 1", problems.get(0).message());
     }
 
     @Test
@@ -194,6 +203,14 @@ public class AnalyzerValidatorTest extends AbstractAnalyzerTest {
         var problems = analyze("""
                 fn test<T, D, A, T>() {
                 }
+                """);
+
+        assertFalse(problems.isEmpty());
+        assertEquals(1, problems.size());
+        assertEquals("Duplicate generic parameter name", problems.get(0).message());
+
+        problems = analyze("""
+                struct a<T, D, A, T> {}
                 """);
 
         assertFalse(problems.isEmpty());
