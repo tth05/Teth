@@ -15,24 +15,24 @@ import java.util.stream.Collectors;
 public class TypeExpression extends Expression implements IDeclarationReference {
 
     private final String name;
-    private final List<TypeExpression> genericBounds;
+    private final List<TypeExpression> genericParameters;
 
     public TypeExpression(ISpan span, String name) {
         this(span, name, Collections.emptyList());
     }
 
-    public TypeExpression(ISpan span, String name, List<TypeExpression> genericBounds) {
+    public TypeExpression(ISpan span, String name, List<TypeExpression> genericParameters) {
         super(span);
         this.name = name;
-        this.genericBounds = Collections.unmodifiableList(Objects.requireNonNull(genericBounds));
+        this.genericParameters = Collections.unmodifiableList(Objects.requireNonNull(genericParameters));
     }
 
     public String getName() {
         return this.name;
     }
 
-    public List<TypeExpression> getGenericBounds() {
-        return this.genericBounds;
+    public List<TypeExpression> getGenericParameters() {
+        return this.genericParameters;
     }
 
     public Type asType() {
@@ -40,10 +40,10 @@ public class TypeExpression extends Expression implements IDeclarationReference 
     }
 
     public Type asType(Function<TypeExpression, Type> basicTypeFactory) {
-        if (this.genericBounds.isEmpty()) {
+        if (this.genericParameters.isEmpty()) {
             return basicTypeFactory.apply(this);
         } else {
-            return Type.fromNameWithGenericBounds(this.name, this.genericBounds.stream().map(t -> t.asType(basicTypeFactory)).collect(Collectors.toList()));
+            return Type.fromNameWithGenericBounds(this.name, this.genericParameters.stream().map(t -> t.asType(basicTypeFactory)).collect(Collectors.toList()));
         }
     }
 
@@ -63,19 +63,19 @@ public class TypeExpression extends Expression implements IDeclarationReference 
 
         if (!this.name.equals(that.name))
             return false;
-        return this.genericBounds.equals(that.genericBounds);
+        return this.genericParameters.equals(that.genericParameters);
     }
 
     @Override
     public int hashCode() {
         int result = this.name.hashCode();
-        result = 31 * result + this.genericBounds.hashCode();
+        result = 31 * result + this.genericParameters.hashCode();
         return result;
     }
 
     @Override
     public void dump(ASTDumpBuilder builder) {
-        builder.append(this.name + (this.genericBounds.isEmpty() ? "" : "<" + this.genericBounds.stream().map(TypeExpression::toString).collect(Collectors.joining(", ")) + ">"));
+        builder.append(this.name + (this.genericParameters.isEmpty() ? "" : "<" + this.genericParameters.stream().map(TypeExpression::toString).collect(Collectors.joining(", ")) + ">"));
     }
 
     @Override

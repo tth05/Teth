@@ -338,6 +338,9 @@ public class Parser {
         consumeLineBreaks();
         var name = this.stream.consumeType(TokenType.IDENTIFIER);
         consumeLineBreaks();
+
+        var genericParameters = tryParseGenericParametersOnInvocation(TokenType.LESS);
+
         this.stream.consumeType(TokenType.L_PAREN);
         var parameters = parseParameterList();
         var secondSpan = this.stream.consumeType(TokenType.R_PAREN).span();
@@ -402,20 +405,25 @@ public class Parser {
     }
 
     private Expression parseFunctionInvocation(Expression target) {
-        List<TypeExpression> genericBounds = null;
-        if (this.stream.peek().is(TokenType.LESS_PIPE)) {
-            this.stream.consume();
-            genericBounds = parseList(this::parseType, ArrayList::new, TokenType.GREATER);
-            this.stream.consumeType(TokenType.GREATER);
-            consumeLineBreaks();
-        }
+        var genericParameters = tryParseGenericParametersOnInvocation(TokenType.LESS_PIPE);
 
         this.stream.consumeType(TokenType.L_PAREN);
         consumeLineBreaks();
         var parameters = parseParameterList();
 
         var secondSpan = this.stream.consumeType(TokenType.R_PAREN).span();
-        return new FunctionInvocationExpression(Span.of(target.getSpan(), secondSpan), target, genericBounds, parameters);
+        return new FunctionInvocationExpression(Span.of(target.getSpan(), secondSpan), target, genericParameters, parameters);
+    }
+
+    private List<TypeExpression> tryParseGenericParametersOnInvocation(TokenType prefix) {
+        List<TypeExpression> genericParameters = null;
+        if (this.stream.peek().is(prefix)) {
+            this.stream.consume();
+            genericParameters = parseList(this::parseType, ArrayList::new, TokenType.GREATER);
+            this.stream.consumeType(TokenType.GREATER);
+            consumeLineBreaks();
+        }
+        return genericParameters;
     }
 
     private ExpressionList parseParameterList() {
@@ -470,30 +478,11 @@ public class Parser {
             throw new UnexpectedTokenException(current.span(), "Expected a type");
 
         var firstSpan = current.span();
-        var secondSpan = firstSpan;
-        var typeName = current.value();
+        var genericParameters = tryParseGenericParametersOnInvocation(TokenType.LESS);
+        if (genericParameters == null)
+            genericParameters = Collections.emptyList();
 
-        var count = 0;
-
-        while (this.stream.peek().is(TokenType.L_SQUARE_BRACKET)) {
-            this.stream.consume();
-
-            var rBracket = this.stream.consume();
-            if (!rBracket.is(TokenType.R_SQUARE_BRACKET))
-                throw new UnexpectedTokenException(rBracket.span(), "Expected a closing square bracket");
-
-            secondSpan = rBracket.span();
-            count++;
-        }
-
-        var genericBounds = new ArrayList<TypeExpression>();
-        for (int i = 0; i < count; i++) {
-            var newB = new ArrayList<TypeExpression>();
-            newB.add(new TypeExpression(Span.of(firstSpan, secondSpan), i == 0 ? typeName : "list", genericBounds));
-            genericBounds = newB;
-        }
-
-        return new TypeExpression(Span.of(firstSpan, secondSpan), count > 0 ? "list" : typeName, genericBounds);
+        return new TypeExpression(Span.of(firstSpan, Span.of(genericParameters, firstSpan)), current.value(), genericParameters);
     }
 
     public static ParserResult fromString(String source) {

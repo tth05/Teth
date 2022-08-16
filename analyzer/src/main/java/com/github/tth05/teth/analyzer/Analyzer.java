@@ -247,7 +247,7 @@ public class Analyzer {
             var parameters = expression.getParameters();
             if (parameters.size() != structDeclaration.getFields().size())
                 throw new ValidationException(
-                        parameters.getSpanOrDefault(expression.getSpan()),
+                        Span.of(parameters, expression.getSpan()),
                         "Wrong number of parameters for object creation. Expected " + structDeclaration.getFields().size() + ", got " + parameters.size()
                 );
 

@@ -1,6 +1,9 @@
 package com.github.tth05.teth.lang.span;
 
+import com.github.tth05.teth.lang.parser.ast.Statement;
+
 import java.util.Arrays;
+import java.util.List;
 
 public record Span(char[] source, int offset, int offsetEnd) implements ISpan {
 
@@ -38,5 +41,13 @@ public record Span(char[] source, int offset, int offsetEnd) implements ISpan {
             throw new IllegalArgumentException("Spans must be from the same source");
 
         return new Span(first.source(), first.offset(), last.offsetEnd());
+    }
+
+    public static <T extends Statement> ISpan of(List<T> list, ISpan fallback) {
+        if (list.size() > 0) {
+            return Span.of(list.get(0).getSpan(), list.get(list.size() - 1).getSpan());
+        } else {
+            return fallback;
+        }
     }
 }

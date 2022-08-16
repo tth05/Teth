@@ -69,7 +69,7 @@ public class ParserTest extends AbstractParserTest {
                 let l: boolean = 5
                 let l: any = 5
                 let l: function = 5
-                let l: long[] = 5
+                let l: list<list<long, double<long>>> = 5
                 """);
         assertEquals(new SourceFileUnit(
                 List.of(
@@ -111,7 +111,18 @@ public class ParserTest extends AbstractParserTest {
                         ),
                         new VariableDeclaration(
                                 null,
-                                new TypeExpression(null, "list", List.of(new TypeExpression(null, "long"))),
+                                new TypeExpression(null,
+                                        "list",
+                                        List.of(
+                                                new TypeExpression(null,
+                                                        "list",
+                                                        List.of(
+                                                                new TypeExpression(null, "long"),
+                                                                new TypeExpression(null, "double", List.of(new TypeExpression(null, "long")))
+                                                        )
+                                                )
+                                        )
+                                ),
                                 new IdentifierExpression(null, "l"),
                                 new LongLiteralExpression(null, 5)
                         )

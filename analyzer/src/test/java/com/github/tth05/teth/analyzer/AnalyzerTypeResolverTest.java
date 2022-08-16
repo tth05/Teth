@@ -136,7 +136,7 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
 
     @Test
     public void testVariableDeclaration() {
-        var problems = analyze("let a: long[][] = [[1], [2], [3]]");
+        var problems = analyze("let a: list<list<long>> = [[1], [2], [3]]");
 
         assertTrue(problems.isEmpty());
 
@@ -151,7 +151,7 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
 
     @Test
     public void testVariableDeclarationUnknownType() {
-        var problems = analyze("let a: longg[][] = 5");
+        var problems = analyze("let a: list<list<longg>> = 5");
 
         assertFalse(problems.isEmpty());
         assertEquals(1, problems.size());
@@ -166,7 +166,7 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
 
     @Test
     public void testVariableDeclarationIncompatibleTypes() {
-        var problems = analyze("let a: long[] = [\"\"]");
+        var problems = analyze("let a: list<long> = [\"\"]");
 
         assertFalse(problems.isEmpty());
         assertEquals(1, problems.size());
@@ -376,10 +376,10 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
     @Test
     public void testFunctionInferNestedGenericParam() {
         var problems = analyze("""
-                let a: long[][] = test(5)
+                let a: list<list<long>> = test(5)
                 print([a])
                                 
-                fn test<T>(t: T) T[][] {
+                fn test<T>(t: T) list<list<T>> {
                     let l = [[t]]
                     return l
                 }
@@ -406,7 +406,7 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
     @Test
     public void testFunctionReturningIncorrectGenericType() {
         var problems = analyze("""
-                fn test<T>(t: T) T[][] {
+                fn test<T>(t: T) list<list<T>> {
                     let l = [t]
                     return l
                 }
@@ -420,10 +420,10 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
     @Test
     public void testFunctionResolvedToCorrectNonGenericType() {
         var problems = analyze("""
-                let a: long[] = test(5)
+                let a: list<long> = test(5)
                 print([a])
                                 
-                fn test<T>(t: T) T[][] {
+                fn test<T>(t: T) list<list<T>> {
                     let l = [[t]]
                     return l
                 }

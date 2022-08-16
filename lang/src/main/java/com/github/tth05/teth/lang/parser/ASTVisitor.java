@@ -71,7 +71,7 @@ public abstract class ASTVisitor {
 
     public void visit(FunctionInvocationExpression invocation) {
         invocation.getTarget().accept(this);
-        var genericBounds = invocation.getGenericBounds();
+        var genericBounds = invocation.getGenericParameters();
         if (genericBounds != null)
             genericBounds.forEach(p -> p.accept(this));
         invocation.getParameters().forEach(e -> e.accept(this));

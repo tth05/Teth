@@ -12,13 +12,13 @@ import java.util.Objects;
 public class FunctionInvocationExpression extends Expression {
 
     private final Expression target;
-    private final List<TypeExpression> genericBounds;
+    private final List<TypeExpression> genericParameters;
     private final ExpressionList parameters;
 
-    public FunctionInvocationExpression(ISpan span, Expression target, List<TypeExpression> genericBounds, ExpressionList parameters) {
+    public FunctionInvocationExpression(ISpan span, Expression target, List<TypeExpression> genericParameters, ExpressionList parameters) {
         super(span);
         this.target = target;
-        this.genericBounds = genericBounds != null ? Collections.unmodifiableList(genericBounds) : null;
+        this.genericParameters = genericParameters != null ? Collections.unmodifiableList(genericParameters) : null;
         this.parameters = Objects.requireNonNull(parameters);
     }
 
@@ -26,8 +26,8 @@ public class FunctionInvocationExpression extends Expression {
         return this.target;
     }
 
-    public List<TypeExpression> getGenericBounds() {
-        return this.genericBounds;
+    public List<TypeExpression> getGenericParameters() {
+        return this.genericParameters;
     }
 
     public ExpressionList getParameters() {
