@@ -12,7 +12,7 @@ public class CharStream {
     private int index;
 
     private CharStream(String source) {
-        this.chars = source.toCharArray();
+        this.chars = source.trim().toCharArray();
     }
 
     public char consume() {
