@@ -38,7 +38,7 @@ public class InterpreterTest extends AbstractInterpreterTest {
                 sort(a, 7, 0)
                 print([a])
                                 
-                fn sort(a: long[], n: long, index: long) {
+                fn sort(a: list<long>, n: long, index: long) {
                     if (index == n) return
                                 
                     let k = min(a, index, n-1)
@@ -51,7 +51,7 @@ public class InterpreterTest extends AbstractInterpreterTest {
                     sort(a, n, index+1)
                 }
                                 
-                fn min(a: long[], i: long, j: long) long {
+                fn min(a: list<long>, i: long, j: long) long {
                     if(i == j) return i
                                 
                     let k = min(a, i+1, j)
