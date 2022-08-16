@@ -348,7 +348,7 @@ public class Parser {
         return new ObjectCreationExpression(
                 Span.of(firstSpan, secondSpan),
                 new IdentifierExpression(name.span(), name.value()),
-                parameters
+                genericParameters, parameters
         );
     }
 
@@ -416,7 +416,7 @@ public class Parser {
     }
 
     private List<TypeExpression> tryParseGenericParametersOnInvocation(TokenType prefix) {
-        List<TypeExpression> genericParameters = null;
+        var genericParameters = Collections.<TypeExpression>emptyList();
         if (this.stream.peek().is(prefix)) {
             this.stream.consume();
             genericParameters = parseList(this::parseType, ArrayList::new, TokenType.GREATER);

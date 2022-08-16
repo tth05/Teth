@@ -5,19 +5,29 @@ import com.github.tth05.teth.lang.parser.ExpressionList;
 import com.github.tth05.teth.lang.span.ISpan;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+
 public class ObjectCreationExpression extends Expression implements IDeclarationReference {
 
     private final IdentifierExpression targetNameExpr;
+    private final List<TypeExpression> genericParameters;
     private final ExpressionList parameters;
 
-    public ObjectCreationExpression(ISpan span, IdentifierExpression targetNameExpr, ExpressionList parameters) {
+    public ObjectCreationExpression(ISpan span, IdentifierExpression targetNameExpr, List<TypeExpression> genericParameters, ExpressionList parameters) {
         super(span);
         this.targetNameExpr = targetNameExpr;
+        this.genericParameters = Collections.unmodifiableList(Objects.requireNonNull(genericParameters));
         this.parameters = parameters;
     }
 
     public IdentifierExpression getTargetNameExpr() {
         return this.targetNameExpr;
+    }
+
+    public List<TypeExpression> getGenericParameters() {
+        return this.genericParameters;
     }
 
     public ExpressionList getParameters() {

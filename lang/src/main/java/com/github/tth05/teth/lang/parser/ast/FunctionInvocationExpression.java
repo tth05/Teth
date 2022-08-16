@@ -18,7 +18,7 @@ public class FunctionInvocationExpression extends Expression {
     public FunctionInvocationExpression(ISpan span, Expression target, List<TypeExpression> genericParameters, ExpressionList parameters) {
         super(span);
         this.target = target;
-        this.genericParameters = genericParameters != null ? Collections.unmodifiableList(genericParameters) : null;
+        this.genericParameters = Collections.unmodifiableList(Objects.requireNonNull(genericParameters));
         this.parameters = Objects.requireNonNull(parameters);
     }
 

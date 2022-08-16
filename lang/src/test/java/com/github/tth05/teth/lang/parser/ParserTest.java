@@ -490,7 +490,7 @@ public class ParserTest extends AbstractParserTest {
                                         new FunctionInvocationExpression(
                                                 null,
                                                 new IdentifierExpression(null, "print"),
-                                                null,
+                                                List.of(),
                                                 ExpressionList.of(
                                                         new ListLiteralExpression(null, ExpressionList.of(new IdentifierExpression(null, "a")))
                                                 )
@@ -562,7 +562,7 @@ public class ParserTest extends AbstractParserTest {
                                                                         )
                                                                 )
                                                         ),
-                                                        null,
+                                                        List.of(),
                                                         ExpressionList.of()
                                                 )
                                         ),
@@ -643,13 +643,13 @@ public class ParserTest extends AbstractParserTest {
                                                 new FunctionInvocationExpression(
                                                         null,
                                                         new IdentifierExpression(null, "foo"),
-                                                        null,
+                                                        List.of(),
                                                         ExpressionList.of(
                                                                 new LongLiteralExpression(null, 1),
                                                                 new LongLiteralExpression(null, 2)
                                                         )
                                                 ),
-                                                null,
+                                                List.of(),
                                                 ExpressionList.of(
                                                         new StringLiteralExpression(null, "hello world")
                                                 )
@@ -667,7 +667,7 @@ public class ParserTest extends AbstractParserTest {
                                                 ),
                                                 ExpressionList.of()
                                         ),
-                                        null,
+                                        List.of(),
                                         ExpressionList.of()
                                 )
                         )
@@ -775,7 +775,7 @@ public class ParserTest extends AbstractParserTest {
                                 new ObjectCreationExpression(
                                         null,
                                         new IdentifierExpression(null, "Foo"),
-                                        ExpressionList.of(
+                                        List.of(), ExpressionList.of(
                                                 new LongLiteralExpression(null, 1),
                                                 new LongLiteralExpression(null, 2),
                                                 new LongLiteralExpression(null, 3)
@@ -811,11 +811,11 @@ public class ParserTest extends AbstractParserTest {
                                                                         new IdentifierExpression(null, "b"),
                                                                         new IdentifierExpression(null, "a")
                                                                 ),
-                                                                null,
+                                                                List.of(),
                                                                 ExpressionList.of()
                                                         )
                                                 ),
-                                                null,
+                                                List.of(),
                                                 ExpressionList.of()
                                         )
                                 )
