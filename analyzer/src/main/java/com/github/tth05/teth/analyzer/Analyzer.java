@@ -5,6 +5,7 @@ import com.github.tth05.teth.lang.parser.ASTVisitor;
 import com.github.tth05.teth.lang.parser.SourceFileUnit;
 import com.github.tth05.teth.lang.parser.Type;
 import com.github.tth05.teth.lang.parser.ast.*;
+import com.github.tth05.teth.lang.span.Span;
 import com.github.tth05.teth.lang.stdlib.StandardLibrary;
 
 import java.util.*;
@@ -105,14 +106,14 @@ public class Analyzer {
 
         @Override
         public void visit(FunctionDeclaration declaration) {
-            var nested = this.currentFunctionStack.size() > 1;
+            var willBeNested = this.currentFunctionStack.size() > 1;
             // Add nested functions to outer scope, as if this were a variable declaration
-            if (nested)
+            if (willBeNested)
                 addDeclaration(declaration);
 
             beginFunctionDeclaration(declaration);
 
-            if (nested)
+            if (isInNestedMethod())
                 visitFunctionDeclarationHeader(declaration);
             visitFunctionDeclarationBody(declaration);
 
@@ -153,7 +154,7 @@ public class Analyzer {
             }
 
             // Add self to inner scope, to allow nested functions to access themselves
-            if (this.currentFunctionStack.size() > 1)
+            if (isInNestedMethod())
                 addDeclaration(declaration);
             // TODO: Validate body returns something in all cases
             declaration.getBody().accept(this);
@@ -190,14 +191,14 @@ public class Analyzer {
             if (!decl.getGenericParameters().isEmpty()) {
                 genericParameterInfos.put(invocation, genericParameterInfo = new GenericParameterInfo());
 
-                var genericBounds = invocation.getGenericBounds();
+                var genericParameters = invocation.getGenericParameters();
                 // Explicit generic bounds have priority over inferred generic bounds
-                if (genericBounds != null) {
-                    if (genericBounds.size() != decl.getGenericParameters().size())
-                        throw new ValidationException(invocation.getSpan(), "Wrong number of generic bounds. Expected " + decl.getGenericParameters().size() + ", got " + genericBounds.size());
+                if (genericParameters != null) {
+                    if (genericParameters.size() != decl.getGenericParameters().size())
+                        throw new ValidationException(invocation.getSpan(), "Wrong number of generic bounds. Expected " + decl.getGenericParameters().size() + ", got " + genericParameters.size());
 
-                    for (var i = 0; i < genericBounds.size(); i++)
-                        genericParameterInfo.bindGenericParameter(decl.getGenericParameters().get(i).getName(), genericBounds.get(i).asType());
+                    for (var i = 0; i < genericParameters.size(); i++)
+                        genericParameterInfo.bindGenericParameter(decl.getGenericParameters().get(i).getName(), genericParameters.get(i).asType());
                 }
             }
 
@@ -232,7 +233,9 @@ public class Analyzer {
 
         @Override
         public void visit(StructDeclaration.FieldDeclaration declaration) {
-            // Pre-process 2 did this already
+            // Pre-process 2 did this already in the global namespace
+            if (isInNestedMethod())
+                declaration.getTypeExpr().accept(this);
         }
 
         @Override
@@ -463,7 +466,8 @@ public class Analyzer {
         private void validateType(TypeExpression typeExpression) {
             var span = typeExpression.getSpan();
             var type = typeExpression.getName();
-            typeExpression.getGenericBounds().forEach(this::validateType);
+            var genericParameters = typeExpression.getGenericParameters();
+            genericParameters.forEach(this::validateType);
 
             if (StandardLibrary.isBuiltinType(typeExpression.asType()))
                 return;
@@ -473,6 +477,12 @@ public class Analyzer {
                 throw new TypeResolverException(span, "Unknown type " + type);
             if (!(decl instanceof StructDeclaration) && !(decl instanceof GenericParameterDeclaration))
                 throw new TypeResolverException(span, "Type " + type + " is not a struct or builtin type");
+            // Ensure all generic parameters are bound
+            if (decl instanceof StructDeclaration struct) {
+                var genericParameterDeclarations = struct.getGenericParameters();
+                if (genericParameterDeclarations.size() != genericParameters.size())
+                    throw new ValidationException(Span.of(genericParameters, span), "Wrong number of generic parameters. Expected %d, got %d".formatted(genericParameterDeclarations.size(), genericParameters.size()));
+            }
 
             resolvedReferences.put(typeExpression, decl);
         }
@@ -551,6 +561,10 @@ public class Analyzer {
             this.currentFunctionStack.addLast(declaration);
             this.declarationStack.beginScope(declaration.isInstanceFunction());
             functionLocalsCount.put(declaration, 0);
+        }
+
+        private boolean isInNestedMethod() {
+            return this.currentFunctionStack.size() > 2;
         }
     }
 }

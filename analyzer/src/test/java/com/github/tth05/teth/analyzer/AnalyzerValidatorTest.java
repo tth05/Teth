@@ -200,4 +200,30 @@ public class AnalyzerValidatorTest extends AbstractAnalyzerTest {
         assertEquals(1, problems.size());
         assertEquals("Duplicate generic parameter name", problems.get(0).message());
     }
+
+    @Test
+    public void testWrongNumberOfGenericParameters() {
+        var problems = analyze("""
+                struct s<T, D> {}
+                let a: s = new s<long, long>()
+                """);
+
+        assertFalse(problems.isEmpty());
+        assertEquals(1, problems.size());
+        assertEquals("Wrong number of generic parameters. Expected 2, got 0", problems.get(0).message());
+    }
+
+    @Test
+    public void testCorrectNumberOfGenericParameters() {
+        var problems = analyze("""
+                struct s<T, D> {
+                }
+                struct d {
+                    b: s<long, s<double, long>>
+                    a: s<any, any>
+                }
+                """);
+
+        assertTrue(problems.isEmpty());
+    }
 }
