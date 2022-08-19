@@ -4,7 +4,7 @@ import com.github.tth05.teth.lang.parser.ASTVisitor;
 import com.github.tth05.teth.lang.span.ISpan;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
-public class DoubleLiteralExpression extends Expression {
+public class DoubleLiteralExpression extends Expression implements IDeclarationReference {
 
     private final double value;
 

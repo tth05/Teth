@@ -79,7 +79,7 @@ public class AnalyzerValidatorTest extends AbstractAnalyzerTest {
 
         assertFalse(problems.isEmpty());
         assertEquals(1, problems.size());
-        assertEquals("Block needs to return in all cases", problems.get(0).message());
+        assertEquals("Missing return statement", problems.get(0).message());
 
         problems = analyze("""
                 fn f() long {
@@ -89,7 +89,7 @@ public class AnalyzerValidatorTest extends AbstractAnalyzerTest {
 
         assertFalse(problems.isEmpty());
         assertEquals(1, problems.size());
-        assertEquals("Block needs to return in all cases", problems.get(0).message());
+        assertEquals("Missing return statement", problems.get(0).message());
     }
 
     @Test
@@ -103,8 +103,9 @@ public class AnalyzerValidatorTest extends AbstractAnalyzerTest {
 
     @Test
     public void testAccessMember() {
-        var problems = analyze("let f: function = (5).toString");
+        var problems = analyze("let f: string = (5).toString()");
 
+        System.out.println(problems.prettyPrint(true));
         assertTrue(problems.isEmpty());
 
         problems = analyze("""
@@ -117,7 +118,7 @@ public class AnalyzerValidatorTest extends AbstractAnalyzerTest {
 
     @Test
     public void testAccessNonExistentMember() {
-        var problems = analyze("let f: function = (5).toStringg");
+        var problems = analyze("let f: string = (5).toStringg()");
 
         assertFalse(problems.isEmpty());
         assertEquals(1, problems.size());
@@ -242,5 +243,18 @@ public class AnalyzerValidatorTest extends AbstractAnalyzerTest {
                 """);
 
         assertTrue(problems.isEmpty());
+    }
+
+    @Test
+    public void testGenericParametersCannotHaveGenericParameters() {
+        var problems = analyze("""
+                fn test<T>(t: T) {
+                let a: T<long> = t
+                }
+                """);
+
+        assertFalse(problems.isEmpty());
+        assertEquals(1, problems.size());
+        assertEquals("Generic parameter cannot have generic parameters", problems.get(0).message());
     }
 }

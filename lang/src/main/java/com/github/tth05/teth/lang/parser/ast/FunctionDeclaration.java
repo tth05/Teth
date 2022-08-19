@@ -2,7 +2,6 @@ package com.github.tth05.teth.lang.parser.ast;
 
 import com.github.tth05.teth.lang.parser.ASTVisitor;
 import com.github.tth05.teth.lang.parser.IDumpable;
-import com.github.tth05.teth.lang.parser.Type;
 import com.github.tth05.teth.lang.span.ISpan;
 import com.github.tth05.teth.lang.span.Span;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
@@ -59,10 +58,6 @@ public class FunctionDeclaration extends Statement implements ITopLevelDeclarati
         return this.returnTypeExpr;
     }
 
-    public Type getReturnType() {
-        return this.returnTypeExpr == null ? Type.VOID : this.returnTypeExpr.asType();
-    }
-
     public BlockStatement getBody() {
         return this.body;
     }
@@ -111,17 +106,19 @@ public class FunctionDeclaration extends Statement implements ITopLevelDeclarati
 
         FunctionDeclaration that = (FunctionDeclaration) o;
 
+        if (this.instanceFunction != that.instanceFunction)
+            return false;
+        if (this.intrinsic != that.intrinsic)
+            return false;
         if (!this.nameExpr.equals(that.nameExpr))
             return false;
         if (!Objects.equals(this.returnTypeExpr, that.returnTypeExpr))
             return false;
         if (!this.parameters.equals(that.parameters))
             return false;
-        if (this.instanceFunction != that.instanceFunction)
+        if (!Objects.equals(this.body, that.body))
             return false;
-        if (this.intrinsic != that.intrinsic)
-            return false;
-        return this.body.equals(that.body);
+        return this.genericParameters.equals(that.genericParameters);
     }
 
     @Override
@@ -129,9 +126,10 @@ public class FunctionDeclaration extends Statement implements ITopLevelDeclarati
         int result = this.nameExpr.hashCode();
         result = 31 * result + (this.returnTypeExpr != null ? this.returnTypeExpr.hashCode() : 0);
         result = 31 * result + this.parameters.hashCode();
-        result = 31 * result + this.body.hashCode();
+        result = 31 * result + (this.body != null ? this.body.hashCode() : 0);
         result = 31 * result + (this.instanceFunction ? 1 : 0);
         result = 31 * result + (this.intrinsic ? 1 : 0);
+        result = 31 * result + this.genericParameters.hashCode();
         return result;
     }
 

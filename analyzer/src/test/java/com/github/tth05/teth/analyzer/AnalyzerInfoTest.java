@@ -12,11 +12,29 @@ public class AnalyzerInfoTest extends AbstractAnalyzerTest {
         var problems = analyze("fn f(a: long) {a=5\n let b=3\nlet n = 7}");
 
         assertTrue(problems.isEmpty());
-        assertEquals(2, this.analyzer.functionLocalsCount((FunctionDeclaration) this.unit.getStatements().get(0)));
+        assertEquals(
+                2,
+                this.analyzer.functionLocalsCount(
+                        this.unit.getStatements().stream()
+                                .filter(s -> s instanceof FunctionDeclaration)
+                                .map(FunctionDeclaration.class::cast)
+                                .filter(f -> f.getNameExpr().getValue().equals("f"))
+                                .findFirst().orElseThrow()
+                )
+        );
 
         problems = analyze("fn f(a: long) {}");
 
         assertTrue(problems.isEmpty());
-        assertEquals(0, this.analyzer.functionLocalsCount((FunctionDeclaration) this.unit.getStatements().get(0)));
+        assertEquals(
+                0,
+                this.analyzer.functionLocalsCount(
+                        this.unit.getStatements().stream()
+                                .filter(s -> s instanceof FunctionDeclaration)
+                                .map(FunctionDeclaration.class::cast)
+                                .filter(f -> f.getNameExpr().getValue().equals("f"))
+                                .findFirst().orElseThrow()
+                )
+        );
     }
 }

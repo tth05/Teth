@@ -10,6 +10,8 @@ repositories {
 
 dependencies {
     implementation project(":bytecode")
+    implementation project(":analyzer")
+    implementation project(":lang")
 
     testImplementation project(":lang")
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'

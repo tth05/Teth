@@ -1,53 +1,44 @@
-package com.github.tth05.teth.lang.parser;
+package com.github.tth05.teth.analyzer.type;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
-public class Type {
+public class SemanticType {
 
-    public static final Type VOID = new Type("void");
+    /*public static final Type VOID = new Type("void");
     public static final Type ANY = new Type("any");
     public static final Type LONG = new Type("long");
     public static final Type STRING = new Type("string");
     public static final Type DOUBLE = new Type("double");
     public static final Type BOOLEAN = new Type("bool");
-    public static final Type FUNCTION = new Type("function");
+    public static final Type FUNCTION = new Type("function");*/
 
-    private final String name;
-    private final List<Type> genericBounds;
+    private final int typeId;
+    private final List<SemanticType> genericBounds;
 
-    public Type(String name) {
-        this(name, null);
+    SemanticType(int typeId) {
+        this(typeId, null);
     }
 
-    public Type(String name, List<Type> genericBounds) {
-        this.name = name;
+    public SemanticType(int typeId, List<SemanticType> genericBounds) {
+        this.typeId = typeId;
         this.genericBounds = genericBounds;
     }
 
-    public String getName() {
-        return this.name;
-    }
-
-    public boolean isList() {
-        return this.name.equals("list");
-    }
-
-    public boolean isNumber() {
-        return this == LONG || this == DOUBLE;
+    public int getTypeId() {
+        return this.typeId;
     }
 
     public boolean hasGenericBounds() {
         return this.genericBounds != null;
     }
 
-    public List<Type> getGenericBounds() {
+    public List<SemanticType> getGenericBounds() {
         return Collections.unmodifiableList(this.genericBounds);
     }
 
-    public boolean isSubtypeOf(Type other) {
+/*    public boolean isSubtypeOf(Type other) {
         if (this == VOID)
             return other == VOID;
 
@@ -68,7 +59,7 @@ public class Type {
             }
         }
         return true;
-    }
+    }*/
 
     @Override
     public boolean equals(Object o) {
@@ -77,26 +68,26 @@ public class Type {
         if (o == null || getClass() != o.getClass())
             return false;
 
-        Type type = (Type) o;
+        SemanticType type = (SemanticType) o;
 
-        if (!this.name.equals(type.name))
+        if (this.typeId != type.typeId)
             return false;
         return Objects.equals(this.genericBounds, type.genericBounds);
     }
 
     @Override
     public int hashCode() {
-        int result = this.name.hashCode();
+        int result = this.typeId;
         result = 31 * result + (this.genericBounds != null ? this.genericBounds.hashCode() : 0);
         return result;
     }
 
     @Override
     public String toString() {
-        return this.name + (!hasGenericBounds() ? "" : "<" + this.genericBounds.stream().map(Type::toString).collect(Collectors.joining(", ")) + ">");
+        throw new UnsupportedOperationException("Wrong");
     }
 
-    public static Type list(Type type) {
+/*    public static Type list(Type type) {
         return new Type("list", List.of(type));
     }
 
@@ -114,5 +105,5 @@ public class Type {
 
     public static Type fromNameWithGenericBounds(String type, List<Type> genericBounds) {
         return new Type(type, genericBounds);
-    }
+    }*/
 }

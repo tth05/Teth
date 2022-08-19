@@ -2,11 +2,31 @@ package com.github.tth05.teth.lang.parser;
 
 import com.github.tth05.teth.lang.parser.ast.*;
 
+import java.util.function.Predicate;
+
 public abstract class ASTVisitor {
+
+    private Predicate<Statement> blockStatementFilter = s -> true;
+
+    public void setBlockStatementFilter(Predicate<Statement> blockStatementFilter) {
+        this.blockStatementFilter = blockStatementFilter;
+    }
 
     public void visit(SourceFileUnit unit) {
         for (Statement statement : unit.getStatements()) {
+            if (!this.blockStatementFilter.test(statement))
+                continue;
+
             statement.accept(this);
+        }
+    }
+
+    public void visit(BlockStatement statement) {
+        for (Statement child : statement.getStatements()) {
+            if (!this.blockStatementFilter.test(statement))
+                continue;
+
+            child.accept(this);
         }
     }
 
@@ -17,12 +37,6 @@ public abstract class ASTVisitor {
 
     public void visit(UnaryExpression expression) {
         expression.getExpression().accept(this);
-    }
-
-    public void visit(BlockStatement statement) {
-        for (Statement child : statement.getStatements()) {
-            child.accept(this);
-        }
     }
 
     public void visit(VariableAssignmentExpression expression) {
@@ -56,7 +70,12 @@ public abstract class ASTVisitor {
     public void visit(StructDeclaration declaration) {
         declaration.getNameExpr().accept(this);
         declaration.getFields().forEach(p -> p.accept(this));
-        declaration.getFunctions().forEach(p -> p.accept(this));
+        declaration.getFunctions().forEach(p -> {
+            if (!this.blockStatementFilter.test(p))
+                return;
+
+            p.accept(this);
+        });
     }
 
     public void visit(StructDeclaration.FieldDeclaration declaration) {
@@ -66,6 +85,7 @@ public abstract class ASTVisitor {
 
     public void visit(ObjectCreationExpression expression) {
         expression.getTargetNameExpr().accept(this);
+        expression.getGenericParameters().forEach(param -> param.accept(this));
         expression.getParameters().forEach(p -> p.accept(this));
     }
 

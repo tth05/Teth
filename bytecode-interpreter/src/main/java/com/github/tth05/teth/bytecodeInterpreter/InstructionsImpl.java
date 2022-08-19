@@ -1,7 +1,9 @@
 package com.github.tth05.teth.bytecodeInterpreter;
 
+import com.github.tth05.teth.analyzer.prelude.Prelude;
 import com.github.tth05.teth.bytecode.compiler.OpCodes;
 import com.github.tth05.teth.bytecode.decoder.*;
+import com.github.tth05.teth.lang.parser.ast.FunctionDeclaration;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -12,10 +14,10 @@ import java.util.function.BiConsumer;
 public class InstructionsImpl {
 
     private static final Object[] ARGS_ARRAY = new Object[32];
-    private static final Map<String, BiConsumer<Interpreter, Object[]>> INTRINSICS = new HashMap<>();
+    private static final Map<FunctionDeclaration, BiConsumer<Interpreter, Object[]>> INTRINSICS = new HashMap<>();
     static {
-        INTRINSICS.put("print", (interpreter, args) -> {
-            var list = (List) args[0];
+        INTRINSICS.put(Prelude.getGlobalFunction("print"), (interpreter, args) -> {
+            var list = (List<Object>) args[0];
             var first = true;
             for (Object o : list) {
                 System.out.print((first ? "" : " ") + o);
@@ -24,31 +26,31 @@ public class InstructionsImpl {
 
             System.out.println();
         });
-        INTRINSICS.put("string.concat", (interpreter, args) -> {
+        INTRINSICS.put(prelude("string", "concat"), (interpreter, args) -> {
             var left = ((String) args[0]);
             var right = ((String) args[1]);
 
             interpreter.push(left + right);
         });
-        INTRINSICS.put("long.toString", (interpreter, args) -> {
+        INTRINSICS.put(prelude("long", "toString"), (interpreter, args) -> {
             var val = (Long) args[0];
 
             interpreter.push(val.toString());
         });
-        INTRINSICS.put("list.add", (interpreter, args) -> {
-            var list = (List) args[0];
+        INTRINSICS.put(prelude("list", "add"), (interpreter, args) -> {
+            var list = (List<Object>) args[0];
             var el = args[1];
 
             list.add(el);
         });
-        INTRINSICS.put("list.get", (interpreter, args) -> {
-            var list = (List) args[0];
+        INTRINSICS.put(prelude("list", "get"), (interpreter, args) -> {
+            var list = (List<Object>) args[0];
             var el = (long) args[1];
 
             interpreter.push(list.get((int) el));
         });
-        INTRINSICS.put("list.set", (interpreter, args) -> {
-            var list = (List) args[0];
+        INTRINSICS.put(prelude("list", "set"), (interpreter, args) -> {
+            var list = (List<Object>) args[0];
             var idx = (long) args[1];
             var el = args[2];
 
@@ -185,10 +187,9 @@ public class InstructionsImpl {
                 }
                 case OpCodes.INVOKE_INTRINSIC -> {
                     //TODO: Pre-process instructions to convert this into a resolved INVOKE_INTRINSIC instruction
-                    var name = ((INVOKE_INTRINSIC_Insn) insn).getIntrinsicName();
-                    var intrinsic = INTRINSICS.get(name);
-                    //TODO: Get intrinsic function instance from analyzer or lang core?
-                    var argCount = name.equals("print") || name.equals("long.toString") ? 1 : name.equals("list.set") ? 3 : 2;
+                    var function = ((INVOKE_INTRINSIC_Insn) insn).getFunctionDeclaration();
+                    var intrinsic = INTRINSICS.get(function);
+                    var argCount = function.getParameters().size() + (function.isInstanceFunction() ? 1 : 0);
                     intrinsic.accept(interpreter, collectFunctionArguments(interpreter, argCount));
                 }
                 case OpCodes.CREATE_OBJECT -> {
@@ -256,9 +257,7 @@ public class InstructionsImpl {
         }
     }
 
-
     private static Object[] collectFunctionArguments(Interpreter interpreter, int argCount) {
-        //TODO: Should this validate arg types?
         for (int i = argCount - 1; i >= 0; i--)
             ARGS_ARRAY[i] = interpreter.pop();
 
@@ -267,8 +266,12 @@ public class InstructionsImpl {
 
     private static boolean validateLongDoubleOperands(Object left, Object right) {
         if (!(left instanceof Number) || !(right instanceof Number))
-            throw new IllegalStateException("LD_ADD: Top of stack did not contain two numbers");
+            throw new IllegalStateException("Top of stack did not contain two numbers");
 
         return left instanceof Double || right instanceof Double;
+    }
+
+    private static FunctionDeclaration prelude(String struct, String function) {
+        return (FunctionDeclaration) Prelude.getStructForTypeName(struct).getMember(function);
     }
 }

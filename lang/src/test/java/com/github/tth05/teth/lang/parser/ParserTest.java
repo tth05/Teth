@@ -61,7 +61,6 @@ public class ParserTest extends AbstractParserTest {
 
     @Test
     public void testParseTypes() {
-        //TODO: Test parsing of generic types
         createAST("""
                 let l: long = 5
                 let l: double = 5

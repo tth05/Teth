@@ -8,7 +8,7 @@ import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 import java.util.List;
 import java.util.Objects;
 
-public class ListLiteralExpression extends Expression {
+public class ListLiteralExpression extends Expression implements IDeclarationReference {
 
     private final ExpressionList initializers;
 

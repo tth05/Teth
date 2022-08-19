@@ -17,7 +17,6 @@ import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
-//TODO: Allow new-lines everywhere
 public class Parser {
 
     private final TokenStream stream;

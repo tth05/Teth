@@ -1,14 +1,12 @@
 package com.github.tth05.teth.lang.parser.ast;
 
 import com.github.tth05.teth.lang.parser.ASTVisitor;
-import com.github.tth05.teth.lang.parser.Type;
 import com.github.tth05.teth.lang.span.ISpan;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 
@@ -35,7 +33,7 @@ public class TypeExpression extends Expression implements IDeclarationReference 
         return this.genericParameters;
     }
 
-    public Type asType() {
+/*    public Type asType() {
         return asType(t -> Type.fromName(t.getName()));
     }
 
@@ -45,7 +43,7 @@ public class TypeExpression extends Expression implements IDeclarationReference 
         } else {
             return Type.fromNameWithGenericBounds(this.name, this.genericParameters.stream().map(t -> t.asType(basicTypeFactory)).collect(Collectors.toList()));
         }
-    }
+    }*/
 
     @Override
     public void accept(ASTVisitor visitor) {

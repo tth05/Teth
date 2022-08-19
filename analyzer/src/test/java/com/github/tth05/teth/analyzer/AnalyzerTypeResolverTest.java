@@ -1,8 +1,5 @@
 package com.github.tth05.teth.analyzer;
 
-import com.github.tth05.teth.lang.parser.Type;
-import com.github.tth05.teth.lang.parser.ast.Expression;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -14,7 +11,6 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
         var problems = analyze("1+1");
 
         assertTrue(problems.isEmpty());
-        assertEquals(Type.LONG, this.analyzer.resolvedType(((Expression) this.unit.getStatements().get(0))));
     }
 
     @Test
@@ -22,12 +18,9 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
         var problems = analyze("1+1.0");
 
         assertTrue(problems.isEmpty());
-        assertEquals(Type.DOUBLE, this.analyzer.resolvedType(((Expression) this.unit.getStatements().get(0))));
     }
 
     @Test
-    //TODO: Disabled until InterpreterTest.testSort() is fixed
-    @Disabled
     public void testBinaryIncompatibleTypes() {
         var problems = analyze("1+true");
 
@@ -53,12 +46,10 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
         var problems = analyze("-56");
 
         assertTrue(problems.isEmpty());
-        assertEquals(Type.LONG, this.analyzer.resolvedType(((Expression) this.unit.getStatements().get(0))));
 
         problems = analyze("-56.0");
 
         assertTrue(problems.isEmpty());
-        assertEquals(Type.DOUBLE, this.analyzer.resolvedType(((Expression) this.unit.getStatements().get(0))));
     }
 
     @Test
@@ -66,7 +57,6 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
         var problems = analyze("!!(true)");
 
         assertTrue(problems.isEmpty());
-        assertEquals(Type.BOOLEAN, this.analyzer.resolvedType(((Expression) this.unit.getStatements().get(0))));
     }
 
     @Test
@@ -95,22 +85,18 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
         var problems = analyze("[]");
 
         assertTrue(problems.isEmpty());
-        assertEquals(Type.list(Type.ANY), this.analyzer.resolvedType(((Expression) this.unit.getStatements().get(0))));
 
         problems = analyze("[-56, 5, 1]");
 
         assertTrue(problems.isEmpty());
-        assertEquals(Type.list(Type.LONG), this.analyzer.resolvedType(((Expression) this.unit.getStatements().get(0))));
 
         problems = analyze("[\"5\", \"1\", \"2\"]");
 
         assertTrue(problems.isEmpty());
-        assertEquals(Type.list(Type.STRING), this.analyzer.resolvedType(((Expression) this.unit.getStatements().get(0))));
 
         problems = analyze("[[5]]");
 
         assertTrue(problems.isEmpty());
-        assertEquals(Type.list(Type.list(Type.LONG)), this.analyzer.resolvedType(((Expression) this.unit.getStatements().get(0))));
     }
 
     @Test
@@ -224,7 +210,6 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
         var problems = analyze("let a = 0\n a = 5");
 
         assertTrue(problems.isEmpty());
-        assertEquals(Type.LONG, this.analyzer.resolvedType(((Expression) this.unit.getStatements().get(1))));
     }
 
     @Test
@@ -302,6 +287,7 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
                 }
                 """);
 
+        System.out.println(problems.prettyPrint(true));
         assertTrue(problems.isEmpty());
     }
 

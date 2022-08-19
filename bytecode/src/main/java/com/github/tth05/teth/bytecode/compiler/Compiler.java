@@ -1,6 +1,8 @@
 package com.github.tth05.teth.bytecode.compiler;
 
 import com.github.tth05.teth.analyzer.Analyzer;
+import com.github.tth05.teth.analyzer.prelude.Prelude;
+import com.github.tth05.teth.analyzer.visitor.NameAnalysis;
 import com.github.tth05.teth.bytecode.decoder.*;
 import com.github.tth05.teth.lang.parser.ASTVisitor;
 import com.github.tth05.teth.lang.parser.SourceFileUnit;
@@ -51,7 +53,7 @@ public class Compiler {
 
             // Ensure global function comes first
             var sortedFunctions = this.functionInsnMap.entrySet().stream()
-                    .sorted(Comparator.comparing(e -> e.getKey() != Analyzer.GLOBAL_FUNCTION)).toList();
+                    .sorted(Comparator.comparing(e -> e.getKey() != NameAnalysis.GLOBAL_FUNCTION)).toList();
             for (var entry : sortedFunctions) {
                 var function = entry.getKey();
                 var insnList = entry.getValue();
@@ -79,20 +81,23 @@ public class Compiler {
             }
 
             // "Invoke" global function
-            insns[0] = new INVOKE_Insn(false, 0, this.analyzer.functionLocalsCount(Analyzer.GLOBAL_FUNCTION), 0);
+            insns[0] = new INVOKE_Insn(false, 0, this.analyzer.functionLocalsCount(NameAnalysis.GLOBAL_FUNCTION), 0);
 
             return insns;
         }
 
         @Override
         public void visit(SourceFileUnit unit) {
-            this.functionInsnMap.put(Analyzer.GLOBAL_FUNCTION, this.currentFunctionInsn);
+            this.functionInsnMap.put(NameAnalysis.GLOBAL_FUNCTION, this.currentFunctionInsn);
             super.visit(unit);
             this.currentFunctionInsn.add(new EXIT_Insn());
         }
 
         @Override
         public void visit(FunctionDeclaration declaration) {
+            if (declaration.isIntrinsic())
+                return;
+
             var parentFunction = this.currentFunctionInsn;
             var parentLocals = this.currentFunctionLocals;
             this.currentFunctionInsn = new ArrayList<>();
@@ -122,7 +127,7 @@ public class Compiler {
 
             var reference = (FunctionDeclaration) this.analyzer.resolvedReference(((IDeclarationReference) invocation.getTarget()));
             if (reference.isIntrinsic()) {
-                this.currentFunctionInsn.add(new INVOKE_INTRINSIC_Insn(reference.getNameExpr().getValue()));
+                this.currentFunctionInsn.add(new INVOKE_INTRINSIC_Insn(reference));
             } else {
                 this.currentFunctionInsn.add(new PlaceholderInvokeInsn(reference));
             }
@@ -311,7 +316,7 @@ public class Compiler {
 
             listLiteralExpression.getInitializers().forEach(e -> {
                 e.accept(this);
-                this.currentFunctionInsn.add(new INVOKE_INTRINSIC_Insn("list.add"));
+                this.currentFunctionInsn.add(new INVOKE_INTRINSIC_Insn((FunctionDeclaration) Prelude.LIST_STRUCT_DECLARATION.getMember("add")));
             });
         }
 

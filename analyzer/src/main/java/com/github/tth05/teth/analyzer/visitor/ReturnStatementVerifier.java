@@ -1,13 +1,27 @@
-package com.github.tth05.teth.analyzer;
+package com.github.tth05.teth.analyzer.visitor;
 
-import com.github.tth05.teth.lang.parser.ast.BlockStatement;
-import com.github.tth05.teth.lang.parser.ast.IfStatement;
-import com.github.tth05.teth.lang.parser.ast.ReturnStatement;
-import com.github.tth05.teth.lang.parser.ast.Statement;
+import com.github.tth05.teth.analyzer.ValidationException;
+import com.github.tth05.teth.lang.parser.ASTVisitor;
+import com.github.tth05.teth.lang.parser.ast.*;
 
 import java.util.Optional;
 
-public class ScopeExitHelper {
+public class ReturnStatementVerifier extends ASTVisitor {
+
+    public ReturnStatementVerifier() {
+        // Skips imports, top level code etc.
+        setBlockStatementFilter(s -> s instanceof StructDeclaration || (s instanceof FunctionDeclaration f && !f.isIntrinsic()));
+    }
+
+    @Override
+    public void visit(FunctionDeclaration declaration) {
+        if (declaration.getReturnTypeExpr() == null)
+            return;
+
+        validateLastChildReturns(declaration.getBody()).ifPresent(offendingStatement -> {
+            throw new ValidationException(offendingStatement.getSpan(), "Missing return statement");
+        });
+    }
 
     /**
      * Returns the innermost offending statement, or none if all paths may exit.
@@ -15,7 +29,7 @@ public class ScopeExitHelper {
      * @param block The block to check
      * @return The offending statement, or none if all paths may exit.
      */
-    public static Optional<Statement> validateLastChildReturns(BlockStatement block) {
+    private static Optional<Statement> validateLastChildReturns(BlockStatement block) {
         if (block.getStatements().isEmpty())
             return Optional.of(block);
 

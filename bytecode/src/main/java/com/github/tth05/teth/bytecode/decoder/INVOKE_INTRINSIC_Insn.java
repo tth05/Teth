@@ -1,17 +1,18 @@
 package com.github.tth05.teth.bytecode.decoder;
 
 import com.github.tth05.teth.bytecode.compiler.OpCodes;
+import com.github.tth05.teth.lang.parser.ast.FunctionDeclaration;
 
 public class INVOKE_INTRINSIC_Insn implements IInstrunction {
 
-    private final String intrinsicName;
+    private final FunctionDeclaration functionDeclaration;
 
-    public INVOKE_INTRINSIC_Insn(String intrinsicName) {
-        this.intrinsicName = intrinsicName;
+    public INVOKE_INTRINSIC_Insn(FunctionDeclaration functionDeclaration) {
+        this.functionDeclaration = functionDeclaration;
     }
 
-    public String getIntrinsicName() {
-        return this.intrinsicName;
+    public FunctionDeclaration getFunctionDeclaration() {
+        return this.functionDeclaration;
     }
 
     @Override
@@ -21,6 +22,6 @@ public class INVOKE_INTRINSIC_Insn implements IInstrunction {
 
     @Override
     public String getDebugParametersString() {
-        return this.intrinsicName;
+        return this.getFunctionDeclaration().getNameExpr() + "";
     }
 }
