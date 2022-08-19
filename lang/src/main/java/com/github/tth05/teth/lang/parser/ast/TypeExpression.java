@@ -33,18 +33,6 @@ public class TypeExpression extends Expression implements IDeclarationReference 
         return this.genericParameters;
     }
 
-/*    public Type asType() {
-        return asType(t -> Type.fromName(t.getName()));
-    }
-
-    public Type asType(Function<TypeExpression, Type> basicTypeFactory) {
-        if (this.genericParameters.isEmpty()) {
-            return basicTypeFactory.apply(this);
-        } else {
-            return Type.fromNameWithGenericBounds(this.name, this.genericParameters.stream().map(t -> t.asType(basicTypeFactory)).collect(Collectors.toList()));
-        }
-    }*/
-
     @Override
     public void accept(ASTVisitor visitor) {
         visitor.visit(this);
