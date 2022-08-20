@@ -421,24 +421,6 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
     }
 
     @Test
-    public void test() {
-        analyze("""
-                fn test<T>(t: T) T {
-                return t
-                }
-                                
-                struct B<T> {
-                        fn test(t: T) {
-                                fn test2(t: T) {}
-                        }
-                }
-                                
-                let a: long = test(5)
-                print([a])
-                """);
-    }
-
-    @Test
     public void testTypesAreNotJustComparedByName() {
         var problems = analyze("""
                 struct T {}

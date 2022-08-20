@@ -105,10 +105,11 @@ public class ProblemPrettyPrinter {
                 }
 
                 // Add line contents
+                var lineContents = CharArrayUtils.getLineContents(ProblemPrettyPrinter.this.source, line.offset);
                 {
                     var marker = builder.length();
                     builder
-                            .append(CharArrayUtils.getLineContents(ProblemPrettyPrinter.this.source, line.offset))
+                            .append(lineContents)
                             .append("\n");
                     if (useAnsiColors) {
                         // Only supports a single highlight per line
@@ -135,7 +136,7 @@ public class ProblemPrettyPrinter {
                                 .append(useAnsiColors ? "\u001b[0;36m" : "")
                                 .append(" | ")
                                 .append(useAnsiColors ? "\u001b[0m" : "")
-                                .append(" ".repeat(message.column))
+                                .append(createMessageIndent(lineContents, message.column))
                                 .append(useAnsiColors ? "\u001b[0;" + message.color + "m" : "")
                                 .append("^ ")
                                 .append(message.message)
@@ -153,5 +154,18 @@ public class ProblemPrettyPrinter {
         private record Line(int offset, int offsetEnd) {}
 
         private record Message(int lineIndex, int column, String message, int color) {}
+    }
+
+    private static String createMessageIndent(String lineContents, int messageColumn) {
+        var indent = new StringBuilder(messageColumn);
+        for (int i = 0; i < messageColumn; i++) {
+            var c = lineContents.charAt(i);
+            if (c == '\t')
+                indent.append('\t');
+            else
+                indent.append(' ');
+        }
+
+        return indent.toString();
     }
 }
