@@ -32,11 +32,7 @@ public class TypeCache {
         });
     }
 
-    public SemanticType newGenericType(Statement statement, Statement... genericParameters) {
-        return new SemanticType(this.internalizeType(statement), Arrays.stream(genericParameters).map(this::newType).toList());
-    }
-
-    public SemanticType newType(Statement statement) {
+    public SemanticType getType(Statement statement) {
         if (statement instanceof StructDeclaration s && !s.getGenericParameters().isEmpty())
             throw new IllegalArgumentException();
 
@@ -48,7 +44,7 @@ public class TypeCache {
     }
 
     public boolean isNumber(SemanticType type) {
-        return type == newType(Prelude.LONG_STRUCT_DECLARATION) || type == newType(Prelude.DOUBLE_STRUCT_DECLARATION);
+        return type == getType(Prelude.LONG_STRUCT_DECLARATION) || type == getType(Prelude.DOUBLE_STRUCT_DECLARATION);
     }
 
     public SemanticType voidType() {
@@ -59,7 +55,7 @@ public class TypeCache {
         if (subType == VOID)
             return type == VOID;
 
-        var ANY = newType(Prelude.ANY_STRUCT_DECLARATION);
+        var ANY = getType(Prelude.ANY_STRUCT_DECLARATION);
         if (subType == type)
             return true;
         if (type == ANY) // long, double etc. are subtypes of any
@@ -82,7 +78,6 @@ public class TypeCache {
     public String toString(SemanticType type) {
         if (type == VOID)
             return "void";
-        // Really inefficient but this only for debugging anyway
         var name = switch (getDeclaration(type)) {
             case StructDeclaration struct -> struct.getNameExpr().getValue();
             case GenericParameterDeclaration generic -> generic.getName();

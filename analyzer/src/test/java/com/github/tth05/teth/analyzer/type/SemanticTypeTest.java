@@ -13,13 +13,13 @@ public class SemanticTypeTest {
 
     @Test
     public void testIsSubTypeOfAnyAndVoid() {
-        var ANY = this.typeCache.newType(Prelude.ANY_STRUCT_DECLARATION);
+        var ANY = this.typeCache.getType(Prelude.ANY_STRUCT_DECLARATION);
         var anySubTypes = List.of(
-                this.typeCache.newType(Prelude.BOOLEAN_STRUCT_DECLARATION),
-                this.typeCache.newType(Prelude.DOUBLE_STRUCT_DECLARATION),
-                this.typeCache.newType(Prelude.LONG_STRUCT_DECLARATION),
+                this.typeCache.getType(Prelude.BOOLEAN_STRUCT_DECLARATION),
+                this.typeCache.getType(Prelude.DOUBLE_STRUCT_DECLARATION),
+                this.typeCache.getType(Prelude.LONG_STRUCT_DECLARATION),
                 ANY,
-                this.typeCache.newType(Prelude.STRING_STRUCT_DECLARATION),
+                this.typeCache.getType(Prelude.STRING_STRUCT_DECLARATION),
                 new SemanticType(56),
                 new SemanticType(78, List.of(new SemanticType(7999)))
         );
@@ -42,9 +42,9 @@ public class SemanticTypeTest {
 
     @Test
     public void testIsSubTypeOfGenerics() {
-        var LONG = this.typeCache.newType(Prelude.LONG_STRUCT_DECLARATION);
-        var ANY = this.typeCache.newType(Prelude.ANY_STRUCT_DECLARATION);
-        var DOUBLE = this.typeCache.newType(Prelude.DOUBLE_STRUCT_DECLARATION);
+        var LONG = this.typeCache.getType(Prelude.LONG_STRUCT_DECLARATION);
+        var ANY = this.typeCache.getType(Prelude.ANY_STRUCT_DECLARATION);
+        var DOUBLE = this.typeCache.getType(Prelude.DOUBLE_STRUCT_DECLARATION);
 
         assertFalse(this.typeCache.isSubtypeOf(new SemanticType(5, List.of(LONG)), new SemanticType(5, List.of(DOUBLE))));
         assertTrue(this.typeCache.isSubtypeOf(new SemanticType(5, List.of(LONG)), new SemanticType(5, List.of(LONG))));

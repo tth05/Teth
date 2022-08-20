@@ -437,4 +437,19 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
                 print([a])
                 """);
     }
+
+    @Test
+    public void testTypesAreNotJustComparedByName() {
+        var problems = analyze("""
+                struct T {}
+                                
+                fn test() T {return new T()}
+                                
+                fn test2<T>() T {return test()}
+                """);
+
+        assertFalse(problems.isEmpty());
+        assertEquals(1, problems.size());
+        assertEquals("Cannot return T from function returning T", problems.get(0).message());
+    }
 }

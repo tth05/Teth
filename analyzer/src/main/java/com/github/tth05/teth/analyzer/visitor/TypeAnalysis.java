@@ -122,7 +122,7 @@ public class TypeAnalysis extends ASTVisitor {
         this.resolvedExpressionTypes.put(
                 expression,
                 resolvedGenericParameters == null ?
-                        this.typeCache.newType(structDeclaration) :
+                        this.typeCache.getType(structDeclaration) :
                         new SemanticType(this.typeCache.internalizeType(structDeclaration), resolvedGenericParameters)
         );
     }
@@ -198,7 +198,7 @@ public class TypeAnalysis extends ASTVisitor {
     public void visit(IfStatement statement) {
         super.visit(statement);
 
-        if (!this.resolvedExpressionTypes.get(statement.getCondition()).equals(this.typeCache.newType(BOOLEAN_STRUCT_DECLARATION)))
+        if (!this.resolvedExpressionTypes.get(statement.getCondition()).equals(this.typeCache.getType(BOOLEAN_STRUCT_DECLARATION)))
             throw new TypeResolverException(statement.getCondition().getSpan(), "Condition of if statement must be a bool");
     }
 
@@ -206,7 +206,7 @@ public class TypeAnalysis extends ASTVisitor {
     public void visit(LoopStatement statement) {
         super.visit(statement);
 
-        if (statement.getCondition() != null && !this.resolvedExpressionTypes.get(statement.getCondition()).equals(this.typeCache.newType(BOOLEAN_STRUCT_DECLARATION)))
+        if (statement.getCondition() != null && !this.resolvedExpressionTypes.get(statement.getCondition()).equals(this.typeCache.getType(BOOLEAN_STRUCT_DECLARATION)))
             throw new TypeResolverException(statement.getCondition().getSpan(), "Condition of loop statement must be a bool");
     }
 
@@ -217,7 +217,7 @@ public class TypeAnalysis extends ASTVisitor {
         var type = this.resolvedExpressionTypes.get(expression.getExpression());
         var operator = expression.getOperator();
         if ((operator == UnaryExpression.Operator.OP_NEGATIVE && !this.typeCache.isNumber(type)) ||
-            (operator == UnaryExpression.Operator.OP_NOT && type != this.typeCache.newType(BOOLEAN_STRUCT_DECLARATION)))
+            (operator == UnaryExpression.Operator.OP_NOT && type != this.typeCache.getType(BOOLEAN_STRUCT_DECLARATION)))
             throw new TypeResolverException(expression.getExpression().getSpan(), "Unary operator " + operator.asString() + " cannot be applied to " + this.typeCache.toString(type));
 
         this.resolvedExpressionTypes.put(expression, type);
@@ -241,10 +241,10 @@ public class TypeAnalysis extends ASTVisitor {
 
         SemanticType binaryType;
         if (expression.getOperator().producesBoolean()) {
-            binaryType = this.typeCache.newType(BOOLEAN_STRUCT_DECLARATION);
+            binaryType = this.typeCache.getType(BOOLEAN_STRUCT_DECLARATION);
         } else if (anyNumber) {
-            var doubleType = this.typeCache.newType(DOUBLE_STRUCT_DECLARATION);
-            var longType = this.typeCache.newType(LONG_STRUCT_DECLARATION);
+            var doubleType = this.typeCache.getType(DOUBLE_STRUCT_DECLARATION);
+            var longType = this.typeCache.getType(LONG_STRUCT_DECLARATION);
             binaryType = leftType == doubleType || rightType == doubleType ? doubleType : longType;
         } else {
             binaryType = leftType;
@@ -258,7 +258,7 @@ public class TypeAnalysis extends ASTVisitor {
         super.visit(listLiteralExpression);
 
         if (listLiteralExpression.getInitializers().isEmpty()) {
-            this.resolvedExpressionTypes.put(listLiteralExpression, this.typeCache.newGenericType(LIST_STRUCT_DECLARATION, ANY_STRUCT_DECLARATION));
+            this.resolvedExpressionTypes.put(listLiteralExpression, new SemanticType(this.typeCache.internalizeType(LIST_STRUCT_DECLARATION), List.of(this.typeCache.getType(ANY_STRUCT_DECLARATION))));
             return;
         }
 
@@ -273,22 +273,22 @@ public class TypeAnalysis extends ASTVisitor {
 
     @Override
     public void visit(BooleanLiteralExpression booleanLiteralExpression) {
-        this.resolvedExpressionTypes.put(booleanLiteralExpression, this.typeCache.newType(BOOLEAN_STRUCT_DECLARATION));
+        this.resolvedExpressionTypes.put(booleanLiteralExpression, this.typeCache.getType(BOOLEAN_STRUCT_DECLARATION));
     }
 
     @Override
     public void visit(StringLiteralExpression stringLiteralExpression) {
-        this.resolvedExpressionTypes.put(stringLiteralExpression, this.typeCache.newType(STRING_STRUCT_DECLARATION));
+        this.resolvedExpressionTypes.put(stringLiteralExpression, this.typeCache.getType(STRING_STRUCT_DECLARATION));
     }
 
     @Override
     public void visit(DoubleLiteralExpression doubleLiteralExpression) {
-        this.resolvedExpressionTypes.put(doubleLiteralExpression, this.typeCache.newType(DOUBLE_STRUCT_DECLARATION));
+        this.resolvedExpressionTypes.put(doubleLiteralExpression, this.typeCache.getType(DOUBLE_STRUCT_DECLARATION));
     }
 
     @Override
     public void visit(LongLiteralExpression longLiteralExpression) {
-        this.resolvedExpressionTypes.put(longLiteralExpression, this.typeCache.newType(LONG_STRUCT_DECLARATION));
+        this.resolvedExpressionTypes.put(longLiteralExpression, this.typeCache.getType(LONG_STRUCT_DECLARATION));
     }
 
     @Override
@@ -390,7 +390,7 @@ public class TypeAnalysis extends ASTVisitor {
     }
 
     private SemanticType asType(TypeExpression typeExpr) {
-        return asType(typeExpr, expr -> this.typeCache.newType(this.resolvedReferences.get(expr)));
+        return asType(typeExpr, expr -> this.typeCache.getType(this.resolvedReferences.get(expr)));
     }
 
     private SemanticType asType(TypeExpression typeExpression, Function<TypeExpression, SemanticType> basicTypeFactory) {
