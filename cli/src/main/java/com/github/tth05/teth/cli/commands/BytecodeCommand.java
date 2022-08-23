@@ -39,7 +39,7 @@ public class BytecodeCommand implements Runnable {
             if (compilationResult.logProblems(System.out, true))
                 return;
 
-            var instructions = compilationResult.getInstructions();
+            var instructions = compilationResult.getProgram().getInstructions();
             for (int i = 0; i < instructions.length; i++) {
                 System.out.println(i + ": " + instructions[i].getDebugString());
             }

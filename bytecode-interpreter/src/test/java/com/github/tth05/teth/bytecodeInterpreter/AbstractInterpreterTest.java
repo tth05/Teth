@@ -1,7 +1,7 @@
 package com.github.tth05.teth.bytecodeInterpreter;
 
 import com.github.tth05.teth.bytecode.compiler.Compiler;
-import com.github.tth05.teth.bytecode.decoder.IInstrunction;
+import com.github.tth05.teth.bytecode.program.TethProgram;
 import com.github.tth05.teth.lang.lexer.TokenStream;
 import com.github.tth05.teth.lang.lexer.Tokenizer;
 import com.github.tth05.teth.lang.parser.Parser;
@@ -41,7 +41,7 @@ public abstract class AbstractInterpreterTest {
         new Interpreter(compile(code)).execute();
     }
 
-    protected IInstrunction[] compile(String code) {
+    protected TethProgram compile(String code) {
         createAST(code);
         var c = new Compiler();
         c.setMainUnit(this.unit);
@@ -49,7 +49,7 @@ public abstract class AbstractInterpreterTest {
         if (result.hasProblems())
             throw new RuntimeException("Compiler failed\n" + result.getProblems().prettyPrint(true));
 
-        return result.getInstructions();
+        return result.getProgram();
     }
 
     protected void createAST(String str) {

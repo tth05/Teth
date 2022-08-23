@@ -2,9 +2,11 @@ package com.github.tth05.teth.bytecodeInterpreter;
 
 public class ObjectValue {
 
+    private final int structId;
     private final Object[] fields;
 
-    public ObjectValue(Object[] fields) {
+    public ObjectValue(int structId, Object[] fields) {
+        this.structId = structId;
         this.fields = fields;
     }
 
@@ -16,7 +18,7 @@ public class ObjectValue {
         return this.fields[fieldIndex];
     }
 
-    public Object[] getFields() {
-        return this.fields;
+    public int getStructId() {
+        return this.structId;
     }
 }

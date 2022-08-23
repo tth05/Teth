@@ -1,22 +1,22 @@
 package com.github.tth05.teth.bytecode.compiler;
 
-import com.github.tth05.teth.bytecode.decoder.IInstrunction;
+import com.github.tth05.teth.bytecode.program.TethProgram;
 import com.github.tth05.teth.lang.diagnostics.ProblemList;
 
 import java.io.PrintStream;
 
 public class CompilationResult {
 
-    private final IInstrunction[] instructions;
+    private final TethProgram program;
     private final ProblemList problems;
 
     public CompilationResult(ProblemList problems) {
         this.problems = problems;
-        this.instructions = null;
+        this.program = null;
     }
 
-    public CompilationResult(IInstrunction[] instructions) {
-        this.instructions = instructions;
+    public CompilationResult(TethProgram program) {
+        this.program = program;
         this.problems = ProblemList.of();
     }
 
@@ -36,7 +36,7 @@ public class CompilationResult {
         return this.problems;
     }
 
-    public IInstrunction[] getInstructions() {
-        return this.instructions;
+    public TethProgram getProgram() {
+        return this.program;
     }
 }

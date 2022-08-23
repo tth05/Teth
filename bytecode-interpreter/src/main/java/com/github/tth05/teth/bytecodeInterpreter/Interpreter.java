@@ -1,12 +1,14 @@
 package com.github.tth05.teth.bytecodeInterpreter;
 
 import com.github.tth05.teth.bytecode.decoder.*;
+import com.github.tth05.teth.bytecode.program.StructData;
+import com.github.tth05.teth.bytecode.program.TethProgram;
 
 import java.util.Arrays;
 
 public class Interpreter {
 
-    private final IInstrunction[] instructions;
+    private final TethProgram program;
 
     private final Object[] locals = new Object[2048];
     private int localsPointer = 0;
@@ -19,14 +21,14 @@ public class Interpreter {
 
     private int programCounter = 0;
 
-    public Interpreter(IInstrunction[] instructions) {
-        this.instructions = instructions;
+    public Interpreter(TethProgram program) {
+        this.program = program;
     }
 
     public void execute() {
         // These locals exist for micro-optimization
-        var cachedOpCodes = Arrays.stream(this.instructions).mapToInt(IInstrunction::getOpCode).toArray();
-        var instructions = this.instructions;
+        var cachedOpCodes = Arrays.stream(this.program.getInstructions()).mapToInt(IInstrunction::getOpCode).toArray();
+        var instructions = this.program.getInstructions();
 
         var pc = 0;
         while ((pc = this.programCounter) != -1) {
@@ -138,7 +140,7 @@ public class Interpreter {
     }
 
     public void setProgramCounter(int pc) {
-        if (pc < 0 || pc > this.instructions.length)
+        if (pc < 0 || pc > this.program.getInstructions().length)
             throw new IllegalArgumentException("Program counter is out of bounds");
 
         this.programCounter = pc;
@@ -156,5 +158,9 @@ public class Interpreter {
 
         this.localsPointer += localCount;
         this.locals[++this.localsPointer] = localCount;
+    }
+
+    public StructData getStructData(int structId) {
+        return this.program.getStructData()[structId];
     }
 }

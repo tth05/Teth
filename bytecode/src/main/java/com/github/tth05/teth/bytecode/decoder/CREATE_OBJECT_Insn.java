@@ -4,14 +4,14 @@ import com.github.tth05.teth.bytecode.compiler.OpCodes;
 
 public class CREATE_OBJECT_Insn implements IInstrunction {
 
-    private final short fieldCount;
+    private final int structId;
 
-    public CREATE_OBJECT_Insn(short fieldCount) {
-        this.fieldCount = fieldCount;
+    public CREATE_OBJECT_Insn(int structId) {
+        this.structId = structId;
     }
 
-    public short getFieldCount() {
-        return this.fieldCount;
+    public int getStructId() {
+        return this.structId;
     }
 
     @Override
@@ -21,6 +21,6 @@ public class CREATE_OBJECT_Insn implements IInstrunction {
 
     @Override
     public String getDebugParametersString() {
-        return this.fieldCount + "";
+        return this.structId + "";
     }
 }

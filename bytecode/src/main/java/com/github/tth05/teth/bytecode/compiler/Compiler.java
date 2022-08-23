@@ -4,6 +4,8 @@ import com.github.tth05.teth.analyzer.Analyzer;
 import com.github.tth05.teth.analyzer.prelude.Prelude;
 import com.github.tth05.teth.analyzer.visitor.NameAnalysis;
 import com.github.tth05.teth.bytecode.decoder.*;
+import com.github.tth05.teth.bytecode.program.StructData;
+import com.github.tth05.teth.bytecode.program.TethProgram;
 import com.github.tth05.teth.lang.parser.ASTVisitor;
 import com.github.tth05.teth.lang.parser.SourceFileUnit;
 import com.github.tth05.teth.lang.parser.ast.*;
@@ -29,13 +31,14 @@ public class Compiler {
 
         var generator = new BytecodeGeneratorVisitor(analyzer);
         generator.visit(this.mainUnit);
-        return new CompilationResult(generator.toArray());
+        return new CompilationResult(generator.toProgram());
     }
 
     private static class BytecodeGeneratorVisitor extends ASTVisitor {
 
         private static final FunctionDeclaration.ParameterDeclaration SELF_PLACEHOLDER = new FunctionDeclaration.ParameterDeclaration(null, null, new IdentifierExpression(null, "self"));
 
+        private final Map<StructDeclaration, Integer> structIds = new IdentityHashMap<>();
         private final Map<FunctionDeclaration, List<IInstrunction>> functionInsnMap = new IdentityHashMap<>();
         private final Analyzer analyzer;
 
@@ -46,7 +49,7 @@ public class Compiler {
             this.analyzer = analyzer;
         }
 
-        public IInstrunction[] toArray() {
+        public TethProgram toProgram() {
             var i = 1;
             var insns = new IInstrunction[this.functionInsnMap.values().stream().mapToInt(List::size).sum() + 1];
             var functionOffsets = new IdentityHashMap<FunctionDeclaration, Integer>();
@@ -83,7 +86,18 @@ public class Compiler {
             // "Invoke" global function
             insns[0] = new INVOKE_Insn(false, 0, this.analyzer.functionLocalsCount(NameAnalysis.GLOBAL_FUNCTION), 0);
 
-            return insns;
+            return new TethProgram(insns, generateStructData());
+        }
+
+        private StructData[] generateStructData() {
+            var data = new StructData[this.structIds.size()];
+            this.structIds.forEach((struct, id) -> {
+                data[id] = new StructData(
+                        struct.getNameExpr().getValue(),
+                        struct.getFields().stream().map(f -> f.getNameExpr().getValue()).toArray(String[]::new)
+                );
+            });
+            return data;
         }
 
         @Override
@@ -91,6 +105,12 @@ public class Compiler {
             this.functionInsnMap.put(NameAnalysis.GLOBAL_FUNCTION, this.currentFunctionInsn);
             super.visit(unit);
             this.currentFunctionInsn.add(new EXIT_Insn());
+        }
+
+        @Override
+        public void visit(StructDeclaration declaration) {
+            getStructId(declaration);
+            super.visit(declaration);
         }
 
         @Override
@@ -140,7 +160,7 @@ public class Compiler {
             }
 
             var structDeclaration = (StructDeclaration) this.analyzer.resolvedReference(expression.getTargetNameExpr());
-            this.currentFunctionInsn.add(new CREATE_OBJECT_Insn((short) structDeclaration.getFields().size()));
+            this.currentFunctionInsn.add(new CREATE_OBJECT_Insn(getStructId(structDeclaration)));
         }
 
         @Override
@@ -326,6 +346,10 @@ public class Compiler {
             // which is the index if the 'self' parameter. All of this obviously assumes that the analyzer ran
             // successfully.
             return this.currentFunctionLocals.getOrDefault((IVariableDeclaration) this.analyzer.resolvedReference(identifierExpression), 0);
+        }
+
+        private int getStructId(StructDeclaration declaration) {
+            return this.structIds.computeIfAbsent(declaration, k -> this.structIds.size());
         }
     }
 

@@ -47,7 +47,7 @@ public class RunCommand implements Runnable {
             if (compilationResult.logProblems(System.out, true))
                 return;
 
-            var interpreter = new Interpreter(compilationResult.getInstructions());
+            var interpreter = new Interpreter(compilationResult.getProgram());
             interpreter.execute();
 
             if (this.verbose) {

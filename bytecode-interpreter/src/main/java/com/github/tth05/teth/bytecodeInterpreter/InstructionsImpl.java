@@ -194,11 +194,12 @@ public class InstructionsImpl {
                 }
                 case OpCodes.CREATE_OBJECT -> {
                     var createInsn = (CREATE_OBJECT_Insn) insn;
-                    var fields = new Object[createInsn.getFieldCount()];
+                    var structData = interpreter.getStructData(createInsn.getStructId());
 
+                    var fields = new Object[structData.fieldNames().length];
                     for (int i = fields.length - 1; i >= 0; i--)
                         fields[i] = interpreter.pop();
-                    interpreter.push(new ObjectValue(fields));
+                    interpreter.push(new ObjectValue(createInsn.getStructId(), fields));
                 }
                 case OpCodes.LOAD_MEMBER -> {
                     var loadMemberInsn = (LOAD_MEMBER_Insn) insn;
