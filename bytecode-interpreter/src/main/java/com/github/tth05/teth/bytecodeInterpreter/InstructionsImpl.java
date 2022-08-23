@@ -195,7 +195,8 @@ public class InstructionsImpl {
                 case OpCodes.CREATE_OBJECT -> {
                     var createInsn = (CREATE_OBJECT_Insn) insn;
                     var fields = new Object[createInsn.getFieldCount()];
-                    for (int i = 0; i < fields.length; i++)
+
+                    for (int i = fields.length - 1; i >= 0; i--)
                         fields[i] = interpreter.pop();
                     interpreter.push(new ObjectValue(fields));
                 }

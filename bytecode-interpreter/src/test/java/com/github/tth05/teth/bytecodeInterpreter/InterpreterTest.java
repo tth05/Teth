@@ -9,6 +9,20 @@ import static org.junit.jupiter.api.Assertions.*;
 public class InterpreterTest extends AbstractInterpreterTest {
 
     @Test
+    public void testStructFieldsAreInCorrectOrder() {
+        execute("""
+                struct S {
+                    one: long
+                    two: long
+                }
+                
+                print([new S(1, 2).one, new S(1, 2).two])
+                """);
+
+        assertLinesMatch(List.of("1 2"), getSystemOutputLines());
+    }
+
+    @Test
     public void testVariableRedeclarationShouldNotLeakValueToOuterScope() {
         execute("""
                 let a = 5
