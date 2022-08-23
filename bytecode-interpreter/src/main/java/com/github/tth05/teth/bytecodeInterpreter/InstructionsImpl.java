@@ -26,6 +26,9 @@ public class InstructionsImpl {
 
             System.out.println();
         });
+        INTRINSICS.put(Prelude.getGlobalFunction("stringify"), (interpreter, args) -> {
+            interpreter.push(intrinsicToString(interpreter, args[0]));
+        });
         INTRINSICS.put(prelude("string", "concat"), (interpreter, args) -> {
             var left = ((String) args[0]);
             var right = ((String) args[1]);
@@ -275,5 +278,39 @@ public class InstructionsImpl {
 
     private static FunctionDeclaration prelude(String struct, String function) {
         return (FunctionDeclaration) Prelude.getStructForTypeName(struct).getMember(function);
+    }
+
+    private static String intrinsicToString(Interpreter interpreter, Object o) {
+        return switch (o) {
+            case List<?> l -> {
+                var sb = new StringBuilder();
+                sb.append("[");
+                for (var i = 0; i < l.size(); i++) {
+                    if (i > 0)
+                        sb.append(", ");
+                    sb.append(intrinsicToString(interpreter, l.get(i)));
+                }
+                sb.append("]");
+                yield sb.toString();
+            }
+            case ObjectValue v -> {
+                var structData = interpreter.getStructData(v.getStructId());
+                var str = new StringBuilder(structData.name());
+                str.append('(');
+                for (int i = 0; i < structData.fieldNames().length; i++) {
+                    if (i > 0)
+                        str.append(", ");
+
+                    var fieldName = structData.fieldNames()[i];
+                    str
+                            .append(fieldName)
+                            .append(": ")
+                            .append(intrinsicToString(interpreter, v.getField(i)));
+                }
+                str.append(')');
+                yield str.toString();
+            }
+            default -> o.toString();
+        };
     }
 }

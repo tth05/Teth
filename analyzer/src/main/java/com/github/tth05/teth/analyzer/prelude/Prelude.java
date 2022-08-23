@@ -74,10 +74,17 @@ public class Prelude {
             null,
             type("list", type("any"))
     );
+    private static final FunctionDeclaration STRINGIFY_FUNCTION = createFakeFunctionDeclaration(
+            "stringify",
+            false,
+            type("string"),
+            type("any")
+    );
 
     public static FunctionDeclaration getGlobalFunction(String name) {
         return switch (name) {
             case "print" -> PRINT_FUNCTION;
+            case "stringify" -> STRINGIFY_FUNCTION;
             default -> null;
         };
     }
@@ -109,6 +116,7 @@ public class Prelude {
         statements.add(0, LIST_STRUCT_DECLARATION);
         statements.add(0, ANY_STRUCT_DECLARATION);
         statements.add(0, PRINT_FUNCTION);
+        statements.add(0, STRINGIFY_FUNCTION);
     }
 
     private static TypeExpression type(String name, TypeExpression... params) {
