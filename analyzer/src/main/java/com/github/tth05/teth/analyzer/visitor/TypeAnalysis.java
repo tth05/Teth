@@ -419,8 +419,4 @@ public class TypeAnalysis extends ASTVisitor {
             return this.resolvedExpressionTypes.get(varDecl.getInitializerExpr());
         }
     }
-
-    private boolean isInNestedFunction() {
-        return this.currentFunctionStack.size() > 2;
-    }
 }
