@@ -9,6 +9,16 @@ import static org.junit.jupiter.api.Assertions.*;
 public class InterpreterTest extends AbstractInterpreterTest {
 
     @Test
+    public void testStringInterpolation() {
+        execute("""
+                struct S {a: long}
+                print(["Hello 5+5={stringify(5+5)}, {stringify(new S(25))}"])
+                """);
+
+        assertLinesMatch(List.of("Hello 5+5=10, S(a: 25)"), getSystemOutputLines());
+    }
+
+    @Test
     public void testStructFieldsAreInCorrectOrder() {
         execute("""
                 struct S {
