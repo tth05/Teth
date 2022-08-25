@@ -90,15 +90,25 @@ public class Tokenizer {
 
         StringBuilder string = new StringBuilder(5);
         this.stream.consume(); //Prefix
+
+        var escaped = false;
         while (true) {
             var next = this.stream.peek();
             if (next == 0 || isLineBreak(next))
                 throw new UnexpectedCharException(this.stream.createCurrentIndexSpan(), "Unclosed string literal");
-            if (isQuote(next))
-                break;
 
-            //TODO: Escapes etc.
-            string.append(this.stream.consume());
+            if (escaped) { // Escaped character
+                //TODO: Actual escape sequences
+                string.append(this.stream.consume());
+                escaped = false;
+            } else if (isQuote(next)) { // End string
+                break;
+            } else if (next == '\\') { // Escape next char
+                escaped = true;
+                this.stream.consume();
+            } else { // Normal character
+                string.append(this.stream.consume());
+            }
         }
         this.stream.consume(); //Suffix
 

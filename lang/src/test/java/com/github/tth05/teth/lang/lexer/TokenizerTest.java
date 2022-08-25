@@ -53,6 +53,10 @@ public class TokenizerTest extends AbstractTokenizerTest {
         createStreams("\"teth_is_great!\"");
         assertIterableEquals(tokenList(new Token(makeSpan(0, 16), "teth_is_great!", TokenType.STRING_LITERAL)), tokensIntoList());
         assertStreamsEmpty();
+
+        createStreams("\"teth\\\"hi\\\"1\\\\\"");
+        assertIterableEquals(tokenList(new Token(makeSpan(0, 15), "teth\"hi\"1\\", TokenType.STRING_LITERAL)), tokensIntoList());
+        assertStreamsEmpty();
     }
 
     @Test
