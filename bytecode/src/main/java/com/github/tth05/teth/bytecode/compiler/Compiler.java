@@ -312,7 +312,21 @@ public class Compiler {
 
         @Override
         public void visit(StringLiteralExpression stringLiteralExpression) {
-            this.currentFunctionInsn.add(new S_CONST_Insn(stringLiteralExpression.getValue()));
+            if (stringLiteralExpression.isSingleString()) {
+                this.currentFunctionInsn.add(new S_CONST_Insn(stringLiteralExpression.asSingleString()));
+                return;
+            }
+
+            for (var part : stringLiteralExpression.getParts()) {
+                switch (part.getType()) {
+                    case STRING -> this.currentFunctionInsn.add(new S_CONST_Insn(part.asString()));
+                    case EXPRESSION -> part.asExpression().accept(this);
+                }
+            }
+
+            var concatFunction = (FunctionDeclaration) Prelude.getStructForTypeName("string").getMember("concat");
+            for (int i = 0; i < stringLiteralExpression.getParts().size() - 1; i++)
+                this.currentFunctionInsn.add(new INVOKE_INTRINSIC_Insn(concatFunction));
         }
 
         @Override
