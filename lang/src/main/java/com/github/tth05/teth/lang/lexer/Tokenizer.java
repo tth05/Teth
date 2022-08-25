@@ -15,43 +15,12 @@ public class Tokenizer {
 
     public TokenizerResult tokenize() {
         try {
-            while (true) {
-                char c = this.stream.peek();
-                if (c == 0) {
-                    emit(this.stream.createCurrentIndexSpan(), "", TokenType.EOF);
-                    break;
-                }
-
-                if (isNumber(c)) {
-                    emitNumber();
-                } else if (isQuote(c)) {
-                    emitString();
-                } else if (isIdentifierChar(c)) {
-                    var ident = parseIdentifier();
-                    if (isKeyword(ident.value()))
-                        emit(new Token(ident.span(), ident.value(), TokenType.KEYWORD));
-                    else if (isBooleanLiteral(ident.value()))
-                        emit(new Token(ident.span(), ident.value(), TokenType.BOOLEAN_LITERAL));
-                    else
-                        emit(ident);
-                } else if (isOperator(c)) {
-                    emitOperator();
-                } else if (isParen(c)) {
-                    emitParen();
-                } else if (isLineBreak(c)) {
-                    emit(this.stream.consumeKnownSingle(), "\n", TokenType.LINE_BREAK);
-                } else if (isWhitespace(c)) {
-                    this.stream.consume();
-                } else if (isComma(c)) {
-                    emit(this.stream.consumeKnownSingle(), ",", TokenType.COMMA);
-                } else if (isDot(c)) {
-                    emit(this.stream.consumeKnownSingle(), ".", TokenType.DOT);
-                } else if (isColon(c)) {
-                    emit(this.stream.consumeKnownSingle(), ":", TokenType.COLON);
-                } else {
-                    throw new UnexpectedCharException(this.stream.createCurrentIndexSpan(), "Invalid character '%s'", c);
-                }
-            }
+            emitUntil(c -> {
+                if (c != 0)
+                    return false;
+                emit(this.stream.createCurrentIndexSpan(), "", TokenType.EOF);
+                return true;
+            });
         } catch (UnexpectedCharException e) {
             return new TokenizerResult(this.tokenStream, ProblemList.of(e.asProblem()));
         }
@@ -59,12 +28,50 @@ public class Tokenizer {
         return new TokenizerResult(this.tokenStream);
     }
 
+    private void emitUntil(CharPredicate breakPredicate) {
+        while (true) {
+            char c = this.stream.peek();
+            if (breakPredicate.test(c))
+                break;
+
+            if (isNumber(c)) {
+                emitNumber();
+            } else if (isQuote(c)) {
+                emitString();
+            } else if (isIdentifierChar(c)) {
+                var ident = parseIdentifier();
+                if (isKeyword(ident.value()))
+                    emit(new Token(ident.span(), ident.value(), TokenType.KEYWORD));
+                else if (isBooleanLiteral(ident.value()))
+                    emit(new Token(ident.span(), ident.value(), TokenType.BOOLEAN_LITERAL));
+                else
+                    emit(ident);
+            } else if (isOperator(c)) {
+                emitOperator();
+            } else if (isParen(c)) {
+                emitParen();
+            } else if (isLineBreak(c)) {
+                emit(this.stream.consumeKnownSingle(), "\n", TokenType.LINE_BREAK);
+            } else if (isWhitespace(c)) {
+                this.stream.consume();
+            } else if (isComma(c)) {
+                emit(this.stream.consumeKnownSingle(), ",", TokenType.COMMA);
+            } else if (isDot(c)) {
+                emit(this.stream.consumeKnownSingle(), ".", TokenType.DOT);
+            } else if (isColon(c)) {
+                emit(this.stream.consumeKnownSingle(), ":", TokenType.COLON);
+            } else {
+                throw new UnexpectedCharException(this.stream.createCurrentIndexSpan(), "Invalid character '%s'", c);
+            }
+        }
+    }
+
     private void emit(Token token) {
         this.tokenStream.push(token);
     }
 
     private void emit(String value, TokenType type) {
-        this.tokenStream.push(new Token(this.stream.createMarkedSpan(), value, type));
+        this.tokenStream.push(new Token(this.stream.popMarkedSpan(), value, type));
     }
 
     private void emit(ISpan span, String value, TokenType type) {
@@ -82,13 +89,13 @@ public class Tokenizer {
             ident.append(this.stream.consume());
         } while (!isSeparator(this.stream.peek()) && !isDot(this.stream.peek()));
 
-        return new Token(this.stream.createMarkedSpan(), ident.toString(), TokenType.IDENTIFIER);
+        return new Token(this.stream.popMarkedSpan(), ident.toString(), TokenType.IDENTIFIER);
     }
 
     private void emitString() {
         this.stream.markSpan();
 
-        StringBuilder string = new StringBuilder(5);
+        var string = new StringBuilder(5);
         this.stream.consume(); //Prefix
 
         var escaped = false;
@@ -106,6 +113,18 @@ public class Tokenizer {
             } else if (next == '\\') { // Escape next char
                 escaped = true;
                 this.stream.consume();
+            } else if (next == '{') {
+                // Commit everything up to this point as a string literal
+                emit(string.toString(), TokenType.STRING_LITERAL);
+                string.setLength(0);
+
+                emit(this.stream.createCurrentIndexSpan(), "{", TokenType.STRING_LITERAL_CODE_START);
+                this.stream.consume();
+                emitUntil(new BracketMatchingBreakPredicate());
+                emit(this.stream.createCurrentIndexSpan(), "}", TokenType.STRING_LITERAL_CODE_END);
+                this.stream.consume();
+
+                this.stream.markSpan();
             } else { // Normal character
                 string.append(this.stream.consume());
             }
@@ -138,7 +157,7 @@ public class Tokenizer {
             number.append(this.stream.consume());
         } while (!isSeparator(this.stream.peek()));
 
-        var span = this.stream.createMarkedSpan();
+        var span = this.stream.popMarkedSpan();
         try {
             if (isDouble)
                 Double.parseDouble(number.toString());
@@ -293,5 +312,25 @@ public class Tokenizer {
 
     public static TokenizerResult streamOf(CharStream charStream) {
         return new Tokenizer(charStream).tokenize();
+    }
+
+    @FunctionalInterface
+    private interface CharPredicate {
+
+        boolean test(char c);
+    }
+
+    private static class BracketMatchingBreakPredicate implements CharPredicate {
+
+        private int balance = 1;
+
+        @Override
+        public boolean test(char c) {
+            if (c == '{')
+                this.balance++;
+            else if (c == '}')
+                this.balance--;
+            return this.balance == 0;
+        }
     }
 }

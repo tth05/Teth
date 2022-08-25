@@ -445,8 +445,7 @@ public class Parser {
         return switch (token.type()) {
             case LONG_LITERAL -> new LongLiteralExpression(span, Long.parseLong(this.stream.consume().value()));
             case DOUBLE_LITERAL -> new DoubleLiteralExpression(span, Double.parseDouble(this.stream.consume().value()));
-            case STRING_LITERAL ->
-                    new StringLiteralExpression(span, this.stream.consumeType(TokenType.STRING_LITERAL).value());
+            case STRING_LITERAL -> parseStringLiteralExpression();
             case BOOLEAN_LITERAL ->
                     new BooleanLiteralExpression(span, Boolean.parseBoolean(this.stream.consumeType(TokenType.BOOLEAN_LITERAL).value()));
             case IDENTIFIER -> new IdentifierExpression(span, this.stream.consumeType(TokenType.IDENTIFIER).value());
@@ -469,6 +468,22 @@ public class Parser {
             }
             default -> throw new UnexpectedTokenException(token.span(), "Expected a literal");
         };
+    }
+
+    private StringLiteralExpression parseStringLiteralExpression() {
+        var parts = new ArrayList<StringLiteralExpression.Part>(1);
+        while (this.stream.peek().is(TokenType.STRING_LITERAL)) {
+            var token = this.stream.consumeType(TokenType.STRING_LITERAL);
+            parts.add(StringLiteralExpression.stringPart(token.span(), token.value()));
+
+            if (this.stream.peek().is(TokenType.STRING_LITERAL_CODE_START)) {
+                this.stream.consumeType(TokenType.STRING_LITERAL_CODE_START);
+                parts.add(StringLiteralExpression.expressionPart(parseExpression()));
+                this.stream.consumeType(TokenType.STRING_LITERAL_CODE_END);
+            }
+        }
+
+        return new StringLiteralExpression(parts);
     }
 
     private TypeExpression parseType() {

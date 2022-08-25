@@ -3,11 +3,14 @@ package com.github.tth05.teth.lang.stream;
 import com.github.tth05.teth.lang.span.ISpan;
 import com.github.tth05.teth.lang.span.Span;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
+
 public class CharStream {
 
     private final char[] chars;
 
-    private int markedIndex = -1;
+    private Deque<Integer> markedIndices = new ArrayDeque<>(5);
 
     private int index;
 
@@ -57,16 +60,15 @@ public class CharStream {
     }
 
     public void markSpan() {
-        this.markedIndex = this.index;
+        this.markedIndices.push(this.index);
     }
 
-    public ISpan createMarkedSpan() {
-        if (this.markedIndex == -1)
+    public ISpan popMarkedSpan() {
+        if (this.markedIndices.isEmpty())
             throw new IllegalStateException("No mark set");
 
-        var span = new Span(this.chars, this.markedIndex, this.index);
-        this.markedIndex = -1;
-        return span;
+        var markedIndex = this.markedIndices.pop();
+        return new Span(this.chars, markedIndex, this.index);
     }
 
     public ISpan createCurrentIndexSpan() {

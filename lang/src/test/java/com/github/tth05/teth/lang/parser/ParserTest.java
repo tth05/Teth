@@ -16,7 +16,36 @@ public class ParserTest extends AbstractParserTest {
         createAST("\"A string!\"");
         assertEquals(new SourceFileUnit(
                 List.of(
-                        new StringLiteralExpression(null, "A string!")
+                        new StringLiteralExpression(null, List.of(StringLiteralExpression.stringPart(null, "A string!")))
+                )
+        ), this.unit);
+        assertStreamsEmpty();
+
+        createAST("""
+                "5+{5} is equal to \\{=}{calc(5+5)}"
+                """);
+        assertEquals(new SourceFileUnit(
+                List.of(
+                        new StringLiteralExpression(null, List.of(
+                                StringLiteralExpression.stringPart(null, "5+"),
+                                StringLiteralExpression.expressionPart(new LongLiteralExpression(null, 5)),
+                                StringLiteralExpression.stringPart(null, " is equal to {=}"),
+                                StringLiteralExpression.expressionPart(new FunctionInvocationExpression(
+                                                null,
+                                                new IdentifierExpression(null, "calc"),
+                                                List.of(),
+                                                ExpressionList.of(
+                                                        new BinaryExpression(
+                                                                null,
+                                                                new LongLiteralExpression(null, 5),
+                                                                new LongLiteralExpression(null, 5),
+                                                                BinaryExpression.Operator.OP_ADD
+                                                        )
+                                                )
+                                        )
+                                ),
+                                StringLiteralExpression.stringPart(null, "")
+                        ))
                 )
         ), this.unit);
         assertStreamsEmpty();
@@ -382,7 +411,7 @@ public class ParserTest extends AbstractParserTest {
                                         new BlockStatement(
                                                 null,
                                                 StatementList.of(
-                                                        new StringLiteralExpression(null, "true")
+                                                        new StringLiteralExpression(null, List.of(StringLiteralExpression.stringPart(null, "true")))
                                                 )
                                         ),
                                         null
@@ -608,7 +637,7 @@ public class ParserTest extends AbstractParserTest {
                                                                 new BlockStatement(
                                                                         null,
                                                                         StatementList.of(
-                                                                                new ReturnStatement(null, new StringLiteralExpression(null, "hello"))
+                                                                                new ReturnStatement(null, new StringLiteralExpression(null, List.of(StringLiteralExpression.stringPart(null, "hello"))))
                                                                         )
                                                                 ),
                                                                 false
@@ -650,7 +679,7 @@ public class ParserTest extends AbstractParserTest {
                                                 ),
                                                 List.of(),
                                                 ExpressionList.of(
-                                                        new StringLiteralExpression(null, "hello world")
+                                                        new StringLiteralExpression(null, List.of(StringLiteralExpression.stringPart(null, "hello world")))
                                                 )
                                         ),
                                         BinaryExpression.Operator.OP_ADD
@@ -775,10 +804,10 @@ public class ParserTest extends AbstractParserTest {
                                         null,
                                         new IdentifierExpression(null, "Foo"),
                                         List.of(), ExpressionList.of(
-                                                new LongLiteralExpression(null, 1),
-                                                new LongLiteralExpression(null, 2),
-                                                new LongLiteralExpression(null, 3)
-                                        )
+                                        new LongLiteralExpression(null, 1),
+                                        new LongLiteralExpression(null, 2),
+                                        new LongLiteralExpression(null, 3)
+                                )
                                 )
                         )
                 ),

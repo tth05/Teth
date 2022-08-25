@@ -7,6 +7,8 @@ public enum TokenType {
     LONG_LITERAL("Long"),
     DOUBLE_LITERAL("Double"),
     STRING_LITERAL("String"),
+    STRING_LITERAL_CODE_START("{"),
+    STRING_LITERAL_CODE_END("}"),
     BOOLEAN_LITERAL("Boolean"),
     COMMA(","),
     DOT("."),
