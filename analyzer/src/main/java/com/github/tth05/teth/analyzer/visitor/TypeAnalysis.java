@@ -278,6 +278,17 @@ public class TypeAnalysis extends ASTVisitor {
 
     @Override
     public void visit(StringLiteralExpression stringLiteralExpression) {
+        super.visit(stringLiteralExpression);
+
+        for (var part : stringLiteralExpression.getParts()) {
+            if (part.getType() != StringLiteralExpression.PartType.EXPRESSION)
+                continue;
+
+            var type = this.resolvedExpressionTypes.get(part.asExpression());
+            if (!type.equals(this.typeCache.getType(STRING_STRUCT_DECLARATION)))
+                throw new TypeResolverException(part.asExpression().getSpan(), "String literal part must be a string");
+        }
+
         this.resolvedExpressionTypes.put(stringLiteralExpression, this.typeCache.getType(STRING_STRUCT_DECLARATION));
     }
 

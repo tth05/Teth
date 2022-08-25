@@ -166,6 +166,22 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
     }
 
     @Test
+    public void testStringInterpolation() {
+        var problems = analyze("\"Hello, {\"World\"}!\"");
+
+        assertTrue(problems.isEmpty());
+    }
+
+    @Test
+    public void testIncorrectTypeStringInterpolation() {
+        var problems = analyze("\"Hello, {5}!\"");
+
+        assertFalse(problems.isEmpty());
+        assertEquals(1, problems.size());
+        assertEquals("String literal part must be a string", problems.get(0).message());
+    }
+
+    @Test
     public void testIfStatementCondition() {
         var problems = analyze("if(true) 5");
 

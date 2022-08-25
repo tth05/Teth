@@ -139,6 +139,10 @@ public abstract class ASTVisitor {
     }
 
     public void visit(StringLiteralExpression stringLiteralExpression) {
+        stringLiteralExpression.getParts().forEach(p -> {
+            if (p.getType() == StringLiteralExpression.PartType.EXPRESSION)
+                p.asExpression().accept(this);
+        });
     }
 
     public void visit(IdentifierExpression identifierExpression) {
