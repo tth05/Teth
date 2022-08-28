@@ -10,7 +10,6 @@ import com.github.tth05.teth.lang.parser.ExpressionList;
 import com.github.tth05.teth.lang.parser.ast.*;
 
 import java.util.*;
-import java.util.function.Function;
 
 import static com.github.tth05.teth.analyzer.prelude.Prelude.*;
 
@@ -89,7 +88,7 @@ public class TypeAnalysis extends ASTVisitor {
                 decl.getParameters(), invocation.getParameters()
         );
 
-        var returnType = decl.getReturnTypeExpr() != null ? resolveTypeOrBind(genericParameterInfo, decl.getReturnTypeExpr(), null) : this.typeCache.voidType();
+        var returnType = decl.getReturnTypeExpr() != null ? asTypeGeneric(genericParameterInfo, decl.getReturnTypeExpr(), null) : this.typeCache.voidType();
         if (returnType == null)
             throw new TypeResolverException(invocation.getSpan(), "Return type is generic, but not bound");
 
@@ -331,7 +330,7 @@ public class TypeAnalysis extends ASTVisitor {
         declaration.getBody().accept(this);
     }
 
-    private SemanticType resolveTypeOrBind(GenericParameterInfo genericParameterInfo, TypeExpression typeExpr, SemanticType fallbackType) {
+    private SemanticType asTypeGeneric(GenericParameterInfo genericParameterInfo, TypeExpression typeExpr, SemanticType fallbackType) {
         SemanticType paramType;
         if (referencesGenericParameter(typeExpr)) {
             var actualType = genericParameterInfo.getBoundGenericParameter(typeExpr.getName());
@@ -343,14 +342,36 @@ public class TypeAnalysis extends ASTVisitor {
             }
             paramType = actualType;
         } else {
+            // Non-generic reference with no parameters -> simply internalize it
+            if (typeExpr.getGenericParameters().isEmpty())
+                return asType(typeExpr);
+
+            var ref = this.resolvedReferences.get(typeExpr);
+            if (ref == null)
+                throw new IllegalStateException();
+
             // This resolves inner generic parameters when converting the expression to a type. Allows list<T> to
             // become list<long>
-            paramType = asType(typeExpr, (expr) -> {
-                if (referencesGenericParameter(expr))
-                    return resolveTypeOrBind(genericParameterInfo, expr, null);
-                else
-                    return asType(expr);
-            });
+            var genericParameters = new ArrayList<SemanticType>(typeExpr.getGenericParameters().size());
+            var fallbackTypeGenericBounds = fallbackType == null || !fallbackType.hasGenericBounds() ? null : fallbackType.getGenericBounds();
+            for (int i = 0; i < typeExpr.getGenericParameters().size(); i++) {
+                // We "step into" the fallback type here to resolve the generic parameters of the inner type
+                // Also note that the case of no fallback type is handled above, because the fallback type is only
+                // important when the current expression references a generic parameter. Otherwise, which is the case
+                // here, we can just propagate null or the fallback type without caring about the value.
+                var fallbackTypeGenericBound = fallbackTypeGenericBounds == null ? null : fallbackTypeGenericBounds.get(i);
+
+                var genericParamType = asTypeGeneric(genericParameterInfo, typeExpr.getGenericParameters().get(i), fallbackTypeGenericBound);
+                if (genericParamType == null)
+                    return null;
+
+                genericParameters.add(genericParamType);
+            }
+
+            paramType = new SemanticType(
+                    this.typeCache.internalizeType(ref),
+                    genericParameters.isEmpty() ? null : genericParameters
+            );
         }
 
         return paramType;
@@ -386,8 +407,10 @@ public class TypeAnalysis extends ASTVisitor {
             var expression = parameters.get(i);
             var expressionType = this.resolvedExpressionTypes.get(expression);
 
-            var paramType = resolveTypeOrBind(genericParameterInfo, paramTypeExpr, expressionType);
+            var paramType = asTypeGeneric(genericParameterInfo, paramTypeExpr, expressionType);
 
+            if(paramType == null)
+                throw new TypeResolverException(expression.getSpan(), "Parameter type mismatch. Expected " + paramTypeExpr + ", got " + this.typeCache.toString(expressionType));
             if (!this.typeCache.isSubtypeOf(expressionType, paramType))
                 throw new TypeResolverException(expression.getSpan(), "Parameter type mismatch. Expected " + this.typeCache.toString(paramType) + ", got " + this.typeCache.toString(expressionType));
         }
@@ -401,17 +424,13 @@ public class TypeAnalysis extends ASTVisitor {
     }
 
     private SemanticType asType(TypeExpression typeExpr) {
-        return asType(typeExpr, expr -> this.typeCache.getType(this.resolvedReferences.get(expr)));
-    }
+        var ref = this.resolvedReferences.get(typeExpr);
 
-    private SemanticType asType(TypeExpression typeExpression, Function<TypeExpression, SemanticType> basicTypeFactory) {
-        var ref = this.resolvedReferences.get(typeExpression);
+        if (typeExpr.getGenericParameters().isEmpty())
+            return this.typeCache.getType(ref);
 
-        if (typeExpression.getGenericParameters().isEmpty())
-            return basicTypeFactory.apply(typeExpression);
-
-        var genericParameters = typeExpression.getGenericParameters().stream()
-                .map(p -> asType(p, basicTypeFactory))
+        var genericParameters = typeExpr.getGenericParameters().stream()
+                .map(this::asType)
                 .toList();
 
         return new SemanticType(this.typeCache.internalizeType(ref), genericParameters);

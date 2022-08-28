@@ -450,4 +450,30 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
         assertEquals(1, problems.size());
         assertEquals("Cannot return T from function returning T", problems.get(0).message());
     }
+
+    @Test
+    public void testTypeStructureMismatchGivesCorrectFullTypeInErrorMessage() {
+        var problems = analyze("""
+                fn t<T>(t: list<T>) {}
+                t(5)
+                """);
+
+        assertFalse(problems.isEmpty());
+        assertEquals(1, problems.size());
+        assertEquals("Parameter type mismatch. Expected list<T>, got long", problems.get(0).message());
+    }
+
+    @Test
+    // This test name sucks
+    public void testInnerTypePreBoundResolvesCorrectly() {
+        var problems = analyze("""
+                fn t<T>(t: T, l: list<T>) {}
+                struct S<B> {}
+                t(5, new S<double>())
+                """);
+
+        assertFalse(problems.isEmpty());
+        assertEquals(1, problems.size());
+        assertEquals("Parameter type mismatch. Expected list<long>, got S<double>", problems.get(0).message());
+    }
 }

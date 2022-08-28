@@ -270,13 +270,13 @@ public class NameAnalysis extends ASTVisitor {
         declaration.getBody().accept(this);
     }
 
-    private <T extends Statement> void validateNoDuplicates(List<T> genericParameterDeclarations, Comparator<T> comparator, String message) {
-        for (var p1 : genericParameterDeclarations) {
-            for (var p2 : genericParameterDeclarations) {
+    private <T extends Statement> void validateNoDuplicates(List<T> list, Comparator<T> comparator, String message) {
+        for (var p1 : list) {
+            for (var p2 : list) {
                 if (p1 == p2)
                     continue;
                 if (comparator.compare(p1, p2) == 0)
-                    throw new ValidationException(p2.getSpan(), "Duplicate generic parameter name");
+                    throw new ValidationException(p2.getSpan(), message);
             }
         }
     }

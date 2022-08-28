@@ -27,6 +27,8 @@ public class SemanticType {
     }
 
     public List<SemanticType> getGenericBounds() {
+        if (this.genericBounds == null)
+            throw new UnsupportedOperationException("No generic bounds present");
         return Collections.unmodifiableList(this.genericBounds);
     }
 
