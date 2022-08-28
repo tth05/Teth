@@ -284,6 +284,8 @@ public class Compiler {
                 case OP_DIVIDE -> this.currentFunctionInsn.add(new LD_DIV_Insn());
                 case OP_LESS -> this.currentFunctionInsn.add(new LD_LESS_Insn());
                 case OP_LESS_EQUAL -> this.currentFunctionInsn.add(new LD_LESS_EQUAL_Insn());
+                case OP_GREATER -> this.currentFunctionInsn.add(new LD_GREATER_Insn());
+                case OP_GREATER_EQUAL -> this.currentFunctionInsn.add(new LD_GREATER_EQUAL_Insn());
                 case OP_EQUAL -> this.currentFunctionInsn.add(new LD_EQUAL_Insn());
                 case OP_NOT_EQUAL -> {
                     this.currentFunctionInsn.add(new LD_EQUAL_Insn());

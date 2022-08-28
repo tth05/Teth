@@ -248,6 +248,21 @@ public class InstructionsImpl {
 
                     interpreter.push(result);
                 }
+                case OpCodes.LD_GREATER_EQUAL, OpCodes.LD_GREATER -> {
+                    var right = interpreter.pop();
+                    var left = interpreter.pop();
+                    boolean useDouble = validateLongDoubleOperands(left, right);
+                    var leftNum = (Number) left;
+                    var rightNum = (Number) right;
+
+                    boolean result;
+                    if (code == OpCodes.LD_GREATER)
+                        result = useDouble ? leftNum.doubleValue() > rightNum.doubleValue() : leftNum.longValue() > rightNum.longValue();
+                    else
+                        result = useDouble ? leftNum.doubleValue() >= rightNum.doubleValue() : leftNum.longValue() >= rightNum.longValue();
+
+                    interpreter.push(result);
+                }
                 case OpCodes.LD_EQUAL -> {
                     var right = interpreter.pop();
                     var left = interpreter.pop();
