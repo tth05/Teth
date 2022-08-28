@@ -415,14 +415,15 @@ public class Parser {
     }
 
     private List<TypeExpression> tryParseGenericParametersOnInvocation(TokenType prefix) {
-        var genericParameters = Collections.<TypeExpression>emptyList();
         if (this.stream.peek().is(prefix)) {
             this.stream.consume();
-            genericParameters = parseList(this::parseType, ArrayList::new, TokenType.GREATER);
+            var genericParameters = parseList(this::parseType, ArrayList::new, TokenType.GREATER);
             this.stream.consumeType(TokenType.GREATER);
             consumeLineBreaks();
+            return genericParameters;
+        } else {
+            return Collections.emptyList();
         }
-        return genericParameters;
     }
 
     private ExpressionList parseParameterList() {
@@ -492,11 +493,19 @@ public class Parser {
             throw new UnexpectedTokenException(current.span(), "Expected a type");
 
         var firstSpan = current.span();
-        var genericParameters = tryParseGenericParametersOnInvocation(TokenType.LESS);
-        if (genericParameters == null)
-            genericParameters = Collections.emptyList();
+        var secondSpan = firstSpan;
 
-        return new TypeExpression(Span.of(firstSpan, Span.of(genericParameters, firstSpan)), current.value(), genericParameters);
+        List<TypeExpression> genericParameters;
+        if (this.stream.peek().is(TokenType.LESS)) {
+            this.stream.consume();
+            genericParameters = parseList(this::parseType, ArrayList::new, TokenType.GREATER);
+            secondSpan = this.stream.consumeType(TokenType.GREATER).span();
+            consumeLineBreaks();
+        } else {
+            genericParameters = Collections.emptyList();
+        }
+
+        return new TypeExpression(Span.of(firstSpan, secondSpan), current.value(), genericParameters);
     }
 
     public static ParserResult fromString(String source) {
