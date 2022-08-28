@@ -4,6 +4,7 @@ import com.github.tth05.teth.lang.parser.ast.*;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.IntStream;
 
 public class Prelude {
 
@@ -50,6 +51,7 @@ public class Prelude {
             List.of(new GenericParameterDeclaration(null, "T")),
             List.of(),
             List.of(
+                    createFakeFunctionDeclaration("size", true, type("long")),
                     createFakeFunctionDeclaration("get", true, type("T"), type("long")),
                     createFakeFunctionDeclaration("set", true, null, type("long"), type("T")),
                     createFakeFunctionDeclaration("add", true, null, type("T"))
@@ -130,10 +132,10 @@ public class Prelude {
                 null,
                 new IdentifierExpression(null, name),
                 List.of(),
-                Arrays.stream(parameters).map(t -> new FunctionDeclaration.ParameterDeclaration(
+                IntStream.range(0, parameters.length).mapToObj(i -> new FunctionDeclaration.ParameterDeclaration(
                         null,
-                        t,
-                        new IdentifierExpression(null, "arg")
+                        parameters[i],
+                        new IdentifierExpression(null, "arg" + i)
                 )).toList(),
                 returnType,
                 null,

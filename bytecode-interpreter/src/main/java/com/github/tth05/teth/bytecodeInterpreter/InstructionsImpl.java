@@ -40,6 +40,11 @@ public class InstructionsImpl {
 
             interpreter.push(val.toString());
         });
+        INTRINSICS.put(prelude("list", "size"), (interpreter, args) -> {
+            var list = (List<Object>) args[0];
+
+            interpreter.push((long) list.size());
+        });
         INTRINSICS.put(prelude("list", "add"), (interpreter, args) -> {
             var list = (List<Object>) args[0];
             var el = args[1];
