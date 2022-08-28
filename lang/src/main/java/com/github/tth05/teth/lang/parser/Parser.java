@@ -263,6 +263,7 @@ public class Parser {
         var fields = new ArrayList<StructDeclaration.FieldDeclaration>();
         var functions = new ArrayList<FunctionDeclaration>();
 
+        //TODO: Move this to name analysis
         var checkDuplicateDeclaration = (BiConsumer<ISpan, String>) (span, value) -> {
             if (fields.stream().anyMatch(f -> f.getNameExpr().getValue().equals(value)) ||
                 functions.stream().anyMatch(f -> f.getNameExpr().getValue().equals(value)))

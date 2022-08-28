@@ -220,6 +220,18 @@ public class AnalyzerValidatorTest extends AbstractAnalyzerTest {
     }
 
     @Test
+    public void testDuplicateParameterName() {
+        var problems = analyze("""
+                fn test(t: long, a: double, t: double) {
+                }
+                """);
+
+        assertFalse(problems.isEmpty());
+        assertEquals(1, problems.size());
+        assertEquals("Duplicate parameter name", problems.get(0).message());
+    }
+
+    @Test
     public void testWrongNumberOfGenericParameters() {
         var problems = analyze("""
                 struct s<T, D> {}

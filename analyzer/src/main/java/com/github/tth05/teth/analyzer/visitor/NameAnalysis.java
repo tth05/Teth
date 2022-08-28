@@ -102,7 +102,7 @@ public class NameAnalysis extends ASTVisitor {
 
     @Override
     public void visit(StructDeclaration declaration) {
-        validateGenericParameterDeclarations(declaration.getGenericParameters());
+        validateNoDuplicates(declaration.getGenericParameters(), Comparator.comparing(GenericParameterDeclaration::getName), "Duplicate generic parameter name");
 
         this.declarationStack.beginStructScope(declaration);
         { // Don't want to visit struct name here
@@ -228,9 +228,10 @@ public class NameAnalysis extends ASTVisitor {
     }
 
     private void visitFunctionDeclarationHeader(FunctionDeclaration declaration) {
-        validateGenericParameterDeclarations(declaration.getGenericParameters());
+        validateNoDuplicates(declaration.getGenericParameters(), Comparator.comparing(GenericParameterDeclaration::getName), "Duplicate generic parameter name");
         declaration.getGenericParameters().forEach(p -> p.accept(this));
 
+        validateNoDuplicates(declaration.getParameters(), Comparator.comparing(p -> p.getNameExpr().getValue()), "Duplicate parameter name");
         declaration.getParameters().forEach(p -> p.accept(this));
 
         var returnTypeExpr = declaration.getReturnTypeExpr();
@@ -269,12 +270,12 @@ public class NameAnalysis extends ASTVisitor {
         declaration.getBody().accept(this);
     }
 
-    private void validateGenericParameterDeclarations(List<GenericParameterDeclaration> genericParameterDeclarations) {
+    private <T extends Statement> void validateNoDuplicates(List<T> genericParameterDeclarations, Comparator<T> comparator, String message) {
         for (var p1 : genericParameterDeclarations) {
             for (var p2 : genericParameterDeclarations) {
                 if (p1 == p2)
                     continue;
-                if (p1.getName().equals(p2.getName()))
+                if (comparator.compare(p1, p2) == 0)
                     throw new ValidationException(p2.getSpan(), "Duplicate generic parameter name");
             }
         }
