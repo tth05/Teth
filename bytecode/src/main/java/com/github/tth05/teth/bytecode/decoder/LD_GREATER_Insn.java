@@ -6,7 +6,7 @@ public class LD_GREATER_Insn implements IInstrunction {
 
     @Override
     public byte getOpCode() {
-        return OpCodes.LD_LESS;
+        return OpCodes.LD_GREATER;
     }
 
     @Override
