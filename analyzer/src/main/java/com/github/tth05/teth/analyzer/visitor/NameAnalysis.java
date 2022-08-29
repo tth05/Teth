@@ -39,7 +39,8 @@ public class NameAnalysis extends ASTVisitor {
                     case StructDeclaration sd -> 0;
                     case FunctionDeclaration fd -> 1;
                     default -> 2;
-                })).collect(Collectors.toList());
+                }))
+                .collect(Collectors.toCollection(() -> new ArrayList<>(unit.getStatements().size())));
 
         // Pre-process 1: Collect all declarations
         for (var decl : topLevelDeclarations)
