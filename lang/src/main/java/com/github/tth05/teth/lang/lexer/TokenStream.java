@@ -3,7 +3,7 @@ package com.github.tth05.teth.lang.lexer;
 import com.github.tth05.teth.lang.parser.UnexpectedTokenException;
 import com.github.tth05.teth.lang.stream.EndOfStreamException;
 
-import java.util.LinkedList;
+import java.util.ArrayDeque;
 import java.util.List;
 import java.util.function.Predicate;
 
@@ -11,12 +11,10 @@ public class TokenStream {
 
     private static final Token EOF = new Token(null, "", TokenType.EOF);
 
-    private final LinkedList<Token> tokens = new LinkedList<>();
-
-    private int index;
+    private final ArrayDeque<Token> tokens = new ArrayDeque<>();
 
     void push(Token token) {
-        this.tokens.add(token);
+        this.tokens.addLast(token);
     }
 
     public Token consumeMatchingOrElse(Predicate<Token> predicate, Runnable orElse) {

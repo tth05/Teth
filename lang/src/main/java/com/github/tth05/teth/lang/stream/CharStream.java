@@ -60,14 +60,14 @@ public class CharStream {
     }
 
     public void markSpan() {
-        this.markedIndices.push(this.index);
+        this.markedIndices.addLast(this.index);
     }
 
     public ISpan popMarkedSpan() {
         if (this.markedIndices.isEmpty())
             throw new IllegalStateException("No mark set");
 
-        var markedIndex = this.markedIndices.pop();
+        var markedIndex = this.markedIndices.removeLast();
         return new Span(this.chars, markedIndex, this.index);
     }
 
