@@ -163,6 +163,7 @@ public class FunctionDeclaration extends Statement implements ITopLevelDeclarati
             return this.type;
         }
 
+        @Override
         public IdentifierExpression getNameExpr() {
             return this.name;
         }

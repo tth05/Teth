@@ -19,7 +19,8 @@ public class Prelude {
             List.of(),
             List.of(
                     createFakeFunctionDeclaration("toString", true, type("string"))
-            )
+            ),
+            true
     );
 
     public static final StructDeclaration DOUBLE_STRUCT_DECLARATION = new StructDeclaration(
@@ -27,14 +28,16 @@ public class Prelude {
             new IdentifierExpression(null, "double"),
             List.of(),
             List.of(),
-            List.of()
+            List.of(),
+            true
     );
     public static final StructDeclaration BOOLEAN_STRUCT_DECLARATION = new StructDeclaration(
             null,
             new IdentifierExpression(null, "bool"),
             List.of(),
             List.of(),
-            List.of()
+            List.of(),
+            true
     );
     public static final StructDeclaration STRING_STRUCT_DECLARATION = new StructDeclaration(
             null,
@@ -43,7 +46,8 @@ public class Prelude {
             List.of(),
             List.of(
                     createFakeFunctionDeclaration("concat", true, type("string"), type("string"))
-            )
+            ),
+            true
     );
     public static final StructDeclaration LIST_STRUCT_DECLARATION = new StructDeclaration(
             null,
@@ -55,7 +59,8 @@ public class Prelude {
                     createFakeFunctionDeclaration("get", true, type("T"), type("long")),
                     createFakeFunctionDeclaration("set", true, null, type("long"), type("T")),
                     createFakeFunctionDeclaration("add", true, null, type("T"))
-            )
+            ),
+            true
     );
 
     public static final StructDeclaration ANY_STRUCT_DECLARATION = new StructDeclaration(
@@ -63,7 +68,8 @@ public class Prelude {
             new IdentifierExpression(null, "any"),
             List.of(),
             List.of(),
-            List.of()
+            List.of(),
+            true
     );
 
     /**

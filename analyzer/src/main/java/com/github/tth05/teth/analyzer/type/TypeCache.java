@@ -80,7 +80,7 @@ public class TypeCache {
             return "void";
         var name = switch (getDeclaration(type)) {
             case StructDeclaration struct -> struct.getNameExpr().getValue();
-            case GenericParameterDeclaration generic -> generic.getName();
+            case GenericParameterDeclaration generic -> generic.getNameExpr().getValue();
             default -> throw new IllegalStateException();
         };
 

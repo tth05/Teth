@@ -15,13 +15,19 @@ public class StructDeclaration extends Statement implements ITopLevelDeclaration
     private final List<GenericParameterDeclaration> genericParameters;
     private final List<FieldDeclaration> fields;
     private final List<FunctionDeclaration> functions;
+    private final boolean intrinsic;
 
     public StructDeclaration(ISpan span, IdentifierExpression nameExpr, List<GenericParameterDeclaration> genericParameters, List<FieldDeclaration> fields, List<FunctionDeclaration> functions) {
+        this(span, nameExpr, genericParameters, fields, functions, false);
+    }
+
+    public StructDeclaration(ISpan span, IdentifierExpression nameExpr, List<GenericParameterDeclaration> genericParameters, List<FieldDeclaration> fields, List<FunctionDeclaration> functions, boolean intrinsic) {
         super(span);
         this.nameExpr = nameExpr;
         this.genericParameters = Collections.unmodifiableList(Objects.requireNonNull(genericParameters));
         this.fields = Collections.unmodifiableList(Objects.requireNonNull(fields));
         this.functions = Collections.unmodifiableList(Objects.requireNonNull(functions));
+        this.intrinsic = intrinsic;
     }
 
     @Override
@@ -39,6 +45,10 @@ public class StructDeclaration extends Statement implements ITopLevelDeclaration
 
     public List<FunctionDeclaration> getFunctions() {
         return this.functions;
+    }
+
+    public boolean isIntrinsic() {
+        return this.intrinsic;
     }
 
     public Statement getMember(String name) {

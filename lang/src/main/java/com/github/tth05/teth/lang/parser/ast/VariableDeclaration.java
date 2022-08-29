@@ -20,6 +20,7 @@ public class VariableDeclaration extends Statement implements IVariableDeclarati
         this.initializer = initializer;
     }
 
+    @Override
     public IdentifierExpression getNameExpr() {
         return this.nameExpr;
     }

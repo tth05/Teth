@@ -77,7 +77,7 @@ public class TypeAnalysis extends ASTVisitor {
             var struct = (StructDeclaration) this.typeCache.getDeclaration(targetType);
             for (int i = 0; i < struct.getGenericParameters().size(); i++) {
                 var genericParameter = struct.getGenericParameters().get(i);
-                genericParameterInfo.bindGenericParameter(genericParameter.getName(), targetType.getGenericBounds().get(i));
+                genericParameterInfo.bindGenericParameter(genericParameter.getNameExpr().getValue(), targetType.getGenericBounds().get(i));
             }
         }
 
@@ -112,7 +112,7 @@ public class TypeAnalysis extends ASTVisitor {
         var resolvedGenericParameters = structDeclaration.getGenericParameters().isEmpty() ?
                 null :
                 structDeclaration.getGenericParameters().stream().map(p -> {
-                    var bound = genericParameterInfo.getBoundGenericParameter(p.getName());
+                    var bound = genericParameterInfo.getBoundGenericParameter(p.getNameExpr().getValue());
                     if (bound == null)
                         throw new IllegalStateException();
                     return bound;
@@ -394,7 +394,7 @@ public class TypeAnalysis extends ASTVisitor {
                     throw new ValidationException(invocation.getSpan(), "Wrong number of generic bounds. Expected " + genericParameterDeclarations.size() + ", got " + explicitGenericParameters.size());
 
                 for (var i = 0; i < explicitGenericParameters.size(); i++)
-                    genericParameterInfo.bindGenericParameter(genericParameterDeclarations.get(i).getName(), asType(explicitGenericParameters.get(i)));
+                    genericParameterInfo.bindGenericParameter(genericParameterDeclarations.get(i).getNameExpr().getValue(), asType(explicitGenericParameters.get(i)));
             }
         }
 
@@ -416,8 +416,8 @@ public class TypeAnalysis extends ASTVisitor {
         }
 
         for (var genericParameterDeclaration : genericParameterDeclarations) {
-            if (!genericParameterInfo.isGenericParameterBound(genericParameterDeclaration.getName()))
-                throw new TypeResolverException(invocation.getSpan(), "Generic parameter " + genericParameterDeclaration.getName() + " is not bound");
+            if (!genericParameterInfo.isGenericParameterBound(genericParameterDeclaration.getNameExpr().getValue()))
+                throw new TypeResolverException(invocation.getSpan(), "Generic parameter " + genericParameterDeclaration.getNameExpr() + " is not bound");
         }
 
         return genericParameterInfo;

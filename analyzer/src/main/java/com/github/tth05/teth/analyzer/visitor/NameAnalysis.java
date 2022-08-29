@@ -6,6 +6,7 @@ import com.github.tth05.teth.analyzer.prelude.Prelude;
 import com.github.tth05.teth.lang.parser.ASTVisitor;
 import com.github.tth05.teth.lang.parser.SourceFileUnit;
 import com.github.tth05.teth.lang.parser.ast.*;
+import com.github.tth05.teth.lang.span.ISpan;
 import com.github.tth05.teth.lang.span.Span;
 
 import java.util.*;
@@ -14,6 +15,8 @@ import java.util.stream.Collectors;
 public class NameAnalysis extends ASTVisitor {
 
     public static final FunctionDeclaration GLOBAL_FUNCTION = new FunctionDeclaration(null, null, List.of(), List.of(), null, null, false);
+
+    private static final HashSet<String> DUPLICATION_SET = new HashSet<>();
 
     private final Deque<FunctionDeclaration> currentFunctionStack = new ArrayDeque<>(5);
     private final DeclarationStack declarationStack = new DeclarationStack();
@@ -30,38 +33,39 @@ public class NameAnalysis extends ASTVisitor {
     public void visit(SourceFileUnit unit) {
         beginFunctionDeclaration(GLOBAL_FUNCTION);
 
-        var statements = new ArrayList<>(unit.getStatements());
-        // Note: This re-orders other statements as well, but that's fine because the sort is stable.
-        statements.sort(Comparator.comparingInt(s -> switch (s) {
-            case StructDeclaration sd -> 0;
-            case FunctionDeclaration fd -> 1;
-            default -> 2;
-        }));
-        // Pre-process 1: Collect all declarations
-        statements.stream()
+        var topLevelDeclarations = unit.getStatements().stream()
                 .filter(s -> s instanceof ITopLevelDeclaration)
-                .forEach(this::addDeclaration);
+                .sorted(Comparator.comparingInt(s -> switch (s) {
+                    case StructDeclaration sd -> 0;
+                    case FunctionDeclaration fd -> 1;
+                    default -> 2;
+                })).collect(Collectors.toList());
 
-        // Pre-process 2: Analyze headers of top level functions and structs
-        statements.stream()
-                .filter(s -> s instanceof ITopLevelDeclaration)
-                .forEach(decl -> {
-                    switch (decl) {
-                        case StructDeclaration structDeclaration -> {
-                            this.declarationStack.beginScope(false);
-                            structDeclaration.getGenericParameters().forEach(this::addDeclaration);
-                            structDeclaration.getFields().forEach(f -> visit(f.getTypeExpr()));
-                            structDeclaration.getFunctions().forEach(this::visitFunctionDeclarationHeader);
-                            this.declarationStack.endScope();
-                        }
-                        case FunctionDeclaration functionDeclaration -> {
-                            this.declarationStack.beginScope(false);
-                            visitFunctionDeclarationHeader(functionDeclaration);
-                            this.declarationStack.endScope();
-                        }
-                        default -> throw new IllegalStateException();
-                    }
-                });
+        // Pre-process 1: Collect all declarations
+        for (var decl : topLevelDeclarations)
+            addDeclaration(decl);
+
+        // Pre-process 2: Analyze headers of top level functions and structs and check for duplicates
+        //noinspection unchecked
+        validateNoDuplicates((List<? extends IHasName>) (Object) topLevelDeclarations, "Duplicate top level declaration");
+
+        for (var decl : topLevelDeclarations) {
+            switch (decl) {
+                case StructDeclaration structDeclaration -> {
+                    this.declarationStack.beginScope(false);
+                    structDeclaration.getGenericParameters().forEach(this::addDeclaration);
+                    structDeclaration.getFields().forEach(f -> visit(f.getTypeExpr()));
+                    structDeclaration.getFunctions().forEach(this::visitFunctionDeclarationHeader);
+                    this.declarationStack.endScope();
+                }
+                case FunctionDeclaration functionDeclaration -> {
+                    this.declarationStack.beginScope(false);
+                    visitFunctionDeclarationHeader(functionDeclaration);
+                    this.declarationStack.endScope();
+                }
+                default -> throw new IllegalStateException();
+            }
+        }
 
         super.visit(unit);
     }
@@ -87,6 +91,8 @@ public class NameAnalysis extends ASTVisitor {
 
     @Override
     public void visit(FunctionDeclaration.ParameterDeclaration parameter) {
+        validateNotAReservedName(parameter.getNameExpr());
+
         { // Don't want to visit parameter name here
             parameter.getTypeExpr().accept(this);
         }
@@ -102,7 +108,10 @@ public class NameAnalysis extends ASTVisitor {
 
     @Override
     public void visit(StructDeclaration declaration) {
-        validateNoDuplicates(declaration.getGenericParameters(), Comparator.comparing(GenericParameterDeclaration::getName), "Duplicate generic parameter name");
+        if (!declaration.isIntrinsic())
+            validateNotAReservedName(declaration.getNameExpr());
+
+        validateNoDuplicates(declaration.getGenericParameters(), "Duplicate generic parameter name");
 
         this.declarationStack.beginStructScope(declaration);
         { // Don't want to visit struct name here
@@ -114,6 +123,8 @@ public class NameAnalysis extends ASTVisitor {
 
     @Override
     public void visit(StructDeclaration.FieldDeclaration declaration) {
+        validateNotAReservedName(declaration.getNameExpr());
+
         // Pre-process 2 did this already in the global namespace
         if (isInNestedFunction())
             declaration.getTypeExpr().accept(this);
@@ -149,6 +160,8 @@ public class NameAnalysis extends ASTVisitor {
 
     @Override
     public void visit(VariableDeclaration declaration) {
+        validateNotAReservedName(declaration.getNameExpr());
+
         { // Don't want to visit name here
             var typeExpr = declaration.getTypeExpr();
             if (typeExpr != null)
@@ -178,6 +191,8 @@ public class NameAnalysis extends ASTVisitor {
 
     @Override
     public void visit(GenericParameterDeclaration declaration) {
+        validateNotAReservedName(declaration.getSpan(), declaration.getNameExpr().getValue());
+
         addDeclaration(declaration);
     }
 
@@ -228,10 +243,13 @@ public class NameAnalysis extends ASTVisitor {
     }
 
     private void visitFunctionDeclarationHeader(FunctionDeclaration declaration) {
-        validateNoDuplicates(declaration.getGenericParameters(), Comparator.comparing(GenericParameterDeclaration::getName), "Duplicate generic parameter name");
+        if (!declaration.isIntrinsic())
+            validateNotAReservedName(declaration.getNameExpr());
+
+        validateNoDuplicates(declaration.getGenericParameters(), "Duplicate generic parameter name");
         declaration.getGenericParameters().forEach(p -> p.accept(this));
 
-        validateNoDuplicates(declaration.getParameters(), Comparator.comparing(p -> p.getNameExpr().getValue()), "Duplicate parameter name");
+        validateNoDuplicates(declaration.getParameters(), "Duplicate parameter name");
         declaration.getParameters().forEach(p -> p.accept(this));
 
         var returnTypeExpr = declaration.getReturnTypeExpr();
@@ -252,7 +270,7 @@ public class NameAnalysis extends ASTVisitor {
                             currentStruct.getNameExpr().getValue(),
                             currentStruct.getGenericParameters().stream()
                                     .map(p -> {
-                                        var typeExpr = new TypeExpression(null, p.getName());
+                                        var typeExpr = new TypeExpression(null, p.getNameExpr().getValue());
                                         this.resolvedReferences.put(typeExpr, p);
                                         return typeExpr;
                                     })
@@ -270,22 +288,27 @@ public class NameAnalysis extends ASTVisitor {
         declaration.getBody().accept(this);
     }
 
-    private <T extends Statement> void validateNoDuplicates(List<T> list, Comparator<T> comparator, String message) {
-        for (var p1 : list) {
-            for (var p2 : list) {
-                if (p1 == p2)
-                    continue;
-                if (comparator.compare(p1, p2) == 0)
-                    throw new ValidationException(p2.getSpan(), message);
-            }
+    private <T extends IHasName> void validateNoDuplicates(List<T> list, String message) {
+        DUPLICATION_SET.clear();
+
+        for (var el : list) {
+            if (!DUPLICATION_SET.add(el.getNameExpr().getValue()))
+                throw new ValidationException(el.getNameExpr().getSpan(), message);
         }
+    }
+
+    private void validateNotAReservedName(IdentifierExpression expression) {
+        validateNotAReservedName(expression.getSpan(), expression.getValue());
+    }
+
+    private void validateNotAReservedName(ISpan span, String name) {
+        if (Prelude.isBuiltInTypeName(name))
+            throw new ValidationException(span, "Reserved name '" + name + "'");
     }
 
     private void addDeclaration(Statement declaration) {
         var name = switch (declaration) {
-            case IVariableDeclaration decl -> decl.getNameExpr().getValue();
-            case ITopLevelDeclaration decl -> decl.getNameExpr().getValue();
-            case GenericParameterDeclaration decl -> decl.getName();
+            case IHasName named -> named.getNameExpr().getValue();
             default -> throw new IllegalArgumentException();
         };
         this.declarationStack.addDeclaration(name, declaration);

@@ -7,17 +7,18 @@ import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 import java.util.Objects;
 
 
-public class GenericParameterDeclaration extends Statement {
+public class GenericParameterDeclaration extends Statement implements IHasName {
 
-    private final String name;
+    private final IdentifierExpression nameExpr;
 
     public GenericParameterDeclaration(ISpan span, String name) {
         super(span);
-        this.name = name;
+        this.nameExpr = new IdentifierExpression(span, name);
     }
 
-    public String getName() {
-        return this.name;
+    @Override
+    public IdentifierExpression getNameExpr() {
+        return this.nameExpr;
     }
 
     @Override
@@ -32,19 +33,19 @@ public class GenericParameterDeclaration extends Statement {
         if (o == null || getClass() != o.getClass())
             return false;
 
-        return Objects.equals(this.name, ((GenericParameterDeclaration) o).name);
+        return Objects.equals(this.nameExpr, ((GenericParameterDeclaration) o).nameExpr);
     }
 
     @Override
     public int hashCode() {
         int result = super.hashCode();
-        result = 31 * result + this.name.hashCode();
+        result = 31 * result + this.nameExpr.hashCode();
         return result;
     }
 
     @Override
     public void dump(ASTDumpBuilder builder) {
-        builder.append(this.name);
+        this.nameExpr.dump(builder);
     }
 
     @Override
