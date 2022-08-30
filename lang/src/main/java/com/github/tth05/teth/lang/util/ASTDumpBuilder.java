@@ -1,5 +1,9 @@
 package com.github.tth05.teth.lang.util;
 
+import com.github.tth05.teth.lang.parser.IDumpable;
+
+import java.util.List;
+
 public class ASTDumpBuilder {
 
     private final StringBuilder builder = new StringBuilder();
@@ -39,6 +43,17 @@ public class ASTDumpBuilder {
     public ASTDumpBuilder appendAttribute(String name, String value) {
         appendAttribute(name);
         append(value);
+        return this;
+    }
+
+    public ASTDumpBuilder appendAttribute(String name, List<? extends IDumpable> list) {
+        appendAttribute(name);
+        append("[").newLine().startBlock();
+        for (var dumpable : list) {
+            dumpable.dump(this);
+            newLine();
+        }
+        endBlock().append("]");
         return this;
     }
 

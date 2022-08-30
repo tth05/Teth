@@ -232,7 +232,7 @@ public class Tokenizer {
             case '+' -> emit("+", TokenType.PLUS);
             case '-' -> emit("-", TokenType.MINUS);
             case '*' -> emit("*", TokenType.MULTIPLY);
-            case '/' -> emit("/", TokenType.DIVIDE);
+            case '/' -> emit("/", TokenType.SLASH);
             case '^' -> emit("^", TokenType.POW);
             default -> throw new IllegalStateException("Unreachable");
         }
@@ -255,7 +255,7 @@ public class Tokenizer {
     private static boolean isKeyword(String value) {
         return value.equals("if") || value.equals("else") || value.equals("fn") ||
                value.equals("return") || value.equals("let") || value.equals("loop") ||
-               value.equals("new") || value.equals("struct");
+               value.equals("new") || value.equals("struct") || value.equals("use");
     }
 
     private static boolean isBooleanLiteral(String value) {

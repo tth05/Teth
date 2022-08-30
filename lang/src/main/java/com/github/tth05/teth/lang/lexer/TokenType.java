@@ -24,7 +24,7 @@ public enum TokenType {
     PLUS("+"),
     MINUS("-"),
     MULTIPLY("*"),
-    DIVIDE("/"),
+    SLASH("/"),
     POW("^"),
     AMPERSAND_AMPERSAND("&&"),
     PIPE_PIPE("||"),

@@ -169,7 +169,7 @@ public class TokenizerTest extends AbstractTokenizerTest {
                 new Token(makeSpan(6, 7), "-", TokenType.MINUS),
                 new Token(makeSpan(7, 9), "45", TokenType.LONG_LITERAL),
                 new Token(makeSpan(9, 10), ")", TokenType.R_PAREN),
-                new Token(makeSpan(10, 11), "/", TokenType.DIVIDE),
+                new Token(makeSpan(10, 11), "/", TokenType.SLASH),
                 new Token(makeSpan(11, 13), "10", TokenType.LONG_LITERAL),
                 new Token(makeSpan(13, 14), "+", TokenType.PLUS),
                 new Token(makeSpan(14, 18), "1.01", TokenType.DOUBLE_LITERAL)

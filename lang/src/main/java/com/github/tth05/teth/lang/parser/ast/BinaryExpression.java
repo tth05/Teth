@@ -138,7 +138,7 @@ public class BinaryExpression extends Expression {
             return switch (type) {
                 case POW -> Operator.OP_POW;
                 case MULTIPLY -> Operator.OP_MULTIPLY;
-                case DIVIDE -> Operator.OP_DIVIDE;
+                case SLASH -> Operator.OP_DIVIDE;
                 case PLUS -> Operator.OP_ADD;
                 case MINUS -> Operator.OP_SUBTRACT;
                 case LESS -> Operator.OP_LESS;

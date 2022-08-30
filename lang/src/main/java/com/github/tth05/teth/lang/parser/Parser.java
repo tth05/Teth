@@ -27,12 +27,55 @@ public class Parser {
 
     public ParserResult parse() {
         try {
-            var unit = new SourceFileUnit(parseStatementList(t -> t.is(TokenType.EOF)));
+            var unit = new SourceFileUnit(parseUseStatements(), parseStatementList(t -> t.is(TokenType.EOF)));
             this.stream.consumeType(TokenType.EOF);
             return new ParserResult(unit);
         } catch (UnexpectedTokenException e) {
             return new ParserResult(null, ProblemList.of(e.asProblem()));
         }
+    }
+
+    private List<UseStatement> parseUseStatements() {
+        var useStatements = new ArrayList<UseStatement>();
+
+        Token current;
+        while ((current = this.stream.peek()).is(TokenType.KEYWORD) && current.value().equals("use"))
+            useStatements.add(parseUseStatement());
+        return useStatements;
+    }
+
+    private UseStatement parseUseStatement() {
+        var firstSpan = this.stream.consumeType(TokenType.KEYWORD).span();
+        consumeLineBreaks();
+
+        var path = new ArrayList<IdentifierExpression>(2);
+        while (true) {
+            var part = this.stream.consumeType(TokenType.IDENTIFIER);
+            path.add(new IdentifierExpression(part.span(), part.value()));
+
+            if (!this.stream.peek().is(TokenType.SLASH))
+                break;
+            this.stream.consume();
+        }
+
+        consumeLineBreaks();
+        this.stream.consumeType(TokenType.L_CURLY_PAREN);
+
+        var imports = new ArrayList<IdentifierExpression>(8);
+        while (true) {
+            consumeLineBreaks();
+            var part = this.stream.consumeType(TokenType.IDENTIFIER);
+            consumeLineBreaks();
+            imports.add(new IdentifierExpression(part.span(), part.value()));
+
+            if (!this.stream.peek().is(TokenType.COMMA))
+                break;
+            this.stream.consume();
+        }
+
+        var lastSpan = this.stream.consumeType(TokenType.R_CURLY_PAREN).span();
+        consumeLineBreaks();
+        return new UseStatement(Span.of(firstSpan, lastSpan), path, imports);
     }
 
     private StatementList parseStatementList(Predicate<Token> terminatorPredicate) {

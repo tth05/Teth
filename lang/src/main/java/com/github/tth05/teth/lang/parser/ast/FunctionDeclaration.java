@@ -10,7 +10,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-public class FunctionDeclaration extends Statement implements ITopLevelDeclaration {
+public class FunctionDeclaration extends Statement implements ITopLevelDeclaration, IHasName {
 
     private final IdentifierExpression nameExpr;
     private final TypeExpression returnTypeExpr;
