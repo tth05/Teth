@@ -292,6 +292,32 @@ public class TokenizerTest extends AbstractTokenizerTest {
         assertStreamsEmpty();
     }
 
+    @Test
+    public void testComments() {
+        createStreams("""
+                // Hello
+                5 // Test
+                // World
+                /*
+                Multi
+                line
+                */
+                6 /*7*/ + /*hi*/8
+                """);
+
+        assertIterableEquals(tokenList(
+                new Token(makeSpan(8, 9), "\n", TokenType.LINE_BREAK),
+                new Token(makeSpan(9, 10), "5", TokenType.LONG_LITERAL),
+                new Token(makeSpan(18, 19), "\n", TokenType.LINE_BREAK),
+                new Token(makeSpan(27, 28), "\n", TokenType.LINE_BREAK),
+                new Token(makeSpan(44, 45), "\n", TokenType.LINE_BREAK),
+                new Token(makeSpan(45, 46), "6", TokenType.LONG_LITERAL),
+                new Token(makeSpan(53, 54), "+", TokenType.PLUS),
+                new Token(makeSpan(61, 62), "8", TokenType.LONG_LITERAL)
+        ), tokensIntoList());
+        assertStreamsEmpty();
+    }
+
     private static List<Token> tokenList(Token... tokens) {
         List<Token> list = new ArrayList<>(Arrays.asList(tokens));
 

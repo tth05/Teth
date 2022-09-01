@@ -18,7 +18,7 @@ public abstract class AbstractTokenizerTest {
     private char[] source;
 
     protected void createStreams(String str) {
-        this.source = str.toCharArray();
+        this.source = str.trim().toCharArray();
         this.charStream = CharStream.fromString(str);
         var tokenizerResult = Tokenizer.streamOf(this.charStream);
         if (tokenizerResult.hasProblems())

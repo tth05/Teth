@@ -232,7 +232,17 @@ public class Tokenizer {
             case '+' -> emit("+", TokenType.PLUS);
             case '-' -> emit("-", TokenType.MINUS);
             case '*' -> emit("*", TokenType.MULTIPLY);
-            case '/' -> emit("/", TokenType.SLASH);
+            case '/' -> {
+                if (this.stream.peek() == '/') {
+                    this.stream.consume();
+                    skipLineComment();
+                } else if (this.stream.peek() == '*') {
+                    this.stream.consume();
+                    skipMultiLineComment();
+                } else {
+                    emit("/", TokenType.SLASH);
+                }
+            }
             case '^' -> emit("^", TokenType.POW);
             default -> throw new IllegalStateException("Unreachable");
         }
@@ -250,6 +260,21 @@ public class Tokenizer {
             case ']' -> TokenType.R_SQUARE_BRACKET;
             default -> throw new IllegalStateException("Unreachable");
         });
+    }
+
+    private void skipLineComment() {
+        while (this.stream.peek() != '\n')
+            this.stream.consume();
+    }
+
+    private void skipMultiLineComment() {
+        while (true) {
+            var c = this.stream.consume();
+            if (c == '*' && this.stream.peek() == '/') {
+                this.stream.consume();
+                return;
+            }
+        }
     }
 
     private static boolean isKeyword(String value) {

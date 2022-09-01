@@ -888,6 +888,7 @@ public class ParserTest extends AbstractParserTest {
         assertThrows(RuntimeException.class, () -> createAST("use foo {  }"));
         assertThrows(RuntimeException.class, () -> createAST("use {  }"));
         assertThrows(RuntimeException.class, () -> createAST("use ddd"));
+        assertThrows(RuntimeException.class, () -> createAST("let a = 5\nuse ddd {ddd}"));
     }
 
     @Test
@@ -907,7 +908,7 @@ public class ParserTest extends AbstractParserTest {
                 -
                 b / d
                 * c ^ d
-                fn 
+                fn
                 a
                 <
                 a
@@ -920,7 +921,7 @@ public class ParserTest extends AbstractParserTest {
                  b: b
                  ) a
                  {
-                 a = 
+                 a =
                  b
                  a.b.c
                  (a)
@@ -937,12 +938,12 @@ public class ParserTest extends AbstractParserTest {
                         a
                     }
                  }
-                loop 
+                loop
                 (
                 let
                 a = 5
                 ,
-                b < 
+                b <
                 5
                 ,
                 c = c+1
