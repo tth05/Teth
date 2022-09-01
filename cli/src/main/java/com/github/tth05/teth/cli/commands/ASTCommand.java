@@ -2,10 +2,10 @@ package com.github.tth05.teth.cli.commands;
 
 import com.github.tth05.teth.cli.commands.converters.String2ExistingFileConverter;
 import com.github.tth05.teth.lang.parser.Parser;
+import com.github.tth05.teth.lang.source.FileSource;
 import picocli.CommandLine;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 
 @CommandLine.Command(
@@ -28,7 +28,7 @@ public class ASTCommand implements Runnable {
     @Override
     public void run() {
         try {
-            var parserResult = Parser.fromString(Files.readString(this.filePath));
+            var parserResult = Parser.parse(new FileSource(this.filePath.getParent(), this.filePath));
             if (parserResult.logProblems(System.out, true))
                 return;
 

@@ -14,6 +14,6 @@ public class String2ExistingFileConverter implements CommandLine.ITypeConverter<
         if (!Files.exists(path))
             throw new CommandLine.TypeConversionException("File does not exist");
 
-        return path;
+        return path.toAbsolutePath().normalize();
     }
 }

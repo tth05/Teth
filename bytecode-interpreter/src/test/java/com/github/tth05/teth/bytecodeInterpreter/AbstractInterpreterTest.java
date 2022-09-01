@@ -6,6 +6,7 @@ import com.github.tth05.teth.lang.lexer.TokenStream;
 import com.github.tth05.teth.lang.lexer.Tokenizer;
 import com.github.tth05.teth.lang.parser.Parser;
 import com.github.tth05.teth.lang.parser.SourceFileUnit;
+import com.github.tth05.teth.lang.source.InMemorySource;
 import com.github.tth05.teth.lang.stream.CharStream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -54,7 +55,7 @@ public abstract class AbstractInterpreterTest {
 
     protected void createAST(String str) {
         createStreams(str);
-        var parserResult = Parser.from(this.tokenStream);
+        var parserResult = Parser.parse(this.tokenStream);
         if (parserResult.hasProblems())
             throw new RuntimeException("Parser failed\n" + parserResult.getProblems().prettyPrint(true));
 
@@ -63,8 +64,8 @@ public abstract class AbstractInterpreterTest {
     }
 
     private void createStreams(String str) {
-        this.charStream = CharStream.fromString(str);
-        var tokenizerResult = Tokenizer.streamOf(this.charStream);
+        this.charStream = CharStream.fromSource(new InMemorySource("main", str));
+        var tokenizerResult = Tokenizer.tokenize(this.charStream);
         if (tokenizerResult.hasProblems())
             throw new RuntimeException("Tokenizer failed\n" + tokenizerResult.getProblems().prettyPrint(true));
         this.tokenStream = tokenizerResult.getTokenStream();
