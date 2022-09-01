@@ -36,4 +36,16 @@ public class CharArrayUtils {
                 CharArrayUtils.getLineEnd(source, offset))
         );
     }
+
+    public static int trimStart(char[] chars) {
+        var index = 0;
+        for (; index < chars.length && Character.isWhitespace(chars[index]); index++) {}
+        return index;
+    }
+
+    public static int trimEnd(char[] chars) {
+        var length = chars.length;
+        for (; length > 0 && Character.isWhitespace(chars[length - 1]); length--) {}
+        return length;
+    }
 }

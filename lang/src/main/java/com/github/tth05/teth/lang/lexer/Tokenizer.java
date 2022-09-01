@@ -1,16 +1,18 @@
 package com.github.tth05.teth.lang.lexer;
 
 import com.github.tth05.teth.lang.diagnostics.ProblemList;
+import com.github.tth05.teth.lang.source.ISource;
 import com.github.tth05.teth.lang.span.ISpan;
 import com.github.tth05.teth.lang.stream.CharStream;
 
 public class Tokenizer {
 
     private final CharStream stream;
-    private final TokenStream tokenStream = new TokenStream();
+    private final TokenStream tokenStream;
 
     private Tokenizer(CharStream stream) {
         this.stream = stream;
+        this.tokenStream = new TokenStream(stream.getSource());
     }
 
     public TokenizerResult tokenize() {
@@ -22,10 +24,10 @@ public class Tokenizer {
                 return true;
             });
         } catch (UnexpectedCharException e) {
-            return new TokenizerResult(this.tokenStream, ProblemList.of(e.asProblem()));
+            return new TokenizerResult(this.stream.getSource(), this.tokenStream, ProblemList.of(e.asProblem()));
         }
 
-        return new TokenizerResult(this.tokenStream);
+        return new TokenizerResult(this.stream.getSource(), this.tokenStream);
     }
 
     private void emitUntil(CharPredicate breakPredicate) {
@@ -335,7 +337,11 @@ public class Tokenizer {
         return c == ' ' || c == '\t';
     }
 
-    public static TokenizerResult streamOf(CharStream charStream) {
+    public static TokenizerResult tokenize(ISource source) {
+        return new Tokenizer(CharStream.fromSource(source)).tokenize();
+    }
+
+    public static TokenizerResult tokenize(CharStream charStream) {
         return new Tokenizer(charStream).tokenize();
     }
 

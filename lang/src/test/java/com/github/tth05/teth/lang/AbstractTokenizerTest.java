@@ -3,6 +3,8 @@ package com.github.tth05.teth.lang;
 import com.github.tth05.teth.lang.lexer.Token;
 import com.github.tth05.teth.lang.lexer.TokenStream;
 import com.github.tth05.teth.lang.lexer.Tokenizer;
+import com.github.tth05.teth.lang.source.ISource;
+import com.github.tth05.teth.lang.source.InMemorySource;
 import com.github.tth05.teth.lang.span.Span;
 import com.github.tth05.teth.lang.stream.CharStream;
 
@@ -15,12 +17,12 @@ public abstract class AbstractTokenizerTest {
 
     protected TokenStream tokenStream;
     protected CharStream charStream;
-    private char[] source;
+    private ISource source;
 
     protected void createStreams(String str) {
-        this.source = str.trim().toCharArray();
-        this.charStream = CharStream.fromString(str);
-        var tokenizerResult = Tokenizer.streamOf(this.charStream);
+        this.source = new InMemorySource("main", str);
+        this.charStream = CharStream.fromSource(this.source);
+        var tokenizerResult = Tokenizer.tokenize(this.charStream);
         if (tokenizerResult.hasProblems())
             throw new RuntimeException("Tokenizer failed\n" + tokenizerResult.getProblems().prettyPrint(false));
         this.tokenStream = tokenizerResult.getTokenStream();

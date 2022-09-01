@@ -1,35 +1,11 @@
 package com.github.tth05.teth.lang.span;
 
 import com.github.tth05.teth.lang.parser.ast.Statement;
+import com.github.tth05.teth.lang.source.ISource;
 
-import java.util.Arrays;
 import java.util.List;
 
-public record Span(char[] source, int offset, int offsetEnd) implements ISpan {
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o)
-            return true;
-        if (o == null || getClass() != o.getClass())
-            return false;
-
-        Span span = (Span) o;
-
-        if (this.offset != span.offset)
-            return false;
-        if (this.offsetEnd != span.offsetEnd)
-            return false;
-        return Arrays.equals(this.source, span.source);
-    }
-
-    @Override
-    public int hashCode() {
-        int result = Arrays.hashCode(this.source);
-        result = 31 * result + this.offset;
-        result = 31 * result + this.offsetEnd;
-        return result;
-    }
+public record Span(ISource source, int offset, int offsetEnd) implements ISpan {
 
     @Override
     public String toString() {

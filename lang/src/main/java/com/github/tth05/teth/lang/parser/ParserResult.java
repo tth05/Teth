@@ -1,19 +1,22 @@
 package com.github.tth05.teth.lang.parser;
 
 import com.github.tth05.teth.lang.diagnostics.ProblemList;
+import com.github.tth05.teth.lang.source.ISource;
 
 import java.io.PrintStream;
 
 public class ParserResult {
 
+    private final ISource source;
     private final SourceFileUnit unit;
     private final ProblemList problems;
 
-    public ParserResult(SourceFileUnit unit) {
-        this(unit, ProblemList.of());
+    public ParserResult(ISource source, SourceFileUnit unit) {
+        this(source, unit, ProblemList.of());
     }
 
-    public ParserResult(SourceFileUnit unit, ProblemList problems) {
+    public ParserResult(ISource source, SourceFileUnit unit, ProblemList problems) {
+        this.source = source;
         this.unit = unit;
         this.problems = problems;
     }
@@ -24,6 +27,10 @@ public class ParserResult {
 
         out.append(this.problems.prettyPrint(useAnsiColors));
         return true;
+    }
+
+    public ISource getSource() {
+        return this.source;
     }
 
     public SourceFileUnit getUnit() {

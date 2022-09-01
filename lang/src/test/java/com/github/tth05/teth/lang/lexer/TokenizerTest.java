@@ -2,6 +2,7 @@ package com.github.tth05.teth.lang.lexer;
 
 import com.github.tth05.teth.lang.AbstractTokenizerTest;
 import com.github.tth05.teth.lang.span.Span;
+import com.github.tth05.teth.lang.util.CharArrayUtils;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -324,7 +325,8 @@ public class TokenizerTest extends AbstractTokenizerTest {
         var lastToken = list.get(list.size() - 1);
         var lastSpan = lastToken.span();
 
-        list.add(new Token(new Span(lastSpan.source(), lastSpan.source().length, lastSpan.source().length + 1), "", TokenType.EOF));
+        var length = CharArrayUtils.trimEnd(lastSpan.source().getContents());
+        list.add(new Token(new Span(lastSpan.source(), length, length + 1), "", TokenType.EOF));
         return list;
     }
 }

@@ -1,29 +1,24 @@
 package com.github.tth05.teth.lang.lexer;
 
 import com.github.tth05.teth.lang.parser.UnexpectedTokenException;
+import com.github.tth05.teth.lang.source.ISource;
 import com.github.tth05.teth.lang.stream.EndOfStreamException;
 
 import java.util.ArrayDeque;
-import java.util.List;
-import java.util.function.Predicate;
 
 public class TokenStream {
 
     private static final Token EOF = new Token(null, "", TokenType.EOF);
 
     private final ArrayDeque<Token> tokens = new ArrayDeque<>();
+    private final ISource source;
+
+    public TokenStream(ISource source) {
+        this.source = source;
+    }
 
     void push(Token token) {
         this.tokens.addLast(token);
-    }
-
-    public Token consumeMatchingOrElse(Predicate<Token> predicate, Runnable orElse) {
-        if (!predicate.test(peek())) {
-            orElse.run();
-            throw new IllegalStateException("TokenStream has no values");
-        }
-
-        return consume();
     }
 
     public Token consumeType(TokenType expectedType) {
@@ -54,12 +49,12 @@ public class TokenStream {
         return this.tokens.peekFirst();
     }
 
-    public List<Token> toList() {
-        return List.of(this.tokens.toArray(new Token[0]));
-    }
-
     public boolean isEmpty() {
         return this.tokens.isEmpty();
+    }
+
+    public ISource getSource() {
+        return this.source;
     }
 
     private boolean isValidIndex(int offset) {

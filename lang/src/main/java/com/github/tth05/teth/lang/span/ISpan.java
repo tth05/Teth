@@ -1,5 +1,6 @@
 package com.github.tth05.teth.lang.span;
 
+import com.github.tth05.teth.lang.source.ISource;
 import com.github.tth05.teth.lang.util.CharArrayUtils;
 
 public interface ISpan {
@@ -11,24 +12,24 @@ public interface ISpan {
      */
     int offsetEnd();
 
-    char[] source();
+    ISource source();
 
     default int getStartLine() {
-        return CharArrayUtils.getLineNumber(source(), offset());
+        return CharArrayUtils.getLineNumber(source().getContents(), offset());
     }
 
     default int getEndLine() {
-        return CharArrayUtils.getLineNumber(source(), offsetEnd());
+        return CharArrayUtils.getLineNumber(source().getContents(), offsetEnd());
     }
 
     default int getStartColumn() {
-        return offset() - CharArrayUtils.getLineStart(source(), offset());
+        return offset() - CharArrayUtils.getLineStart(source().getContents(), offset());
     }
 
     /**
      * @return The exclusive end column of the span.
      */
     default int getEndColumn() {
-        return offsetEnd() - CharArrayUtils.getLineStart(source(), offsetEnd());
+        return offsetEnd() - CharArrayUtils.getLineStart(source().getContents(), offsetEnd());
     }
 }

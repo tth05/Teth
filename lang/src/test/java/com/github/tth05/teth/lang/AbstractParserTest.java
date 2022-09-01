@@ -9,7 +9,7 @@ public class AbstractParserTest extends AbstractTokenizerTest {
 
     protected void createAST(String str) {
         super.createStreams(str);
-        var parserResult = Parser.from(this.tokenStream);
+        var parserResult = Parser.parse(this.tokenStream);
         if (parserResult.hasProblems())
             throw new RuntimeException("Parser failed\n" + parserResult.getProblems().prettyPrint(false));
         this.unit = parserResult.getUnit();

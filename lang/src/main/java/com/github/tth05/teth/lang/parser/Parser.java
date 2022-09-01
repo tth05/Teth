@@ -6,6 +6,7 @@ import com.github.tth05.teth.lang.lexer.TokenStream;
 import com.github.tth05.teth.lang.lexer.TokenType;
 import com.github.tth05.teth.lang.lexer.Tokenizer;
 import com.github.tth05.teth.lang.parser.ast.*;
+import com.github.tth05.teth.lang.source.ISource;
 import com.github.tth05.teth.lang.span.ISpan;
 import com.github.tth05.teth.lang.span.Span;
 import com.github.tth05.teth.lang.stream.CharStream;
@@ -29,9 +30,9 @@ public class Parser {
         try {
             var unit = new SourceFileUnit(parseUseStatements(), parseStatementList(t -> t.is(TokenType.EOF)));
             this.stream.consumeType(TokenType.EOF);
-            return new ParserResult(unit);
+            return new ParserResult(this.stream.getSource(), unit);
         } catch (UnexpectedTokenException e) {
-            return new ParserResult(null, ProblemList.of(e.asProblem()));
+            return new ParserResult(this.stream.getSource(), null, ProblemList.of(e.asProblem()));
         }
     }
 
@@ -552,14 +553,29 @@ public class Parser {
         return new TypeExpression(Span.of(firstSpan, secondSpan), current.value(), genericParameters);
     }
 
-    public static ParserResult fromString(String source) {
-        var tokenizerResult = Tokenizer.streamOf(CharStream.fromString(source));
+    public static ParserResult parse(ISource source) {
+        var tokenizerResult = Tokenizer.tokenize(CharStream.fromSource(source));
         if (tokenizerResult.hasProblems())
-            return new ParserResult(null, tokenizerResult.getProblems());
+            return new ParserResult(source, null, tokenizerResult.getProblems());
         return new Parser(tokenizerResult.getTokenStream()).parse();
     }
 
-    public static ParserResult from(TokenStream stream) {
-        return new Parser(stream).parse();
+    public static ParserResult parse(TokenStream tokenStream) {
+        return new Parser(tokenStream).parse();
+    }
+
+    public static List<ParserResult> parse(List<? extends ISource> sources) {
+        return sources.stream().map(Parser::parse).toList();
+    }
+
+    /**
+     * Only useful when files are very big, as the parser is currently very fast and therefore outperforms the cost of
+     * multi-threading.
+     *
+     * @param sources The sources to parse
+     * @return The parser results
+     */
+    public static List<ParserResult> parseParallel(List<? extends ISource> sources) {
+        return sources.stream().map(Parser::parse).toList();
     }
 }
