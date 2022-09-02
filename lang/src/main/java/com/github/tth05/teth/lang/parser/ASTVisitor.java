@@ -13,13 +13,6 @@ public abstract class ASTVisitor {
     }
 
     public void visit(SourceFileUnit unit) {
-        for (UseStatement useStatement : unit.getUseStatements()) {
-            if (!this.blockStatementFilter.test(useStatement))
-                continue;
-
-            useStatement.accept(this);
-        }
-
         for (Statement statement : unit.getStatements()) {
             if (!this.blockStatementFilter.test(statement))
                 continue;

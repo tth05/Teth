@@ -28,21 +28,12 @@ public class Parser {
 
     public ParserResult parse() {
         try {
-            var unit = new SourceFileUnit(parseUseStatements(), parseStatementList(t -> t.is(TokenType.EOF)));
+            var unit = new SourceFileUnit(parseStatementList(t -> t.is(TokenType.EOF)));
             this.stream.consumeType(TokenType.EOF);
             return new ParserResult(this.stream.getSource(), unit);
         } catch (UnexpectedTokenException e) {
             return new ParserResult(this.stream.getSource(), null, ProblemList.of(e.asProblem()));
         }
-    }
-
-    private List<UseStatement> parseUseStatements() {
-        var useStatements = new ArrayList<UseStatement>();
-
-        Token current;
-        while ((current = this.stream.peek()).is(TokenType.KEYWORD) && current.value().equals("use"))
-            useStatements.add(parseUseStatement());
-        return useStatements;
     }
 
     private UseStatement parseUseStatement() {
@@ -112,6 +103,7 @@ public class Parser {
                 case "return" -> parseReturnStatement();
                 case "let" -> parseVariableDeclaration();
                 case "new" -> parseExpression();
+                case "use" -> parseUseStatement();
                 default -> throw new UnexpectedTokenException(current.span(), "Keyword '%s' not allowed here", keyword);
             };
         } else if (current.is(TokenType.L_CURLY_PAREN)) { // Block statement
