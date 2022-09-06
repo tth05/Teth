@@ -3,14 +3,12 @@ package com.github.tth05.teth.lang.stream;
 import com.github.tth05.teth.lang.source.ISource;
 import com.github.tth05.teth.lang.span.ISpan;
 import com.github.tth05.teth.lang.span.Span;
+import com.github.tth05.teth.lang.util.BoundedIntStack;
 import com.github.tth05.teth.lang.util.CharArrayUtils;
-
-import java.util.ArrayDeque;
-import java.util.Deque;
 
 public class CharStream {
 
-    private final Deque<Integer> markedIndices = new ArrayDeque<>(5);
+    private final BoundedIntStack markedIndices = new BoundedIntStack(10);
     private final ISource source;
     private final char[] chars;
     private final int length;
@@ -68,14 +66,11 @@ public class CharStream {
     }
 
     public void markSpan() {
-        this.markedIndices.addLast(this.index);
+        this.markedIndices.push(this.index);
     }
 
     public ISpan popMarkedSpan() {
-        if (this.markedIndices.isEmpty())
-            throw new IllegalStateException("No mark set");
-
-        var markedIndex = this.markedIndices.removeLast();
+        var markedIndex = this.markedIndices.pop();
         return new Span(this.source, markedIndex, this.index);
     }
 
