@@ -3,7 +3,7 @@ package com.github.tth05.teth.bytecode.compiler;
 import com.github.tth05.teth.analyzer.Analyzer;
 import com.github.tth05.teth.analyzer.prelude.Prelude;
 import com.github.tth05.teth.analyzer.visitor.NameAnalysis;
-import com.github.tth05.teth.bytecode.decoder.*;
+import com.github.tth05.teth.bytecode.op.*;
 import com.github.tth05.teth.bytecode.program.StructData;
 import com.github.tth05.teth.bytecode.program.TethProgram;
 import com.github.tth05.teth.lang.parser.ASTVisitor;

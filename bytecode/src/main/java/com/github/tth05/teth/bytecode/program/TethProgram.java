@@ -1,6 +1,6 @@
 package com.github.tth05.teth.bytecode.program;
 
-import com.github.tth05.teth.bytecode.decoder.IInstrunction;
+import com.github.tth05.teth.bytecode.op.IInstrunction;
 
 public class TethProgram {
 

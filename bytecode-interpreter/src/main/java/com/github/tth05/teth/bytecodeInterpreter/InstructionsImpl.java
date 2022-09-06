@@ -1,8 +1,8 @@
 package com.github.tth05.teth.bytecodeInterpreter;
 
 import com.github.tth05.teth.analyzer.prelude.Prelude;
-import com.github.tth05.teth.bytecode.compiler.OpCodes;
-import com.github.tth05.teth.bytecode.decoder.*;
+import com.github.tth05.teth.bytecode.op.OpCodes;
+import com.github.tth05.teth.bytecode.op.*;
 import com.github.tth05.teth.lang.parser.ast.FunctionDeclaration;
 
 import java.util.ArrayList;
