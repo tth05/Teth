@@ -22,7 +22,7 @@ public class Parser {
 
     private final TokenStream stream;
 
-    public Parser(TokenStream stream) {
+    private Parser(TokenStream stream) {
         this.stream = stream;
     }
 
@@ -258,14 +258,14 @@ public class Parser {
     }
 
     private List<GenericParameterDeclaration> parseGenericParameterDeclarations() {
-        var genericParameters = new ArrayList<GenericParameterDeclaration>();
+        var genericParameters = Collections.<GenericParameterDeclaration>emptyList();
         if (this.stream.peek().is(TokenType.LESS)) {
             this.stream.consumeType(TokenType.LESS);
-            parseList(() -> {
+            genericParameters = parseList(() -> {
                 var parameterName = this.stream.consumeType(TokenType.IDENTIFIER);
                 consumeLineBreaks();
                 return new GenericParameterDeclaration(parameterName.span(), parameterName.value());
-            }, () -> genericParameters, TokenType.GREATER);
+            }, () -> new ArrayList<>(2), TokenType.GREATER);
             this.stream.consumeType(TokenType.GREATER);
         }
         return genericParameters;
