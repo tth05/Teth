@@ -7,6 +7,8 @@ import com.github.tth05.teth.lang.stream.CharStream;
 
 public class Tokenizer {
 
+    private final StringBuilder identifierBuffer = new StringBuilder(8);
+
     private final CharStream stream;
     private final TokenStream tokenStream;
 
@@ -81,17 +83,18 @@ public class Tokenizer {
     }
 
     private Token parseIdentifier() {
+        this.identifierBuffer.setLength(0);
+
         this.stream.markSpan();
-        StringBuilder ident = new StringBuilder(8);
         do {
             char c = this.stream.peek();
             if (!isIdentifierChar(c))
                 throw new UnexpectedCharException(this.stream.createCurrentIndexSpan(), "Invalid character '%s' in identifier", c);
 
-            ident.append(this.stream.consume());
+            this.identifierBuffer.append(this.stream.consume());
         } while (!isSeparator(this.stream.peek()) && !isDot(this.stream.peek()));
 
-        return new Token(this.stream.popMarkedSpan(), ident.toString(), TokenType.IDENTIFIER);
+        return new Token(this.stream.popMarkedSpan(), this.identifierBuffer.toString(), TokenType.IDENTIFIER);
     }
 
     private void emitString() {
@@ -137,10 +140,10 @@ public class Tokenizer {
     }
 
     private void emitNumber() {
+        this.identifierBuffer.setLength(0);
         this.stream.markSpan();
 
         boolean isDouble = false;
-        StringBuilder number = new StringBuilder(2);
         do {
             char c = this.stream.peek();
 
@@ -149,27 +152,28 @@ public class Tokenizer {
                 if (isDouble)
                     throw new UnexpectedCharException(this.stream.createCurrentIndexSpan(), "Second decimal point in number literal");
                 isDouble = true;
-                number.append('.');
+                this.identifierBuffer.append('.');
                 continue;
             }
 
             if (!isNumber(c))
                 throw new UnexpectedCharException(this.stream.createCurrentIndexSpan(), "Invalid character '%s' in number literal", c);
 
-            number.append(this.stream.consume());
+            this.identifierBuffer.append(this.stream.consume());
         } while (!isSeparator(this.stream.peek()));
 
+        var numberString = this.identifierBuffer.toString();
         var span = this.stream.popMarkedSpan();
         try {
             if (isDouble)
-                Double.parseDouble(number.toString());
+                Double.parseDouble(numberString);
             else
-                Long.parseLong(number.toString());
+                Long.parseLong(numberString);
         } catch (NumberFormatException e) {
             throw new UnexpectedCharException(span, "Number is too big");
         }
 
-        emit(span, number.toString(), isDouble ? TokenType.DOUBLE_LITERAL : TokenType.LONG_LITERAL);
+        emit(span, numberString, isDouble ? TokenType.DOUBLE_LITERAL : TokenType.LONG_LITERAL);
     }
 
     private void emitOperator() {
