@@ -49,24 +49,42 @@ public abstract class AbstractCompilerCommand implements Runnable {
 
         var startTime = System.nanoTime();
         try (var sourcesStream = Files.walk(this.baseDir)) {
-            var sources = sourcesStream.skip(1)
+            // HACK: This is a hack to get the correct module name
+            var entryPointModuleName = new String[1];
+            var sources = sourcesStream
                     .parallel()
+                    .filter(path -> path.getFileName().toString().endsWith(".teth") && !Files.isDirectory(path))
+                    .map(path -> path.toAbsolutePath().normalize())
                     .map(path -> {
                         try {
-                            return new FileSource(this.baseDir, path.toAbsolutePath().normalize());
+                            var fileSource = new FileSource(this.baseDir, path);
+                            if (path.equals(this.filePath))
+                                entryPointModuleName[0] = fileSource.getModuleName();
+                            return fileSource;
                         } catch (IOException e) {
                             throw new RuntimeException("Unable to read file %s".formatted(path), e);
                         }
-                    }).toList();
+                    })
+                    .toList();
+
+            var compiler = new Compiler();
+            if (entryPointModuleName[0] == null)
+                throw new IllegalStateException("Unable to find entry point module");
 
             var parserResults = Parser.parse(sources);
             for (var parserResult : parserResults) {
                 if (parserResult.logProblems(System.out, true))
                     return;
+
+                compiler.addSourceFileUnit(parserResult.getUnit());
             }
 
-            var compiler = new Compiler();
-            compiler.setMainUnit(parserResults.get(0).getUnit());
+            compiler.setEntryPoint(parserResults.stream()
+                    .filter(result -> result.getUnit().getModuleName().equals(entryPointModuleName[0]))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalStateException("Unable to find entry point unit"))
+                    .getUnit());
+
             var compilationResult = compiler.compile();
 
             if (this.verbose)

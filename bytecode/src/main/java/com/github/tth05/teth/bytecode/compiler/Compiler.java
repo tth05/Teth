@@ -14,97 +14,141 @@ import java.util.*;
 
 public class Compiler {
 
+    private final Map<StructDeclaration, Integer> structIds = new IdentityHashMap<>();
+    private final Map<FunctionDeclaration, List<IInstrunction>> functionInsnMap = new IdentityHashMap<>();
+
+    private final List<SourceFileUnit> units = new ArrayList<>();
     private SourceFileUnit mainUnit;
 
-    public void setMainUnit(SourceFileUnit unit) {
+    private boolean compiled;
+
+    public void addSourceFileUnit(SourceFileUnit unit) {
+        if (this.compiled)
+            throw new IllegalStateException("Cannot add source file units after compilation");
+
+        this.units.add(unit);
+    }
+
+    public void addSourceFileUnits(List<SourceFileUnit> units) {
+        if (this.compiled)
+            throw new IllegalStateException("Cannot add source file units after compilation");
+
+        this.units.addAll(units);
+    }
+
+    public void setEntryPoint(SourceFileUnit unit) {
+        if (this.compiled)
+            throw new IllegalStateException("Cannot set entry point after compilation");
+
         this.mainUnit = unit;
     }
 
     public CompilationResult compile() {
+        if (this.compiled)
+            throw new IllegalStateException("Cannot compile twice");
         if (this.mainUnit == null)
             throw new IllegalStateException("No main unit set");
+        if (this.units.stream().noneMatch(u -> u == this.mainUnit))
+            throw new IllegalStateException("Main unit not in list of units");
 
-        var analyzer = new Analyzer(List.of(this.mainUnit));
+        this.compiled = true;
+
+        var analyzer = new Analyzer(this.units);
         var problems = analyzer.analyze();
         if (!problems.isEmpty())
             return new CompilationResult(problems);
 
-        var generator = new BytecodeGeneratorVisitor(analyzer);
-        generator.visit(this.mainUnit);
-        return new CompilationResult(generator.toProgram());
+        for (var unit : this.units) {
+            var generator = new BytecodeGeneratorVisitor(analyzer, unit != this.mainUnit);
+            generator.visit(unit);
+        }
+        return new CompilationResult(toProgram(analyzer));
     }
 
-    private static class BytecodeGeneratorVisitor extends ASTVisitor {
+    public TethProgram toProgram(Analyzer analyzer) {
+        var i = 1;
+        var insns = new IInstrunction[this.functionInsnMap.values().stream().mapToInt(List::size).sum() + 1];
+        var functionOffsets = new IdentityHashMap<FunctionDeclaration, Integer>();
+
+        // Ensure global function comes first
+        var sortedFunctions = this.functionInsnMap.entrySet().stream()
+                .sorted(Comparator.comparing(e -> e.getKey() != NameAnalysis.GLOBAL_FUNCTION)).toList();
+        for (var entry : sortedFunctions) {
+            var function = entry.getKey();
+            var insnList = entry.getValue();
+
+            functionOffsets.put(function, i);
+            for (var insn : insnList)
+                insns[i++] = insn;
+        }
+
+        // Resolve jump addresses
+        for (int j = 1; j < insns.length; j++) {
+            var insn = insns[j];
+            if (!(insn instanceof PlaceholderInvokeInsn placeholder))
+                continue;
+
+            var function = placeholder.target;
+            var offset = functionOffsets.get(function);
+            if (offset == null)
+                throw new IllegalStateException("Function '%s' is referenced but not compiled".formatted(function.getNameExpr().getValue()));
+
+            insns[j] = new INVOKE_Insn(
+                    function.isInstanceFunction(),
+                    function.getParameters().size() + (function.isInstanceFunction() ? 1 : 0),
+                    analyzer.functionLocalsCount(function),
+                    offset - 1
+            );
+        }
+
+        // "Invoke" global function
+        insns[0] = new INVOKE_Insn(false, 0, analyzer.functionLocalsCount(NameAnalysis.GLOBAL_FUNCTION), 0);
+
+        return new TethProgram(insns, generateStructData());
+    }
+
+    private StructData[] generateStructData() {
+        var data = new StructData[this.structIds.size()];
+        this.structIds.forEach((struct, id) -> {
+            data[id] = new StructData(
+                    struct.getNameExpr().getValue(),
+                    struct.getFields().stream().map(f -> f.getNameExpr().getValue()).toArray(String[]::new)
+            );
+        });
+        return data;
+    }
+
+    @SuppressWarnings("UnqualifiedFieldAccess")
+    private class BytecodeGeneratorVisitor extends ASTVisitor {
 
         private static final FunctionDeclaration.ParameterDeclaration SELF_PLACEHOLDER = new FunctionDeclaration.ParameterDeclaration(null, null, new IdentifierExpression(null, "self"));
 
-        private final Map<StructDeclaration, Integer> structIds = new IdentityHashMap<>();
-        private final Map<FunctionDeclaration, List<IInstrunction>> functionInsnMap = new IdentityHashMap<>();
         private final Analyzer analyzer;
+        private final boolean ignoreTopLevelCode;
 
         private List<IInstrunction> currentFunctionInsn = new ArrayList<>();
         private Map<IVariableDeclaration, Integer> currentFunctionLocals = new IdentityHashMap<>();
 
-        public BytecodeGeneratorVisitor(Analyzer analyzer) {
+        public BytecodeGeneratorVisitor(Analyzer analyzer, boolean ignoreTopLevelCode) {
             this.analyzer = analyzer;
-        }
-
-        public TethProgram toProgram() {
-            var i = 1;
-            var insns = new IInstrunction[this.functionInsnMap.values().stream().mapToInt(List::size).sum() + 1];
-            var functionOffsets = new IdentityHashMap<FunctionDeclaration, Integer>();
-
-            // Ensure global function comes first
-            var sortedFunctions = this.functionInsnMap.entrySet().stream()
-                    .sorted(Comparator.comparing(e -> e.getKey() != NameAnalysis.GLOBAL_FUNCTION)).toList();
-            for (var entry : sortedFunctions) {
-                var function = entry.getKey();
-                var insnList = entry.getValue();
-
-                functionOffsets.put(function, i);
-                for (var insn : insnList)
-                    insns[i++] = insn;
-            }
-
-            // Resolve jump addresses
-            for (int j = 1; j < insns.length; j++) {
-                var insn = insns[j];
-                if (!(insn instanceof PlaceholderInvokeInsn placeholder))
-                    continue;
-
-                var function = placeholder.target;
-                var offset = functionOffsets.get(function);
-
-                insns[j] = new INVOKE_Insn(
-                        function.isInstanceFunction(),
-                        function.getParameters().size() + (function.isInstanceFunction() ? 1 : 0),
-                        this.analyzer.functionLocalsCount(function),
-                        offset - 1
-                );
-            }
-
-            // "Invoke" global function
-            insns[0] = new INVOKE_Insn(false, 0, this.analyzer.functionLocalsCount(NameAnalysis.GLOBAL_FUNCTION), 0);
-
-            return new TethProgram(insns, generateStructData());
-        }
-
-        private StructData[] generateStructData() {
-            var data = new StructData[this.structIds.size()];
-            this.structIds.forEach((struct, id) -> {
-                data[id] = new StructData(
-                        struct.getNameExpr().getValue(),
-                        struct.getFields().stream().map(f -> f.getNameExpr().getValue()).toArray(String[]::new)
-                );
-            });
-            return data;
+            this.ignoreTopLevelCode = ignoreTopLevelCode;
         }
 
         @Override
         public void visit(SourceFileUnit unit) {
-            this.functionInsnMap.put(NameAnalysis.GLOBAL_FUNCTION, this.currentFunctionInsn);
-            super.visit(unit);
-            this.currentFunctionInsn.add(new EXIT_Insn());
+            if (!this.ignoreTopLevelCode) {
+                functionInsnMap.put(NameAnalysis.GLOBAL_FUNCTION, this.currentFunctionInsn);
+                super.visit(unit);
+                this.currentFunctionInsn.add(new EXIT_Insn());
+            } else {
+                for (Statement statement : unit.getStatements()) {
+                    switch (statement) {
+                        case FunctionDeclaration decl -> decl.accept(this);
+                        case StructDeclaration decl -> decl.accept(this);
+                        default -> {}
+                    }
+                }
+            }
         }
 
         @Override
@@ -130,7 +174,7 @@ public class Compiler {
             for (var parameter : declaration.getParameters())
                 this.currentFunctionLocals.put(parameter, this.currentFunctionLocals.size());
 
-            this.functionInsnMap.put(declaration, this.currentFunctionInsn);
+            functionInsnMap.put(declaration, this.currentFunctionInsn);
 
             super.visit(declaration);
 
@@ -334,7 +378,7 @@ public class Compiler {
         @Override
         public void visit(IdentifierExpression identifierExpression) {
             var reference = this.analyzer.resolvedReference(identifierExpression);
-            if (!(reference instanceof IVariableDeclaration varDecl))
+            if (!(reference instanceof IVariableDeclaration))
                 return; //TODO: Looks like a bad idea, seems to be added because of function invocations
 
             var varIndex = getLocalIndex(identifierExpression);
@@ -365,17 +409,11 @@ public class Compiler {
         }
 
         private int getStructId(StructDeclaration declaration) {
-            return this.structIds.computeIfAbsent(declaration, k -> this.structIds.size());
+            return structIds.computeIfAbsent(declaration, k -> structIds.size());
         }
     }
 
-    private static final class PlaceholderInvokeInsn implements IInstrunction {
-
-        private final FunctionDeclaration target;
-
-        private PlaceholderInvokeInsn(FunctionDeclaration target) {
-            this.target = target;
-        }
+    private record PlaceholderInvokeInsn(FunctionDeclaration target) implements IInstrunction {
 
         @Override
         public byte getOpCode() {
