@@ -37,7 +37,7 @@ public class NameAnalysis extends ASTVisitor {
         beginFunctionDeclaration(GLOBAL_FUNCTION);
 
         var topLevelDeclarations = unit.getStatements().stream()
-                .filter(s -> s instanceof ITopLevelDeclaration)
+                .filter(s -> s instanceof ITopLevelDeclaration && s instanceof IHasName)
                 .sorted(Comparator.comparingInt(s -> switch (s) {
                     case StructDeclaration sd -> 0;
                     case FunctionDeclaration fd -> 1;
@@ -74,6 +74,20 @@ public class NameAnalysis extends ASTVisitor {
         super.visit(unit);
     }
 
+    @Override
+    public void visit(UseStatement useStatement) {
+        var moduleName = useStatement.getPath().stream().map(IdentifierExpression::getValue).collect(Collectors.joining("/"));
+        if (!this.analyzer.hasModule(moduleName))
+            throw new ValidationException(Span.of(useStatement.getPath(), useStatement.getSpan()), "Module '" + moduleName + "' does not exist");
+
+        for (var importNameExpr : useStatement.getImports()) {
+            var decl = this.analyzer.findExportedDeclaration(moduleName, importNameExpr.getValue());
+            if (decl == null)
+                throw new ValidationException(importNameExpr.getSpan(), "Type or function '" + importNameExpr.getValue() + "' not found in module '" + moduleName + "'");
+
+            addDeclaration(decl);
+        }
+    }
 
     @Override
     public void visit(FunctionDeclaration declaration) {
@@ -314,7 +328,7 @@ public class NameAnalysis extends ASTVisitor {
     private void addDeclaration(Statement declaration) {
         var name = switch (declaration) {
             case IHasName named -> named.getNameExpr().getValue();
-            default -> throw new IllegalArgumentException();
+            default -> throw new IllegalArgumentException(declaration + "");
         };
         this.declarationStack.addDeclaration(name, declaration);
     }
