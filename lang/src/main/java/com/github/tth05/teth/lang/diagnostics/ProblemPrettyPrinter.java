@@ -1,5 +1,6 @@
 package com.github.tth05.teth.lang.diagnostics;
 
+import com.github.tth05.teth.lang.source.ISource;
 import com.github.tth05.teth.lang.util.CharArrayUtils;
 
 import java.util.ArrayList;
@@ -9,16 +10,18 @@ import java.util.stream.Collectors;
 public class ProblemPrettyPrinter {
 
     private final List<Context> contexts = new ArrayList<>(2);
+    private final String moduleName;
     private final char[] source;
 
     private boolean useAnsiColors;
 
-    public ProblemPrettyPrinter(char[] source) {
+    public ProblemPrettyPrinter(String moduleName, char[] source) {
+        this.moduleName = moduleName;
         this.source = source;
     }
 
-    public static ProblemPrettyPrinter ofSource(char[] source) {
-        return new ProblemPrettyPrinter(source);
+    public static ProblemPrettyPrinter ofSource(ISource source) {
+        return new ProblemPrettyPrinter(source.getModuleName(), source.getContents());
     }
 
     public ProblemPrettyPrinter useAnsiColors(boolean useAnsiColors) {
@@ -89,6 +92,8 @@ public class ProblemPrettyPrinter {
         public String toString() {
             var builder = new StringBuilder();
             var useAnsiColors = ProblemPrettyPrinter.this.useAnsiColors;
+
+            builder.append("-> ").append(ProblemPrettyPrinter.this.moduleName).append(".teth").append('\n');
 
             var lineNumber = CharArrayUtils.getLineNumber(ProblemPrettyPrinter.this.source, this.lines.get(0).offset) + 1;
             var lineNumberWidth = String.valueOf(lineNumber + this.lines.size() - 1).length();
