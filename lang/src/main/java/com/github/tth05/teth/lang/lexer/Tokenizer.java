@@ -269,12 +269,13 @@ public class Tokenizer {
     }
 
     private void skipLineComment() {
-        while (this.stream.peek() != '\n')
+        char current;
+        while ((current = this.stream.peek()) != '\n' && current != 0)
             this.stream.consume();
     }
 
     private void skipMultiLineComment() {
-        while (true) {
+        while (this.stream.peek() != 0) {
             var c = this.stream.consume();
             if (c == '*' && this.stream.peek() == '/') {
                 this.stream.consume();
