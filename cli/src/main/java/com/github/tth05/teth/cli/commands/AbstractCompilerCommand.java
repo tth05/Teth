@@ -25,7 +25,7 @@ public abstract class AbstractCompilerCommand implements Runnable {
 
     @CommandLine.Option(
             names = {"-v", "--verbose"},
-            description = "Verbose execution mode"
+            description = "Print timings"
     )
     protected boolean verbose;
 
@@ -47,14 +47,26 @@ public abstract class AbstractCompilerCommand implements Runnable {
         if (!this.filePath.startsWith(this.baseDir))
             throw new CommandLine.ParameterException(this.spec.commandLine(), "File is not child of base directory");
 
-        try {
-            long startTime = System.nanoTime();
-            var parserResult = Parser.parse(new FileSource(this.baseDir, this.filePath));
-            if (parserResult.logProblems(System.out, true))
-                return;
+        var startTime = System.nanoTime();
+        try (var sourcesStream = Files.walk(this.baseDir)) {
+            var sources = sourcesStream.skip(1)
+                    .parallel()
+                    .map(path -> {
+                        try {
+                            return new FileSource(this.baseDir, path.toAbsolutePath().normalize());
+                        } catch (IOException e) {
+                            throw new RuntimeException("Unable to read file %s".formatted(path), e);
+                        }
+                    }).toList();
+
+            var parserResults = Parser.parse(sources);
+            for (var parserResult : parserResults) {
+                if (parserResult.logProblems(System.out, true))
+                    return;
+            }
 
             var compiler = new Compiler();
-            compiler.setMainUnit(parserResult.getUnit());
+            compiler.setMainUnit(parserResults.get(0).getUnit());
             var compilationResult = compiler.compile();
 
             if (this.verbose)
