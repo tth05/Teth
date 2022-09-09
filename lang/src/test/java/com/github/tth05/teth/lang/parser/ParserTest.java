@@ -17,7 +17,7 @@ public class ParserTest extends AbstractParserTest {
     public void testParseString() {
         createAST("\"A string!\"");
         assertEquals(new SourceFileUnit(
-                StatementList.of(
+                "main", StatementList.of(
                 new StringLiteralExpression(null, List.of(StringLiteralExpression.stringPart(null, "A string!")))
         )
         ), this.unit);
@@ -27,7 +27,7 @@ public class ParserTest extends AbstractParserTest {
                 "5+{5} is equal to \\{=}{calc(5+5)}"
                 """);
         assertEquals(new SourceFileUnit(
-                StatementList.of(
+                "main", StatementList.of(
                 new StringLiteralExpression(null, List.of(
                         StringLiteralExpression.stringPart(null, "5+"),
                         StringLiteralExpression.expressionPart(new LongLiteralExpression(null, 5)),
@@ -57,7 +57,7 @@ public class ParserTest extends AbstractParserTest {
     public void testParseBoolean() {
         createAST("true");
         assertEquals(new SourceFileUnit(
-                StatementList.of(
+                "main", StatementList.of(
                 new BooleanLiteralExpression(null, true)
         )
         ), this.unit);
@@ -65,7 +65,7 @@ public class ParserTest extends AbstractParserTest {
 
         createAST("false");
         assertEquals(new SourceFileUnit(
-                StatementList.of(
+                "main", StatementList.of(
                 new BooleanLiteralExpression(null, false)
         )
         ), this.unit);
@@ -76,7 +76,7 @@ public class ParserTest extends AbstractParserTest {
     public void testParseListLiteral() {
         createAST("[5,6,7]");
         assertEquals(new SourceFileUnit(
-                StatementList.of(
+                "main", StatementList.of(
                 new ListLiteralExpression(
                         null,
                         ExpressionList.of(
@@ -102,7 +102,7 @@ public class ParserTest extends AbstractParserTest {
                 let l: list<list<long, double<long>>> = 5
                 """);
         assertEquals(new SourceFileUnit(
-                StatementList.of(
+                "main", StatementList.of(
                 new VariableDeclaration(
                         null,
                         new TypeExpression(null, "long"),
@@ -165,7 +165,7 @@ public class ParserTest extends AbstractParserTest {
     public void testParseUnaryExpression() {
         createAST("-(-1 + -2)+!a");
         assertEquals(new SourceFileUnit(
-                StatementList.of(
+                "main", StatementList.of(
                 new BinaryExpression(
                         null,
                         new UnaryExpression(
@@ -202,7 +202,7 @@ public class ParserTest extends AbstractParserTest {
     public void testParseBinaryExpression() {
         createAST("1+1-1*1/1==1<1<=1>1>=1!=1^(a=1)");
         assertEquals(new SourceFileUnit(
-                StatementList.of(
+                "main", StatementList.of(
                 new BinaryExpression(
                         null,
                         new BinaryExpression(
@@ -269,7 +269,7 @@ public class ParserTest extends AbstractParserTest {
 
         createAST("a && b || c && d");
         assertEquals(new SourceFileUnit(
-                StatementList.of(
+                "main", StatementList.of(
                 new BinaryExpression(
                         null,
                         new BinaryExpression(
@@ -296,7 +296,7 @@ public class ParserTest extends AbstractParserTest {
         createAST("1 - 1 + (5 * 6 + 1 + 3 * 2^2)^(100 + 1)");
         assertEquals(
                 new SourceFileUnit(
-                        StatementList.of(
+                        "main", StatementList.of(
                         new BinaryExpression(
                                 null,
                                 new BinaryExpression(
@@ -357,7 +357,7 @@ public class ParserTest extends AbstractParserTest {
                 """);
         assertEquals(
                 new SourceFileUnit(
-                        StatementList.of(
+                        "main", StatementList.of(
                         new IfStatement(
                                 null,
                                 new BinaryExpression(
@@ -437,7 +437,7 @@ public class ParserTest extends AbstractParserTest {
                 """);
         assertEquals(
                 new SourceFileUnit(
-                        StatementList.of(
+                        "main", StatementList.of(
                         new LoopStatement(null, Collections.emptyList(), null, new BlockStatement(null, StatementList.of()), null),
                         new LoopStatement(
                                 null, Collections.emptyList(), null,
@@ -544,7 +544,7 @@ public class ParserTest extends AbstractParserTest {
         createAST("let d: double = 25");
         assertEquals(
                 new SourceFileUnit(
-                        StatementList.of(
+                        "main", StatementList.of(
                         new VariableDeclaration(
                                 null,
                                 new TypeExpression(null, "double"),
@@ -566,7 +566,7 @@ public class ParserTest extends AbstractParserTest {
                 """);
         assertEquals(
                 new SourceFileUnit(
-                        StatementList.of(
+                        "main", StatementList.of(
                         new VariableAssignmentExpression(
                                 null,
                                 new IdentifierExpression(null, "d"),
@@ -617,7 +617,7 @@ public class ParserTest extends AbstractParserTest {
                 """);
         assertEquals(
                 new SourceFileUnit(
-                        StatementList.of(
+                        "main", StatementList.of(
                         new FunctionDeclaration(
                                 null,
                                 new IdentifierExpression(null, "foo"),
@@ -664,7 +664,7 @@ public class ParserTest extends AbstractParserTest {
                 """);
         assertEquals(
                 new SourceFileUnit(
-                        StatementList.of(
+                        "main", StatementList.of(
                         new BinaryExpression(
                                 null,
                                 new LongLiteralExpression(null, 1),
@@ -720,7 +720,7 @@ public class ParserTest extends AbstractParserTest {
                 """);
         assertEquals(
                 new SourceFileUnit(
-                        StatementList.of(
+                        "main", StatementList.of(
                         new StructDeclaration(
                                 null,
                                 new IdentifierExpression(null, "Foo"),
@@ -801,7 +801,7 @@ public class ParserTest extends AbstractParserTest {
                 """);
         assertEquals(
                 new SourceFileUnit(
-                        StatementList.of(
+                        "main", StatementList.of(
                         new ObjectCreationExpression(
                                 null,
                                 new IdentifierExpression(null, "Foo"),
@@ -825,7 +825,7 @@ public class ParserTest extends AbstractParserTest {
                 """);
         assertEquals(
                 new SourceFileUnit(
-                        StatementList.of(
+                        "main", StatementList.of(
                         new MemberAccessExpression(
                                 null,
                                 new IdentifierExpression(null, "d"),
@@ -869,7 +869,7 @@ public class ParserTest extends AbstractParserTest {
 
         assertEquals(
                 new SourceFileUnit(
-                        StatementList.of(
+                        "main", StatementList.of(
                                 new UseStatement(
                                         null,
                                         List.of(new IdentifierExpression(null, "foo"), new IdentifierExpression(null, "bar")),
@@ -924,7 +924,7 @@ public class ParserTest extends AbstractParserTest {
 
             assertEquals(
                     new SourceFileUnit(
-                            StatementList.of(
+                            "main", StatementList.of(
                                     new VariableDeclaration(
                                             null,
                                             null,

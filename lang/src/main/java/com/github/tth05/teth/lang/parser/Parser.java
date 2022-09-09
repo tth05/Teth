@@ -28,7 +28,7 @@ public class Parser {
 
     public ParserResult parse() {
         try {
-            var unit = new SourceFileUnit(parseStatementList(t -> t.is(TokenType.EOF)));
+            var unit = new SourceFileUnit(this.stream.getSource().getModuleName(), parseStatementList(t -> t.is(TokenType.EOF)));
             this.stream.consumeType(TokenType.EOF);
             return new ParserResult(this.stream.getSource(), unit);
         } catch (UnexpectedTokenException e) {

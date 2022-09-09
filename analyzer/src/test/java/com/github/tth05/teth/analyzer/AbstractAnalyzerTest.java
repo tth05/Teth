@@ -8,6 +8,8 @@ import com.github.tth05.teth.lang.parser.SourceFileUnit;
 import com.github.tth05.teth.lang.source.InMemorySource;
 import com.github.tth05.teth.lang.stream.CharStream;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 public abstract class AbstractAnalyzerTest {
@@ -22,7 +24,7 @@ public abstract class AbstractAnalyzerTest {
         createAST(str);
         assertStreamsEmpty();
 
-        this.analyzer = new Analyzer(this.unit);
+        this.analyzer = new Analyzer(List.of(this.unit));
         return this.analyzer.analyze();
     }
 

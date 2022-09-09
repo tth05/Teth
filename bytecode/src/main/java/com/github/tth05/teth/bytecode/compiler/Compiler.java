@@ -24,7 +24,7 @@ public class Compiler {
         if (this.mainUnit == null)
             throw new IllegalStateException("No main unit set");
 
-        var analyzer = new Analyzer(this.mainUnit);
+        var analyzer = new Analyzer(List.of(this.mainUnit));
         var problems = analyzer.analyze();
         if (!problems.isEmpty())
             return new CompilationResult(problems);

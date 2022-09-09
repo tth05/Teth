@@ -1,5 +1,6 @@
 package com.github.tth05.teth.analyzer.visitor;
 
+import com.github.tth05.teth.analyzer.Analyzer;
 import com.github.tth05.teth.analyzer.DeclarationStack;
 import com.github.tth05.teth.analyzer.ValidationException;
 import com.github.tth05.teth.analyzer.prelude.Prelude;
@@ -21,10 +22,12 @@ public class NameAnalysis extends ASTVisitor {
     private final Deque<FunctionDeclaration> currentFunctionStack = new ArrayDeque<>(5);
     private final DeclarationStack declarationStack = new DeclarationStack();
 
+    private final Analyzer analyzer;
     private final Map<IDeclarationReference, Statement> resolvedReferences;
     private final Map<FunctionDeclaration, Integer> functionLocalsCount;
 
-    public NameAnalysis(Map<IDeclarationReference, Statement> resolvedReferences, Map<FunctionDeclaration, Integer> functionLocalsCount) {
+    public NameAnalysis(Analyzer analyzer, Map<IDeclarationReference, Statement> resolvedReferences, Map<FunctionDeclaration, Integer> functionLocalsCount) {
+        this.analyzer = analyzer;
         this.resolvedReferences = resolvedReferences;
         this.functionLocalsCount = functionLocalsCount;
     }
@@ -70,6 +73,7 @@ public class NameAnalysis extends ASTVisitor {
 
         super.visit(unit);
     }
+
 
     @Override
     public void visit(FunctionDeclaration declaration) {

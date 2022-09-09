@@ -6,10 +6,16 @@ import java.util.Objects;
 
 public class SourceFileUnit implements IDumpable {
 
+    private final String moduleName;
     private final StatementList statements;
 
-    public SourceFileUnit(StatementList statements) {
+    public SourceFileUnit(String moduleName, StatementList statements) {
+        this.moduleName = moduleName;
         this.statements = Objects.requireNonNull(statements);
+    }
+
+    public String getModuleName() {
+        return this.moduleName;
     }
 
     public StatementList getStatements() {
