@@ -21,7 +21,9 @@ public class FileSource implements ISource {
 
         var relativePath = path.toString().substring(root.toString().length() + 1);
         var dotIndex = relativePath.lastIndexOf('.');
-        this.moduleName = relativePath.substring(0, dotIndex == -1 ? relativePath.length() : dotIndex).replace('\\', '/');
+        this.moduleName = relativePath.substring(0, dotIndex == -1 ? relativePath.length() : dotIndex)
+                .replace("\\\\", "/")
+                .replace('\\', '/');
 
         this.contents = Files.readString(path).toCharArray();
     }

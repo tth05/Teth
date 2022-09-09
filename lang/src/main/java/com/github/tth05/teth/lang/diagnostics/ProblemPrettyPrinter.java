@@ -93,10 +93,15 @@ public class ProblemPrettyPrinter {
             var builder = new StringBuilder();
             var useAnsiColors = ProblemPrettyPrinter.this.useAnsiColors;
 
-            builder.append("-> ").append(ProblemPrettyPrinter.this.moduleName).append(".teth").append('\n');
-
             var lineNumber = CharArrayUtils.getLineNumber(ProblemPrettyPrinter.this.source, this.lines.get(0).offset) + 1;
             var lineNumberWidth = String.valueOf(lineNumber + this.lines.size() - 1).length();
+
+            // Append file name
+            builder.append(useAnsiColors ? "\u001b[0;36m" : "")
+                    .append(" ".repeat(lineNumberWidth))
+                    .append("--> ")
+                    .append(useAnsiColors ? "\u001b[0m" : "")
+                    .append(ProblemPrettyPrinter.this.moduleName).append(".teth").append('\n');
 
             for (int i = 0; i < this.lines.size(); i++, lineNumber++) {
                 var line = this.lines.get(i);
