@@ -26,6 +26,8 @@ public class Analyzer {
     public ProblemList analyze() {
         var problems = new ProblemList();
 
+        //TODO: The multi step analysis should advance at the same time for all input units
+
         this.unitIndexMap.forEach((name, index) -> {
             try {
                 var unit = index.getUnit();
