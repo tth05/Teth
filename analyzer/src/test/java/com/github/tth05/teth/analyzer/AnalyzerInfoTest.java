@@ -15,7 +15,7 @@ public class AnalyzerInfoTest extends AbstractAnalyzerTest {
         assertEquals(
                 2,
                 this.analyzer.functionLocalsCount(
-                        this.unit.getStatements().stream()
+                        this.asts.get(0).unit().getStatements().stream()
                                 .filter(s -> s instanceof FunctionDeclaration)
                                 .map(FunctionDeclaration.class::cast)
                                 .filter(f -> f.getNameExpr().getValue().equals("f"))
@@ -29,7 +29,7 @@ public class AnalyzerInfoTest extends AbstractAnalyzerTest {
         assertEquals(
                 0,
                 this.analyzer.functionLocalsCount(
-                        this.unit.getStatements().stream()
+                        this.asts.get(0).unit().getStatements().stream()
                                 .filter(s -> s instanceof FunctionDeclaration)
                                 .map(FunctionDeclaration.class::cast)
                                 .filter(f -> f.getNameExpr().getValue().equals("f"))

@@ -38,6 +38,7 @@ public class Analyzer {
                 nameAnalysisStates.add(nameAnalysis);
             } catch (TypeResolverException | ValidationException e) {
                 problems.add(e.asProblem());
+                nameAnalysisStates.add(null);
             }
         });
 
@@ -45,6 +46,9 @@ public class Analyzer {
         for (var index : this.unitIndexMap.values()) {
             // Safe, because the map is ordered
             var nameAnalysis = nameAnalysisStates.get(i);
+            if (nameAnalysis == null)
+                continue;
+
             try {
                 var unit = index.getUnit();
                 nameAnalysis.visit(unit);

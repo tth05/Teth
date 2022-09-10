@@ -476,4 +476,83 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
         assertEquals(1, problems.size());
         assertEquals("Parameter type mismatch. Expected list<long>, got S<double>", problems.get(0).message());
     }
+
+    @Test
+    public void testUseStatementFunction() {
+        var problems = analyze("""
+                        use other {test}
+                        let a: long = test()
+                        """,
+                new Source("other", """
+                        fn test() long return 15
+                        """)
+        );
+
+        assertTrue(problems.isEmpty());
+    }
+
+    @Test
+    public void testUseStatementStruct() {
+        var problems = analyze("""
+                        use other/test {Str}
+                        let a: Str = new Str()
+                        """,
+                new Source("other/test", """
+                        struct Str {}
+                        """)
+        );
+
+        assertTrue(problems.isEmpty());
+    }
+
+    @Test
+    public void testUseStatementCircular() {
+        var problems = analyze("""
+                        use other {two}
+                        use other2 {three}
+                        
+                        fn one() long {
+                            let a: double = two()
+                            let b: long = three()
+                            return 0
+                        }
+                        """,
+                new Source("other", """
+                        use main {one}
+                        use other2 {three}
+                        
+                        fn two() double {
+                            let a: long = one()
+                            let b = three()
+                            return 0.0
+                        }
+                        """),
+                new Source("other2", """
+                        use main {one}
+                        use other {two}
+                        
+                        fn three() long {
+                            let a = one()
+                            let b: double = two()
+                            return 0
+                        }
+                        """)
+        );
+
+        assertTrue(problems.isEmpty());
+    }
+
+    @Test
+    public void testUseStatementMultipleErrors() {
+        var problems = analyze("""
+                        use doesnotexist {two}
+                        """,
+                new Source("other", """
+                        let a = something()
+                        """)
+        );
+
+        assertFalse(problems.isEmpty());
+        assertEquals(2, problems.size());
+    }
 }
