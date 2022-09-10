@@ -26,14 +26,19 @@ public class NameAnalysis extends ASTVisitor {
     private final Map<IDeclarationReference, Statement> resolvedReferences;
     private final Map<FunctionDeclaration, Integer> functionLocalsCount;
 
+    private boolean preDeclVisit;
+
     public NameAnalysis(Analyzer analyzer, Map<IDeclarationReference, Statement> resolvedReferences, Map<FunctionDeclaration, Integer> functionLocalsCount) {
         this.analyzer = analyzer;
         this.resolvedReferences = resolvedReferences;
         this.functionLocalsCount = functionLocalsCount;
     }
 
-    @Override
-    public void visit(SourceFileUnit unit) {
+    public void preDeclVisit(SourceFileUnit unit) {
+        if (this.preDeclVisit)
+            throw new IllegalStateException("preDeclVisit has already been called");
+        this.preDeclVisit = true;
+
         beginFunctionDeclaration(GLOBAL_FUNCTION);
 
         var topLevelDeclarations = unit.getStatements().stream()
@@ -70,6 +75,12 @@ public class NameAnalysis extends ASTVisitor {
                 default -> throw new IllegalStateException();
             }
         }
+    }
+
+    @Override
+    public void visit(SourceFileUnit unit) {
+        if (!this.preDeclVisit)
+            throw new IllegalStateException("Pre declaration visit was not called");
 
         super.visit(unit);
     }
@@ -86,6 +97,7 @@ public class NameAnalysis extends ASTVisitor {
                 throw new ValidationException(importNameExpr.getSpan(), "Type or function '" + importNameExpr.getValue() + "' not found in module '" + moduleName + "'");
 
             addDeclaration(decl);
+            this.resolvedReferences.put(importNameExpr, decl);
         }
     }
 

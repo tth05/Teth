@@ -15,7 +15,7 @@ public class Analyzer {
     private final Map<IDeclarationReference, Statement> resolvedReferences = new IdentityHashMap<>();
     private final Map<FunctionDeclaration, Integer> functionLocalsCount = new IdentityHashMap<>();
 
-    private final Map<String, SourceFileUnitIndex> unitIndexMap;
+    private final LinkedHashMap<String, SourceFileUnitIndex> unitIndexMap;
 
     public Analyzer(List<SourceFileUnit> units) {
         this.unitIndexMap = new LinkedHashMap<>(units.size());
@@ -26,19 +26,36 @@ public class Analyzer {
     public ProblemList analyze() {
         var problems = new ProblemList();
 
-        //TODO: The multi step analysis should advance at the same time for all input units
-
+        var nameAnalysisStates = new ArrayList<NameAnalysis>(this.unitIndexMap.size());
+        // Pre-decl visit for all units
         this.unitIndexMap.forEach((name, index) -> {
             try {
                 var unit = index.getUnit();
                 Prelude.injectStatements(unit.getStatements());
-                new NameAnalysis(this, this.resolvedReferences, this.functionLocalsCount).visit(unit);
+                var nameAnalysis = new NameAnalysis(this, this.resolvedReferences, this.functionLocalsCount);
+                nameAnalysis.preDeclVisit(unit);
+                // Temporary save the name analysis state
+                nameAnalysisStates.add(nameAnalysis);
+            } catch (TypeResolverException | ValidationException e) {
+                problems.add(e.asProblem());
+            }
+        });
+
+        var i = 0;
+        for (var index : this.unitIndexMap.values()) {
+            // Safe, because the map is ordered
+            var nameAnalysis = nameAnalysisStates.get(i);
+            try {
+                var unit = index.getUnit();
+                nameAnalysis.visit(unit);
                 new TypeAnalysis(this.resolvedReferences).visit(unit);
                 new ReturnStatementVerifier().visit(unit);
             } catch (TypeResolverException | ValidationException e) {
                 problems.add(e.asProblem());
             }
-        });
+
+            i++;
+        }
 
         return problems;
     }
