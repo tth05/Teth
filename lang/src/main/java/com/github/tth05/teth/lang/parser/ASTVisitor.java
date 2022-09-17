@@ -42,11 +42,6 @@ public abstract class ASTVisitor {
         expression.getExpression().accept(this);
     }
 
-    public void visit(VariableAssignmentExpression expression) {
-        expression.getTargetExpr().accept(this);
-        expression.getExpr().accept(this);
-    }
-
     public void visit(VariableDeclaration declaration) {
         var typeExpr = declaration.getTypeExpr();
         if (typeExpr != null)

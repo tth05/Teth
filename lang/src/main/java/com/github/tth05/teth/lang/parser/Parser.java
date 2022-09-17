@@ -30,7 +30,7 @@ public class Parser {
     }
 
     public ParserResult parse() {
-        var unit = new SourceFileUnit(this.stream.getSource().getModuleName(), parseStatementList(AnchorSets.FIRST_SET_BLOCK_STATEMENT, TokenType.EOF));
+        var unit = new SourceFileUnit(this.stream.getSource().getModuleName(), parseStatementList(AnchorSets.FIRST_SET_STATEMENT, TokenType.EOF));
         this.stream.consumeType(TokenType.EOF);
 
         if (this.problems.isEmpty())
@@ -125,7 +125,7 @@ public class Parser {
     }
 
     private IfStatement parseIfStatement(AnchorSet anchorSet) {
-        var firstSpan = this.stream.consumeType(TokenType.KEYWORD_IF).span();
+        var firstSpan = this.stream.consume().span();
         //TODO: Recover to expression
         var condition = parseParenthesisedExpression(AnchorSets.FIRST_SET_ELSE_STATEMENT.lazyUnion(AnchorSets.FIRST_SET_STATEMENT));
         var body = parseBlock(AnchorSets.FIRST_SET_ELSE_STATEMENT.lazyUnion(anchorSet));
@@ -188,7 +188,7 @@ public class Parser {
         if (this.stream.peek().is(TokenType.L_CURLY_PAREN)) {
             var firstSpan = this.stream.consumeType(TokenType.L_CURLY_PAREN).span();
             consumeLineBreaks();
-            var statements = parseStatementList(AnchorSets.END_SET_BLOCK.lazyUnion(AnchorSets.FIRST_SET_BLOCK_STATEMENT), TokenType.R_CURLY_PAREN);
+            var statements = parseStatementList(AnchorSets.END_SET_BLOCK.lazyUnion(AnchorSets.FIRST_SET_STATEMENT), TokenType.R_CURLY_PAREN);
             consumeLineBreaks();
             var secondSpan = this.stream.consumeType(TokenType.R_CURLY_PAREN).span();
             consumeLineBreaks();
@@ -343,7 +343,8 @@ public class Parser {
     }
 
     private Expression parseExpression(AnchorSet anchorSet) {
-        var head = parsePrimaryExpression(anchorSet);
+        anchorSet = anchorSet.lazyUnion(AnchorSets.ALL_EXPRESSION_OPERATORS);
+        var head = parseUnaryExpression(anchorSet);
         var current = head;
 
         while (true) {
@@ -356,17 +357,17 @@ public class Parser {
 
             if (current instanceof BinaryExpression old) {
                 if (operator.getPrecedence() < old.getOperator().getPrecedence()) {
-                    var newRight = new BinaryExpression(old.getRight(), parsePrimaryExpression(anchorSet), operator);
+                    var newRight = new BinaryExpression(old.getRight(), parseUnaryExpression(anchorSet), operator);
                     old.setRight(newRight);
                     current = newRight;
                 } else {
                     var newCurrent = new BinaryExpression(old.getLeft(), old.getRight(), old.getOperator());
                     old.setLeft(newCurrent);
-                    old.setRight(parsePrimaryExpression(anchorSet));
+                    old.setRight(parseUnaryExpression(anchorSet));
                     old.setOperator(operator);
                 }
             } else { // Convert head into binary expression
-                head = new BinaryExpression(head, parsePrimaryExpression(anchorSet), operator);
+                head = new BinaryExpression(head, parseUnaryExpression(anchorSet), operator);
                 current = head;
             }
         }
@@ -374,7 +375,36 @@ public class Parser {
         return head;
     }
 
-    private ObjectCreationExpression parseObjectCreationExpression() {
+    private Expression parseUnaryExpression(AnchorSet set) {
+        var token = this.stream.peek();
+        var op = UnaryExpression.Operator.fromTokenType(token.type());
+        if (op == null)
+            return parsePostfixExpression(set);
+
+        this.stream.consume();
+        var expr = parseUnaryExpression(set);
+        return new UnaryExpression(Span.of(token.span(), expr.getSpan()), expr, op);
+    }
+
+    private Expression parsePostfixExpression(AnchorSet set) {
+        set.lazyUnion(AnchorSets.FIRST_SET_POSTFIX_OP);
+
+        var expr = parsePrimaryExpression(set);
+
+        while (true) {
+            var token = this.stream.peek();
+            if (token.is(TokenType.L_PAREN) || token.is(TokenType.LESS_PIPE)) {
+                expr = parseFunctionInvocation(set, expr);
+            } else if (token.is(TokenType.DOT)) {
+                expr = parseMemberAccessExpression(set, expr);
+            } else {
+                break;
+            }
+        }
+        return expr;
+    }
+
+    private ObjectCreationExpression parseObjectCreationExpression(AnchorSet anchorSet) {
         var firstSpan = this.stream.consumeType(TokenType.KEYWORD_NEW).span();
         consumeLineBreaks();
         var name = this.stream.consumeType(TokenType.IDENTIFIER);
@@ -400,52 +430,27 @@ public class Parser {
         consumeLineBreaks();
         Expression expr;
 
-        var currentToken = this.stream.peek();
-        var currentType = currentToken.type();
-        var operator = UnaryExpression.Operator.fromTokenType(currentType);
-        if (currentType == TokenType.L_PAREN) {
+        var token = this.stream.peek();
+        if (token.is(TokenType.L_PAREN)) {
             expr = parseParenthesisedExpression(anchorSet);
-        } else if (operator != null) {
-            var firstSpan = this.stream.consume().span();
-            expr = parsePrimaryExpression(anchorSet);
-            expr = new UnaryExpression(Span.of(firstSpan, expr.getSpan()), expr, UnaryExpression.Operator.fromTokenType(currentType));
-        } else if (currentType == TokenType.KEYWORD_NEW) {
-            expr = parseObjectCreationExpression();
+        } else if (token.is(TokenType.KEYWORD_NEW)) {
+            expr = parseObjectCreationExpression(anchorSet);
         } else {
             expr = parseLiteralExpression(anchorSet);
-        }
-
-        while (true) {
-            currentType = this.stream.peek().type();
-            if (currentType == TokenType.L_PAREN || currentType == TokenType.LESS_PIPE) {
-                expr = parseFunctionInvocation(expr);
-            } else if (currentType == TokenType.EQUAL) {
-                if (!(expr instanceof IAssignmentTarget))
-                    throw new UnexpectedTokenException(expr.getSpan(), "Left side of assignment must be an identifier or member access");
-                // Consume the equal sign
-                this.stream.consume();
-                var initializerExpression = parseExpression(anchorSet);
-                expr = new VariableAssignmentExpression(
-                        Span.of(expr.getSpan(), initializerExpression.getSpan()),
-                        expr, initializerExpression
-                );
-            } else if (currentType == TokenType.DOT) {
-                this.stream.consume();
-                var target = parseLiteralExpression(anchorSet);
-                if (!(target instanceof IdentifierExpression ident))
-                    throw new UnexpectedTokenException(target.getSpan(), "Member access name must be an identifier");
-
-                expr = new MemberAccessExpression(Span.of(expr.getSpan(), ident.getSpan()), ident, expr);
-            } else {
-                break;
-            }
         }
 
         consumeLineBreaks();
         return expr;
     }
 
-    private Expression parseFunctionInvocation(Expression target) {
+    private Expression parseMemberAccessExpression(AnchorSet anchorSet, Expression target) {
+        this.stream.consume();
+
+        var name = this.stream.consumeType(TokenType.IDENTIFIER);
+        return new MemberAccessExpression(Span.of(target.getSpan(), name.span()), new IdentifierExpression(name.span(), name.value()), target);
+    }
+
+    private Expression parseFunctionInvocation(AnchorSet anchorSet, Expression target) {
         var genericParameters = tryParseGenericParametersOnInvocation(TokenType.LESS_PIPE);
 
         this.stream.consumeType(TokenType.L_PAREN);

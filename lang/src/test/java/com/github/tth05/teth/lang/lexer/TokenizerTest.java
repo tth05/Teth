@@ -133,7 +133,7 @@ public class TokenizerTest extends AbstractTokenizerTest {
     public void testAssign() {
         createStreams("let anIdentifier: type = 56");
         assertIterableEquals(tokenList(
-                new Token(makeSpan(0, 3), "let", TokenType.KEYWORD),
+                new Token(makeSpan(0, 3), "let", TokenType.KEYWORD_LET),
                 new Token(makeSpan(4, 16), "anIdentifier", TokenType.IDENTIFIER),
                 new Token(makeSpan(16, 17), ":", TokenType.COLON),
                 new Token(makeSpan(18, 22), "type", TokenType.IDENTIFIER),
@@ -147,7 +147,7 @@ public class TokenizerTest extends AbstractTokenizerTest {
     public void testAssignMultiline() {
         createStreams("let anIdentifier\n =\n 56");
         assertIterableEquals(tokenList(
-                new Token(makeSpan(0, 3), "let", TokenType.KEYWORD),
+                new Token(makeSpan(0, 3), "let", TokenType.KEYWORD_LET),
                 new Token(makeSpan(4, 16), "anIdentifier", TokenType.IDENTIFIER),
                 new Token(makeSpan(16, 17), "\n", TokenType.LINE_BREAK),
                 new Token(makeSpan(18, 19), "=", TokenType.EQUAL),
@@ -182,7 +182,7 @@ public class TokenizerTest extends AbstractTokenizerTest {
     public void testIfStatement() {
         createStreams("if (1 == 2) { 3 }");
         assertIterableEquals(tokenList(
-                new Token(makeSpan(0, 2), "if", TokenType.KEYWORD),
+                new Token(makeSpan(0, 2), "if", TokenType.KEYWORD_IF),
                 new Token(makeSpan(3, 4), "(", TokenType.L_PAREN),
                 new Token(makeSpan(4, 5), "1", TokenType.LONG_LITERAL),
                 new Token(makeSpan(6, 8), "==", TokenType.EQUAL_EQUAL),
@@ -196,7 +196,7 @@ public class TokenizerTest extends AbstractTokenizerTest {
 
         createStreams("if (a && b || c) { 3 }");
         assertIterableEquals(tokenList(
-                new Token(makeSpan(0, 2), "if", TokenType.KEYWORD),
+                new Token(makeSpan(0, 2), "if", TokenType.KEYWORD_IF),
                 new Token(makeSpan(3, 4), "(", TokenType.L_PAREN),
                 new Token(makeSpan(4, 5), "a", TokenType.IDENTIFIER),
                 new Token(makeSpan(6, 8), "&&", TokenType.AMPERSAND_AMPERSAND),
@@ -212,7 +212,7 @@ public class TokenizerTest extends AbstractTokenizerTest {
 
         createStreams("if (1 == 2) { 35.45 } else 5 == 5");
         assertIterableEquals(tokenList(
-                new Token(makeSpan(0, 2), "if", TokenType.KEYWORD),
+                new Token(makeSpan(0, 2), "if", TokenType.KEYWORD_IF),
                 new Token(makeSpan(3, 4), "(", TokenType.L_PAREN),
                 new Token(makeSpan(4, 5), "1", TokenType.LONG_LITERAL),
                 new Token(makeSpan(6, 8), "==", TokenType.EQUAL_EQUAL),
@@ -221,7 +221,7 @@ public class TokenizerTest extends AbstractTokenizerTest {
                 new Token(makeSpan(12, 13), "{", TokenType.L_CURLY_PAREN),
                 new Token(makeSpan(14, 19), "35.45", TokenType.DOUBLE_LITERAL),
                 new Token(makeSpan(20, 21), "}", TokenType.R_CURLY_PAREN),
-                new Token(makeSpan(22, 26), "else", TokenType.KEYWORD),
+                new Token(makeSpan(22, 26), "else", TokenType.KEYWORD_ELSE),
                 new Token(makeSpan(27, 28), "5", TokenType.LONG_LITERAL),
                 new Token(makeSpan(29, 31), "==", TokenType.EQUAL_EQUAL),
                 new Token(makeSpan(32, 33), "5", TokenType.LONG_LITERAL)
@@ -230,15 +230,15 @@ public class TokenizerTest extends AbstractTokenizerTest {
 
         createStreams("if (1 == 2) 3 else if (a) 5");
         assertIterableEquals(tokenList(
-                new Token(makeSpan(0, 2), "if", TokenType.KEYWORD),
+                new Token(makeSpan(0, 2), "if", TokenType.KEYWORD_IF),
                 new Token(makeSpan(3, 4), "(", TokenType.L_PAREN),
                 new Token(makeSpan(4, 5), "1", TokenType.LONG_LITERAL),
                 new Token(makeSpan(6, 8), "==", TokenType.EQUAL_EQUAL),
                 new Token(makeSpan(9, 10), "2", TokenType.LONG_LITERAL),
                 new Token(makeSpan(10, 11), ")", TokenType.R_PAREN),
                 new Token(makeSpan(12, 13), "3", TokenType.LONG_LITERAL),
-                new Token(makeSpan(14, 18), "else", TokenType.KEYWORD),
-                new Token(makeSpan(19, 21), "if", TokenType.KEYWORD),
+                new Token(makeSpan(14, 18), "else", TokenType.KEYWORD_ELSE),
+                new Token(makeSpan(19, 21), "if", TokenType.KEYWORD_IF),
                 new Token(makeSpan(22, 23), "(", TokenType.L_PAREN),
                 new Token(makeSpan(23, 24), "a", TokenType.IDENTIFIER),
                 new Token(makeSpan(24, 25), ")", TokenType.R_PAREN),
@@ -251,7 +251,7 @@ public class TokenizerTest extends AbstractTokenizerTest {
     public void testLoop() {
         createStreams("loop {}");
         assertIterableEquals(tokenList(
-                new Token(makeSpan(0, 4), "loop", TokenType.KEYWORD),
+                new Token(makeSpan(0, 4), "loop", TokenType.KEYWORD_LOOP),
                 new Token(makeSpan(5, 6), "{", TokenType.L_CURLY_PAREN),
                 new Token(makeSpan(6, 7), "}", TokenType.R_CURLY_PAREN)
         ), tokensIntoList());
@@ -262,14 +262,14 @@ public class TokenizerTest extends AbstractTokenizerTest {
     public void testStruct() {
         createStreams("struct b {} let a = new b()");
         assertIterableEquals(tokenList(
-                new Token(makeSpan(0, 6), "struct", TokenType.KEYWORD),
+                new Token(makeSpan(0, 6), "struct", TokenType.KEYWORD_STRUCT),
                 new Token(makeSpan(7, 8), "b", TokenType.IDENTIFIER),
                 new Token(makeSpan(9, 10), "{", TokenType.L_CURLY_PAREN),
                 new Token(makeSpan(10, 11), "}", TokenType.R_CURLY_PAREN),
-                new Token(makeSpan(12, 15), "let", TokenType.KEYWORD),
+                new Token(makeSpan(12, 15), "let", TokenType.KEYWORD_LET),
                 new Token(makeSpan(16, 17), "a", TokenType.IDENTIFIER),
                 new Token(makeSpan(18, 19), "=", TokenType.EQUAL),
-                new Token(makeSpan(20, 23), "new", TokenType.KEYWORD),
+                new Token(makeSpan(20, 23), "new", TokenType.KEYWORD_NEW),
                 new Token(makeSpan(24, 25), "b", TokenType.IDENTIFIER),
                 new Token(makeSpan(25, 26), "(", TokenType.L_PAREN),
                 new Token(makeSpan(26, 27), ")", TokenType.R_PAREN)

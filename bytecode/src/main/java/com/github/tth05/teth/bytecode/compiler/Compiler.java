@@ -219,26 +219,6 @@ public class Compiler {
         }
 
         @Override
-        public void visit(VariableAssignmentExpression expression) {
-            {
-                expression.getExpr().accept(this);
-            }
-            this.currentFunctionInsn.add(new DUP_Insn());
-
-            if (expression.getTargetExpr() instanceof IdentifierExpression identifierExpression) {
-                var idx = getLocalIndex(identifierExpression);
-                this.currentFunctionInsn.add(new STORE_LOCAL_Insn(idx));
-            } else if (expression.getTargetExpr() instanceof MemberAccessExpression memberAccessExpression) {
-                memberAccessExpression.getTarget().accept(this);
-
-                var field = (StructDeclaration.FieldDeclaration) this.analyzer.resolvedReference(memberAccessExpression);
-                this.currentFunctionInsn.add(new STORE_MEMBER_Insn((short) field.getIndex()));
-            } else {
-                throw new UnsupportedOperationException("Cannot assign to " + expression.getTargetExpr());
-            }
-        }
-
-        @Override
         public void visit(MemberAccessExpression expression) {
             {
                 expression.getTarget().accept(this);
@@ -338,7 +318,27 @@ public class Compiler {
                 }
                 case OP_AND -> this.currentFunctionInsn.add(new B_AND_Insn());
                 case OP_OR -> this.currentFunctionInsn.add(new B_OR_Insn());
+                case OP_ASSIGN -> visitAssignmentExpression(expression);
                 default -> throw new UnsupportedOperationException("Unsupported operator: " + expression.getOperator());
+            }
+        }
+
+        public void visitAssignmentExpression(BinaryExpression expression) {
+            {
+                expression.getRight().accept(this);
+            }
+            this.currentFunctionInsn.add(new DUP_Insn());
+
+            if (expression.getLeft() instanceof IdentifierExpression identifierExpression) {
+                var idx = getLocalIndex(identifierExpression);
+                this.currentFunctionInsn.add(new STORE_LOCAL_Insn(idx));
+            } else if (expression.getLeft() instanceof MemberAccessExpression memberAccessExpression) {
+                memberAccessExpression.getTarget().accept(this);
+
+                var field = (StructDeclaration.FieldDeclaration) this.analyzer.resolvedReference(memberAccessExpression);
+                this.currentFunctionInsn.add(new STORE_MEMBER_Insn((short) field.getIndex()));
+            } else {
+                throw new UnsupportedOperationException("Cannot assign to " + expression.getLeft());
             }
         }
 

@@ -206,14 +206,6 @@ public class NameAnalysis extends ASTVisitor {
     }
 
     @Override
-    public void visit(VariableAssignmentExpression expression) {
-        super.visit(expression);
-
-        if (!(expression.getTargetExpr() instanceof IDeclarationReference targetRef))
-            throw new ValidationException(expression.getTargetExpr().getSpan(), "Invalid assignment target");
-    }
-
-    @Override
     public void visit(BlockStatement statement) {
         this.declarationStack.beginScope(true);
         super.visit(statement);
@@ -225,6 +217,17 @@ public class NameAnalysis extends ASTVisitor {
         validateNotAReservedName(declaration.getSpan(), declaration.getNameExpr().getValue());
 
         addDeclaration(declaration);
+    }
+
+    @Override
+    public void visit(BinaryExpression expression) {
+        super.visit(expression);
+
+        if (expression.getOperator() != BinaryExpression.Operator.OP_ASSIGN)
+            return;
+
+        if (!(expression.getLeft() instanceof IDeclarationReference))
+            throw new ValidationException(expression.getLeft().getSpan(), "Invalid assignment target");
     }
 
     @Override

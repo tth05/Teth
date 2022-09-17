@@ -250,10 +250,11 @@ public class ParserTest extends AbstractParserTest {
                                         new BinaryExpression(
                                                 null,
                                                 new LongLiteralExpression(null, 1),
-                                                new VariableAssignmentExpression(
+                                                new BinaryExpression(
                                                         null,
                                                         new IdentifierExpression(null, "a"),
-                                                        new LongLiteralExpression(null, 1)
+                                                        new LongLiteralExpression(null, 1),
+                                                        BinaryExpression.Operator.OP_ASSIGN
                                                 ),
                                                 BinaryExpression.Operator.OP_POW
                                         ),
@@ -381,20 +382,22 @@ public class ParserTest extends AbstractParserTest {
                                                         new BlockStatement(
                                                                 null,
                                                                 StatementList.of(
-                                                                        new VariableAssignmentExpression(
+                                                                        new BinaryExpression(
                                                                                 null,
                                                                                 new IdentifierExpression(null, "c"),
-                                                                                new LongLiteralExpression(null, 2)
+                                                                                new LongLiteralExpression(null, 2),
+                                                                                BinaryExpression.Operator.OP_ASSIGN
                                                                         )
                                                                 )
                                                         ),
                                                         new BlockStatement(
                                                                 null,
                                                                 StatementList.of(
-                                                                        new VariableAssignmentExpression(
+                                                                        new BinaryExpression(
                                                                                 null,
                                                                                 new IdentifierExpression(null, "c"),
-                                                                                new LongLiteralExpression(null, 5)
+                                                                                new LongLiteralExpression(null, 5),
+                                                                                BinaryExpression.Operator.OP_ASSIGN
                                                                         )
                                                                 )
                                                         )
@@ -442,7 +445,7 @@ public class ParserTest extends AbstractParserTest {
                         new LoopStatement(
                                 null, Collections.emptyList(), null,
                                 new BlockStatement(null, StatementList.of(
-                                        new VariableAssignmentExpression(
+                                        new BinaryExpression(
                                                 null,
                                                 new IdentifierExpression(null, "a"),
                                                 new BinaryExpression(
@@ -450,7 +453,8 @@ public class ParserTest extends AbstractParserTest {
                                                         new IdentifierExpression(null, "a"),
                                                         new LongLiteralExpression(null, 5),
                                                         BinaryExpression.Operator.OP_ADD
-                                                )
+                                                ),
+                                                BinaryExpression.Operator.OP_ASSIGN
                                         )
                                 )),
                                 null
@@ -474,7 +478,7 @@ public class ParserTest extends AbstractParserTest {
                                         BinaryExpression.Operator.OP_LESS
                                 ),
                                 new BlockStatement(null, StatementList.of()),
-                                new VariableAssignmentExpression(
+                                new BinaryExpression(
                                         null,
                                         new IdentifierExpression(null, "i"),
                                         new BinaryExpression(
@@ -482,7 +486,8 @@ public class ParserTest extends AbstractParserTest {
                                                 new IdentifierExpression(null, "i"),
                                                 new LongLiteralExpression(null, 1),
                                                 BinaryExpression.Operator.OP_ADD
-                                        )
+                                        ),
+                                        BinaryExpression.Operator.OP_ASSIGN
                                 )
                         ),
                         new LoopStatement(
@@ -567,12 +572,13 @@ public class ParserTest extends AbstractParserTest {
         assertEquals(
                 new SourceFileUnit(
                         "main", StatementList.of(
-                        new VariableAssignmentExpression(
+                        new BinaryExpression(
                                 null,
                                 new IdentifierExpression(null, "d"),
-                                new LongLiteralExpression(null, 25)
+                                new LongLiteralExpression(null, 25),
+                                BinaryExpression.Operator.OP_ASSIGN
                         ),
-                        new VariableAssignmentExpression(
+                        new BinaryExpression(
                                 null,
                                 new MemberAccessExpression(
                                         null,
@@ -596,7 +602,8 @@ public class ParserTest extends AbstractParserTest {
                                                 ExpressionList.of()
                                         )
                                 ),
-                                new LongLiteralExpression(null, 25)
+                                new LongLiteralExpression(null, 25),
+                                BinaryExpression.Operator.OP_ASSIGN
                         )
                 )
                 ),

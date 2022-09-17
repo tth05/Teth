@@ -154,21 +154,6 @@ public class TypeAnalysis extends ASTVisitor {
     }
 
     @Override
-    public void visit(VariableAssignmentExpression expression) {
-        super.visit(expression);
-
-        // Can only be done after type resolution, therefore not contained in NameAnalysis
-        if (!(this.resolvedReferences.get((IDeclarationReference) expression.getTargetExpr()) instanceof IVariableDeclaration varDecl))
-            throw new TypeResolverException(expression.getSpan(), "Invalid assignment target");
-
-        var type = this.resolvedExpressionTypes.get(expression.getExpr());
-        if (!type.equals(getVariableDeclarationType(varDecl)))
-            throw new TypeResolverException(expression.getExpr().getSpan(), "Cannot assign expression of type " + this.typeCache.toString(type) + " to variable of type " + this.typeCache.toString(getVariableDeclarationType(varDecl)));
-
-        this.resolvedExpressionTypes.put(expression, type);
-    }
-
-    @Override
     public void visit(MemberAccessExpression expression) {
         { // Don't want to visit member name here
             expression.getTarget().accept(this);
@@ -226,6 +211,11 @@ public class TypeAnalysis extends ASTVisitor {
     public void visit(BinaryExpression expression) {
         super.visit(expression);
 
+        if (expression.getOperator() == BinaryExpression.Operator.OP_ASSIGN) {
+            visitAssignmentExpression(expression);
+            return;
+        }
+
         var leftType = this.resolvedExpressionTypes.get(expression.getLeft());
         var rightType = this.resolvedExpressionTypes.get(expression.getRight());
         var leftIsNumber = this.typeCache.isNumber(leftType);
@@ -250,6 +240,18 @@ public class TypeAnalysis extends ASTVisitor {
         }
 
         this.resolvedExpressionTypes.put(expression, binaryType);
+    }
+
+    public void visitAssignmentExpression(BinaryExpression expression) {
+        // Can only be done after type resolution, therefore not contained in NameAnalysis
+        if (!(this.resolvedReferences.get((IDeclarationReference) expression.getLeft()) instanceof IVariableDeclaration varDecl))
+            throw new TypeResolverException(expression.getSpan(), "Invalid assignment target");
+
+        var type = this.resolvedExpressionTypes.get(expression.getRight());
+        if (!type.equals(getVariableDeclarationType(varDecl)))
+            throw new TypeResolverException(expression.getRight().getSpan(), "Cannot assign expression of type " + this.typeCache.toString(type) + " to variable of type " + this.typeCache.toString(getVariableDeclarationType(varDecl)));
+
+        this.resolvedExpressionTypes.put(expression, type);
     }
 
     @Override
@@ -409,7 +411,7 @@ public class TypeAnalysis extends ASTVisitor {
 
             var paramType = asTypeGeneric(genericParameterInfo, paramTypeExpr, expressionType);
 
-            if(paramType == null)
+            if (paramType == null)
                 throw new TypeResolverException(expression.getSpan(), "Parameter type mismatch. Expected " + paramTypeExpr + ", got " + this.typeCache.toString(expressionType));
             if (!this.typeCache.isSubtypeOf(expressionType, paramType))
                 throw new TypeResolverException(expression.getSpan(), "Parameter type mismatch. Expected " + this.typeCache.toString(paramType) + ", got " + this.typeCache.toString(expressionType));

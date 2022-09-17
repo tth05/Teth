@@ -114,7 +114,8 @@ public class BinaryExpression extends Expression {
         OP_EQUAL(4),
         OP_NOT_EQUAL(4),
         OP_AND(5),
-        OP_OR(6);
+        OP_OR(6),
+        OP_ASSIGN(7);
 
         private final int precedence;
 
@@ -149,6 +150,7 @@ public class BinaryExpression extends Expression {
                 case NOT_EQUAL -> Operator.OP_NOT_EQUAL;
                 case AMPERSAND_AMPERSAND -> Operator.OP_AND;
                 case PIPE_PIPE -> Operator.OP_OR;
+                case EQUAL -> Operator.OP_ASSIGN;
                 default -> null;
             };
         }
@@ -168,6 +170,7 @@ public class BinaryExpression extends Expression {
                 case OP_NOT_EQUAL -> "!=";
                 case OP_AND -> "&&";
                 case OP_OR -> "||";
+                case OP_ASSIGN -> "=";
             };
         }
     }
