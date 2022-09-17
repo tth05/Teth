@@ -223,6 +223,7 @@ public class Compiler {
             {
                 expression.getExpr().accept(this);
             }
+            this.currentFunctionInsn.add(new DUP_Insn());
 
             if (expression.getTargetExpr() instanceof IdentifierExpression identifierExpression) {
                 var idx = getLocalIndex(identifierExpression);
