@@ -29,9 +29,7 @@ public class ASTCommand implements Runnable {
     public void run() {
         try {
             var parserResult = Parser.parse(new FileSource(this.filePath.getParent(), this.filePath));
-            if (parserResult.logProblems(System.out, true))
-                return;
-
+            parserResult.logProblems(System.out, true);
             System.out.println(parserResult.getUnit().dumpToString());
         } catch (IOException e) {
             e.printStackTrace();
