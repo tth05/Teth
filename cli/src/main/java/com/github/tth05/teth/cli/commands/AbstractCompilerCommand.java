@@ -10,6 +10,7 @@ import picocli.CommandLine;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.stream.Stream;
 
 public abstract class AbstractCompilerCommand implements Runnable {
 
@@ -30,6 +31,12 @@ public abstract class AbstractCompilerCommand implements Runnable {
     protected boolean verbose;
 
     @CommandLine.Option(
+            names = {"-s", "--single-file"},
+            description = "Only target the given single file"
+    )
+    protected boolean singleFile;
+
+    @CommandLine.Option(
             names = {"-b", "--basedir"},
             description = "The base directory for module resolution",
             converter = {String2ExistingFileConverter.class}
@@ -48,7 +55,7 @@ public abstract class AbstractCompilerCommand implements Runnable {
             throw new CommandLine.ParameterException(this.spec.commandLine(), "File is not child of base directory");
 
         var startTime = System.nanoTime();
-        try (var sourcesStream = Files.walk(this.baseDir)) {
+        try (var sourcesStream = this.singleFile ? Stream.of(this.filePath) : Files.walk(this.baseDir)) {
             // HACK: This is a hack to get the correct module name
             var entryPointModuleName = new String[1];
             var sources = sourcesStream
