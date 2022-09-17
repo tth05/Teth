@@ -3,7 +3,15 @@ package com.github.tth05.teth.lang.lexer;
 public enum TokenType {
 
     IDENTIFIER("Identifier"),
-    KEYWORD("Keywod"),
+    KEYWORD_IF("if"),
+    KEYWORD_ELSE("else"),
+    KEYWORD_FN("fn"),
+    KEYWORD_RETURN("return"),
+    KEYWORD_LET("let"),
+    KEYWORD_LOOP("loop"),
+    KEYWORD_NEW("new"),
+    KEYWORD_STRUCT("struct"),
+    KEYWORD_USE("use"),
     LONG_LITERAL("Long"),
     DOUBLE_LITERAL("Double"),
     STRING_LITERAL("String"),
@@ -46,5 +54,13 @@ public enum TokenType {
 
     public String getText() {
         return this.text;
+    }
+
+    public boolean isKeyword() {
+        return switch (this) {
+            case KEYWORD_IF, KEYWORD_ELSE, KEYWORD_FN, KEYWORD_RETURN, KEYWORD_LET, KEYWORD_LOOP, KEYWORD_NEW, KEYWORD_STRUCT, KEYWORD_USE ->
+                    true;
+            default -> false;
+        };
     }
 }

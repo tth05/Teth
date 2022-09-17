@@ -45,7 +45,7 @@ public class Tokenizer {
             } else if (isIdentifierChar(c)) {
                 var ident = parseIdentifier();
                 if (isKeyword(ident.value()))
-                    emit(new Token(ident.span(), ident.value(), TokenType.KEYWORD));
+                    emitKeyword(ident);
                 else if (isBooleanLiteral(ident.value()))
                     emit(new Token(ident.span(), ident.value(), TokenType.BOOLEAN_LITERAL));
                 else
@@ -68,6 +68,21 @@ public class Tokenizer {
                 throw new UnexpectedCharException(this.stream.createCurrentIndexSpan(), "Invalid character '%s'", c);
             }
         }
+    }
+
+    private void emitKeyword(Token ident) {
+        emit(new Token(ident.span(), ident.value(), switch (ident.value()) {
+            case "if" -> TokenType.KEYWORD_IF;
+            case "else" -> TokenType.KEYWORD_ELSE;
+            case "fn" -> TokenType.KEYWORD_FN;
+            case "return" -> TokenType.KEYWORD_RETURN;
+            case "let" -> TokenType.KEYWORD_LET;
+            case "loop" -> TokenType.KEYWORD_LOOP;
+            case "new" -> TokenType.KEYWORD_NEW;
+            case "struct" -> TokenType.KEYWORD_STRUCT;
+            case "use" -> TokenType.KEYWORD_USE;
+            default -> throw new IllegalStateException("Unexpected value: " + ident.value());
+        }));
     }
 
     private void emit(Token token) {

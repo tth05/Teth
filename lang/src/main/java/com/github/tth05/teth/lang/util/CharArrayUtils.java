@@ -23,8 +23,20 @@ public class CharArrayUtils {
 
     public static int getLineEnd(char[] source, int index) {
         int lineEnd = index;
-        while (lineEnd < source.length && source[lineEnd] != '\n') {
+        while (lineEnd < source.length && source[lineEnd] != '\n')
             lineEnd++;
+
+        return lineEnd;
+    }
+
+    public static int getLineEndExtended(char[] source, int index) {
+        int lineEnd = index;
+        while (lineEnd < source.length) {
+            lineEnd++;
+
+            // Include newline in line
+            if (source[lineEnd - 1] == '\n')
+                break;
         }
         return lineEnd;
     }
