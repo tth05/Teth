@@ -5,6 +5,16 @@ import java.util.Arrays;
 
 public class ProblemList extends ArrayList<Problem> {
 
+    @Override
+    public boolean add(Problem problem) {
+        for (var other : this) {
+            if (other.span().equals(problem.span()))
+                return false;
+        }
+
+        return super.add(problem);
+    }
+
     public String prettyPrint(boolean useAnsiColors) {
         var builder = new StringBuilder();
 

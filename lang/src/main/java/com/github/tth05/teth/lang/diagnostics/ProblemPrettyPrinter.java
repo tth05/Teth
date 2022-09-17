@@ -54,13 +54,13 @@ public class ProblemPrettyPrinter {
 
             var i = start;
             while (i < offsetEnd) {
-                var end = CharArrayUtils.getLineEnd(source, i);
+                var end = CharArrayUtils.getLineEndExtended(source, i);
                 this.lines.add(new Line(i, end));
                 i = end + 1;
             }
 
             if (i < source.length - 1 && includeSurroundingLines)
-                this.lines.add(new Line(i, CharArrayUtils.getLineEnd(source, i)));
+                this.lines.add(new Line(i, CharArrayUtils.getLineEndExtended(source, i)));
         }
 
         public Context addHighlight(int offset, int offsetEnd, int color) {
