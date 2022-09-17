@@ -7,7 +7,7 @@ import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 import java.util.Objects;
 
 
-public class IdentifierExpression extends Expression implements IDeclarationReference, IAssignmentTarget {
+public class IdentifierExpression extends Expression implements IAssignmentTarget {
 
     private final String value;
 

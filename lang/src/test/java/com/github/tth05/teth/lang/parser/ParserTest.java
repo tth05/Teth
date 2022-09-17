@@ -613,6 +613,12 @@ public class ParserTest extends AbstractParserTest {
     }
 
     @Test
+    public void testParseInvalidAssignment() {
+        assertThrows(RuntimeException.class, () -> createAST("25 = 25"));
+        assertThrows(RuntimeException.class, () -> createAST("new Object() = 25"));
+    }
+
+    @Test
     public void testParseFunctionDeclaration() {
         createAST("""
                 fn foo<T, Z>(self: type, b: long) {

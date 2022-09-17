@@ -220,17 +220,6 @@ public class NameAnalysis extends ASTVisitor {
     }
 
     @Override
-    public void visit(BinaryExpression expression) {
-        super.visit(expression);
-
-        if (expression.getOperator() != BinaryExpression.Operator.OP_ASSIGN)
-            return;
-
-        if (!(expression.getLeft() instanceof IDeclarationReference))
-            throw new ValidationException(expression.getLeft().getSpan(), "Invalid assignment target");
-    }
-
-    @Override
     public void visit(TypeExpression typeExpression) {
         var span = typeExpression.getSpan();
         var type = typeExpression.getName();

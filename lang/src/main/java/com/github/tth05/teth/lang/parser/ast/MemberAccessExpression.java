@@ -4,7 +4,7 @@ import com.github.tth05.teth.lang.parser.ASTVisitor;
 import com.github.tth05.teth.lang.span.ISpan;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
-public class MemberAccessExpression extends Expression implements IDeclarationReference, IAssignmentTarget {
+public class MemberAccessExpression extends Expression implements IAssignmentTarget {
 
     private final IdentifierExpression memberNameExpr;
     private final Expression target;

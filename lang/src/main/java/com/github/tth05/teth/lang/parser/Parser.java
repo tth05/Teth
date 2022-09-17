@@ -370,6 +370,9 @@ public class Parser {
                 head = new BinaryExpression(head, parseUnaryExpression(anchorSet), operator);
                 current = head;
             }
+
+            if (operator == BinaryExpression.Operator.OP_ASSIGN && !(((BinaryExpression) current).getLeft() instanceof IAssignmentTarget))
+                this.problems.add(new Problem(((BinaryExpression) current).getLeft().getSpan(), "Cannot assign to this expression"));
         }
 
         return head;
