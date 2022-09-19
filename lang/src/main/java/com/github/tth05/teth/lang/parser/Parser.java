@@ -56,14 +56,14 @@ public class Parser {
         }
 
         consumeLineBreaks();
-        var temp = expectToken(TokenType.L_CURLY_PAREN, anchorSet.lazyUnion(AnchorSets.FIRST_SET_USE_STATEMENT), () -> "Expected '{' after use statement");
+        var temp = expectToken(TokenType.L_CURLY_PAREN, anchorSet.lazyUnion(AnchorSets.END_SET_USE_STATEMENT), () -> "Expected '{' after use statement");
         if (!temp.isInvalid())
             lastSpan = temp.span();
 
         var imports = new ArrayList<IdentifierExpression>(8);
         while (true) {
             consumeLineBreaks();
-            var part = expectIdentifier(anchorSet.lazyUnion(AnchorSets.END_SET_USE_STATEMENT), () -> "Expected identifier");
+            var part = expectIdentifier(AnchorSets.END_SET_USE_STATEMENT.lazyUnion(AnchorSets.FIRST_SET_STATEMENT_EXPRESSIONLESS), () -> "Expected identifier");
             consumeLineBreaks();
             if (!part.isInvalid())
                 imports.add(new IdentifierExpression((lastSpan = part.span()), part.value()));
@@ -126,7 +126,6 @@ public class Parser {
 
     private IfStatement parseIfStatement(AnchorSet anchorSet) {
         var firstSpan = this.stream.consume().span();
-        //TODO: Recover to expression
         var condition = parseParenthesisedExpression(AnchorSets.FIRST_SET_ELSE_STATEMENT.lazyUnion(AnchorSets.FIRST_SET_STATEMENT));
         var body = parseBlock(AnchorSets.FIRST_SET_ELSE_STATEMENT.lazyUnion(anchorSet));
         var next = this.stream.peek();
@@ -343,7 +342,7 @@ public class Parser {
     }
 
     private Expression parseExpression(AnchorSet anchorSet) {
-        anchorSet = anchorSet.lazyUnion(AnchorSets.ALL_EXPRESSION_OPERATORS);
+        anchorSet = anchorSet.lazyUnion(AnchorSets.BINARY_EXPRESSION_OPERATORS);
         var head = parseUnaryExpression(anchorSet);
         var current = head;
 
@@ -482,9 +481,9 @@ public class Parser {
 
     private Expression parseParenthesisedExpression(AnchorSet anchorSet) {
         consumeLineBreaks();
-        this.stream.consumeType(TokenType.L_PAREN);
-        var parenExpr = parseExpression(anchorSet);
-        this.stream.consumeType(TokenType.R_PAREN);
+        expectToken(TokenType.L_PAREN, anchorSet.lazyUnion(AnchorSets.FIRST_SET_EXPRESSION), () -> "Expected opening '('");
+        var parenExpr = parseExpression(anchorSet.lazyUnion(AnchorSets.END_SET_PARENTHESISED_EXPRESSION));
+        expectToken(TokenType.R_PAREN, anchorSet, () -> "Expected closing ')'");
         consumeLineBreaks();
         return parenExpr;
     }
@@ -517,7 +516,10 @@ public class Parser {
                 var lastSpan = this.stream.consumeType(TokenType.R_SQUARE_BRACKET).span();
                 yield new ListLiteralExpression(Span.of(span, lastSpan), elements);
             }
-            default -> throw new UnexpectedTokenException(token.span(), "Expected a literal");
+            default -> {
+                reportAndRecover(anchorSet, token.span(), "Expected a literal");
+                yield new GarbageExpression(token.span());
+            }
         };
     }
 

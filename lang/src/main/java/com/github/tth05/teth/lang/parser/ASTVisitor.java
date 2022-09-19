@@ -151,4 +151,7 @@ public abstract class ASTVisitor {
 
     public void visit(TypeExpression typeExpression) {
     }
+
+    public void visit(GarbageExpression garbageExpression) {
+    }
 }
