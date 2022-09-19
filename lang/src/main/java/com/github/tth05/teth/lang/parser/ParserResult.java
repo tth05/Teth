@@ -4,6 +4,8 @@ import com.github.tth05.teth.lang.diagnostics.ProblemList;
 import com.github.tth05.teth.lang.source.ISource;
 
 import java.io.PrintStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
 public class ParserResult {
 
@@ -22,6 +24,16 @@ public class ParserResult {
     }
 
     public boolean logProblems(PrintStream out, boolean useAnsiColors) {
+        var writer = new StringWriter();
+        var result = logProblems(new PrintWriter(writer), useAnsiColors);
+        if (!result)
+            return false;
+
+        out.print(writer);
+        return true;
+    }
+
+    public boolean logProblems(PrintWriter out, boolean useAnsiColors) {
         if (!hasProblems())
             return false;
 
