@@ -5,6 +5,7 @@ import com.github.tth05.teth.lang.source.ISource;
 import com.github.tth05.teth.lang.stream.EndOfStreamException;
 
 import java.util.ArrayDeque;
+import java.util.function.Consumer;
 
 public class TokenStream {
 
@@ -22,14 +23,14 @@ public class TokenStream {
     }
 
     public Token consumeType(TokenType expectedType) {
-        return consumeTypeOrElse(expectedType, () -> {
-            throw new UnexpectedTokenException(peek().span(), "Expected token '%s'", expectedType.getText());
+        return consumeTypeOrElse(expectedType, (other) -> {
+            throw new UnexpectedTokenException(peek().span(), "Expected token '%s', got '%s'", expectedType.getText(), other.type().getText());
         });
     }
 
-    public Token consumeTypeOrElse(TokenType expectedType, Runnable orElse) {
+    public Token consumeTypeOrElse(TokenType expectedType, Consumer<Token> orElse) {
         if (!peek().is(expectedType)) {
-            orElse.run();
+            orElse.accept(peek());
             throw new IllegalStateException("TokenStream has no values");
         }
 
@@ -47,6 +48,10 @@ public class TokenStream {
             return EOF;
 
         return this.tokens.peekFirst();
+    }
+
+    public int tokensLeft() {
+        return this.tokens.size();
     }
 
     public boolean isEmpty() {

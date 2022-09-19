@@ -924,6 +924,11 @@ public class ParserTest extends AbstractParserTest {
     }
 
     @Test
+    public void testEmptyGenericParameterList() {
+        assertThrows(RuntimeException.class, () -> createAST("let a: T<> = 5"));
+    }
+
+    @Test
     public void testParseParallel() {
         var sources = IntStream.range(0, 10000)
                 .mapToObj(i -> new InMemorySource("main" + i, "let a = " + i))
@@ -1012,5 +1017,12 @@ public class ParserTest extends AbstractParserTest {
                 }
                 """);
         assertStreamsEmpty();
+    }
+
+    @Test
+    public void rat() {
+        createAST("""
+                let a: T<5> = 5
+                """);
     }
 }
