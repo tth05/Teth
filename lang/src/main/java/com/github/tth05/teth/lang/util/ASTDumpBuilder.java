@@ -49,11 +49,19 @@ public class ASTDumpBuilder {
     public ASTDumpBuilder appendAttribute(String name, List<? extends IDumpable> list) {
         appendAttribute(name);
         append("[").newLine().startBlock();
-        for (var dumpable : list) {
-            dumpable.dump(this);
+
+        for (int i = 0; i < list.size(); i++) {
+            var el = list.get(i);
+            el.dump(this);
+
+            if (i < list.size() - 1)
+                append(",");
+
             newLine();
         }
-        endBlock().append("]");
+
+        endBlock();
+        append("]");
         return this;
     }
 
