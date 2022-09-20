@@ -29,6 +29,7 @@ public class AnchorSets {
     public static final AnchorUnion FIRST_SET_ELSE_STATEMENT = AnchorUnion.leaf(List.of(TokenType.KEYWORD_ELSE));
     public static final AnchorUnion FIRST_SET_BLOCK = AnchorUnion.leaf(List.of(TokenType.L_CURLY_PAREN));
     public static final AnchorUnion END_SET_BLOCK =  AnchorUnion.leaf(List.of(TokenType.R_CURLY_PAREN));
+    public static final AnchorUnion FIRST_SET_PARENTHESISED_EXPRESSION =  AnchorUnion.leaf(List.of(TokenType.L_PAREN));
     public static final AnchorUnion END_SET_PARENTHESISED_EXPRESSION =  AnchorUnion.leaf(List.of(TokenType.R_PAREN));
     public static final AnchorUnion FIRST_SET_KEYWORD_STATEMENT = AnchorUnion.leaf(List.of(
             TokenType.KEYWORD_IF, TokenType.KEYWORD_ELSE, TokenType.KEYWORD_LET, TokenType.KEYWORD_RETURN,

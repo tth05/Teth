@@ -61,7 +61,10 @@ public class TypeExpression extends Expression implements IDeclarationReference 
 
     @Override
     public void dump(ASTDumpBuilder builder) {
-        builder.append(this.name + (this.genericParameters.isEmpty() ? "" : "<" + this.genericParameters.stream().map(TypeExpression::toString).collect(Collectors.joining(", ")) + ">"));
+        if (this.name == null)
+            builder.append("???");
+        else
+            builder.append(this.name + (this.genericParameters.isEmpty() ? "" : "<" + this.genericParameters.stream().map(TypeExpression::toString).collect(Collectors.joining(", ")) + ">"));
     }
 
     @Override

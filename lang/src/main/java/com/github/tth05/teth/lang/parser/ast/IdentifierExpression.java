@@ -44,7 +44,7 @@ public class IdentifierExpression extends Expression implements IAssignmentTarge
 
     @Override
     public void dump(ASTDumpBuilder builder) {
-        builder.append(this.value);
+        builder.append(Objects.requireNonNullElse(this.value, "???"));
     }
 
     @Override

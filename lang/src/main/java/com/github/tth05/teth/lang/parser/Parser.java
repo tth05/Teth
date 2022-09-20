@@ -469,26 +469,34 @@ public class Parser {
     private Expression parseMemberAccessExpression(AnchorUnion anchorSet, Expression target) {
         this.stream.consume();
 
-        var name = this.stream.consumeType(TokenType.IDENTIFIER);
-        return new MemberAccessExpression(Span.of(target.getSpan(), name.span()), new IdentifierExpression(name.span(), name.value()), target);
+        var lastSpan = this.stream.peek().span();
+        var name = expectIdentifier(anchorSet, () -> "Expected member name after '.'");
+        if (!name.isInvalid())
+            lastSpan = name.span();
+
+        return new MemberAccessExpression(Span.of(target.getSpan(), lastSpan), new IdentifierExpression(name.span(), name.value()), target);
     }
 
     private Expression parseFunctionInvocation(AnchorUnion anchorSet, Expression target) {
-        var genericParameters = tryParseGenericParametersOnInvocation(anchorSet, TokenType.LESS_PIPE);
+        var genericParameters = tryParseGenericParametersOnInvocation(anchorSet.union(AnchorSets.FIRST_SET_PARENTHESISED_EXPRESSION), TokenType.LESS_PIPE);
 
-        this.stream.consumeType(TokenType.L_PAREN);
+        expectToken(TokenType.L_PAREN, anchorSet.union(AnchorSets.FIRST_SET_EXPRESSION), () -> "Expected '('");
         consumeLineBreaks();
         var parameters = parseParameterList(anchorSet);
 
-        var secondSpan = this.stream.consumeType(TokenType.R_PAREN).span();
-        return new FunctionInvocationExpression(Span.of(target.getSpan(), secondSpan), target, genericParameters, parameters);
+        var lastSpan = this.stream.peek().span();
+        var rParenToken = expectToken(TokenType.R_PAREN, anchorSet, () -> "Expected closing ')'");
+        if (!rParenToken.isInvalid())
+            lastSpan = rParenToken.span();
+
+        return new FunctionInvocationExpression(Span.of(target.getSpan(), lastSpan), target, genericParameters, parameters);
     }
 
     private List<TypeExpression> tryParseGenericParametersOnInvocation(AnchorUnion anchorSet, TokenType prefix) {
         if (this.stream.peek().is(prefix)) {
             this.stream.consume();
             var genericParameters = parseList(anchorSet, this::parseType, ArrayList::new, TokenType.GREATER);
-            this.stream.consumeType(TokenType.GREATER);
+            expectToken(TokenType.GREATER, anchorSet, () -> "Expected '>'");
             consumeLineBreaks();
             return genericParameters;
         } else {
@@ -564,7 +572,7 @@ public class Parser {
         var firstSpan = this.stream.peek().span();
         var current = expectIdentifier(anchorSet, () -> "Expected a type name");
         if (current.isInvalid())
-            return new TypeExpression(zeroWidthSpan(firstSpan), "");
+            return new TypeExpression(zeroWidthSpan(firstSpan), null);
 
         firstSpan = current.span();
         var secondSpan = firstSpan;
