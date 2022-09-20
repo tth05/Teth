@@ -1018,11 +1018,4 @@ public class ParserTest extends AbstractParserTest {
                 """);
         assertStreamsEmpty();
     }
-
-    @Test
-    public void rat() {
-        createAST("""
-                let a: T<5> = 5
-                """);
-    }
 }

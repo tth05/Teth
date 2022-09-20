@@ -55,12 +55,4 @@ public enum TokenType {
     public String getText() {
         return this.text;
     }
-
-    public boolean isKeyword() {
-        return switch (this) {
-            case KEYWORD_IF, KEYWORD_ELSE, KEYWORD_FN, KEYWORD_RETURN, KEYWORD_LET, KEYWORD_LOOP, KEYWORD_NEW, KEYWORD_STRUCT, KEYWORD_USE ->
-                    true;
-            default -> false;
-        };
-    }
 }
