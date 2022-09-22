@@ -2,7 +2,7 @@ package com.github.tth05.teth.lang.parser.ast;
 
 import com.github.tth05.teth.lang.parser.ASTVisitor;
 import com.github.tth05.teth.lang.parser.ExpressionList;
-import com.github.tth05.teth.lang.span.ISpan;
+import com.github.tth05.teth.lang.span.Span;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
 import java.util.List;
@@ -12,7 +12,7 @@ public class ListLiteralExpression extends Expression implements IDeclarationRef
 
     private final ExpressionList initializers;
 
-    public ListLiteralExpression(ISpan span, ExpressionList initializers) {
+    public ListLiteralExpression(Span span, ExpressionList initializers) {
         super(span);
         this.initializers = Objects.requireNonNull(initializers, "initializers cannot be null");
     }

@@ -1,7 +1,7 @@
 package com.github.tth05.teth.lang.parser.ast;
 
 import com.github.tth05.teth.lang.parser.ASTVisitor;
-import com.github.tth05.teth.lang.span.ISpan;
+import com.github.tth05.teth.lang.span.Span;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
 import java.util.Objects;
@@ -11,7 +11,7 @@ public class IdentifierExpression extends Expression implements IAssignmentTarge
 
     private final String value;
 
-    public IdentifierExpression(ISpan span, String value) {
+    public IdentifierExpression(Span span, String value) {
         super(span);
         this.value = value;
     }

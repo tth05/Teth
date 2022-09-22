@@ -2,7 +2,7 @@ package com.github.tth05.teth.lang.lexer;
 
 import com.github.tth05.teth.lang.diagnostics.ProblemList;
 import com.github.tth05.teth.lang.source.ISource;
-import com.github.tth05.teth.lang.span.ISpan;
+import com.github.tth05.teth.lang.span.Span;
 import com.github.tth05.teth.lang.stream.CharStream;
 
 public class Tokenizer {
@@ -93,7 +93,7 @@ public class Tokenizer {
         this.tokenStream.push(new Token(this.stream.popMarkedSpan(), value, type));
     }
 
-    private void emit(ISpan span, String value, TokenType type) {
+    private void emit(Span span, String value, TokenType type) {
         this.tokenStream.push(new Token(span, value, type));
     }
 

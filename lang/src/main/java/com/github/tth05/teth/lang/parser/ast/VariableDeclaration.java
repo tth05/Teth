@@ -1,7 +1,7 @@
 package com.github.tth05.teth.lang.parser.ast;
 
 import com.github.tth05.teth.lang.parser.ASTVisitor;
-import com.github.tth05.teth.lang.span.ISpan;
+import com.github.tth05.teth.lang.span.Span;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
 import java.util.Objects;
@@ -13,7 +13,7 @@ public class VariableDeclaration extends Statement implements IVariableDeclarati
 
     private final TypeExpression type;
 
-    public VariableDeclaration(ISpan span, TypeExpression type, IdentifierExpression nameExpr, Expression initializer) {
+    public VariableDeclaration(Span span, TypeExpression type, IdentifierExpression nameExpr, Expression initializer) {
         super(span);
         this.type = type;
         this.nameExpr = nameExpr;

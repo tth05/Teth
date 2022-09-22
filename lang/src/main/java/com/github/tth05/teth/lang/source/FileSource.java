@@ -3,6 +3,7 @@ package com.github.tth05.teth.lang.source;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 
 public class FileSource implements ISource {
 
@@ -36,5 +37,14 @@ public class FileSource implements ISource {
     @Override
     public char[] getContents() {
         return this.contents;
+    }
+
+    @Override
+    public String toString() {
+        return "FileSource{" +
+               "moduleName='" + this.moduleName + '\'' +
+               ", contentsLength=" + this.contents.length +
+               ", contentsHash=" + Arrays.hashCode(this.contents) +
+               '}';
     }
 }

@@ -1,14 +1,14 @@
 package com.github.tth05.teth.lang.parser.ast;
 
 import com.github.tth05.teth.lang.parser.ASTVisitor;
-import com.github.tth05.teth.lang.span.ISpan;
+import com.github.tth05.teth.lang.span.Span;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
 public class BooleanLiteralExpression extends Expression implements IDeclarationReference {
 
     private final boolean value;
 
-    public BooleanLiteralExpression(ISpan span, boolean value) {
+    public BooleanLiteralExpression(Span span, boolean value) {
         super(span);
         this.value = value;
     }

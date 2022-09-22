@@ -2,7 +2,7 @@ package com.github.tth05.teth.lang.parser.ast;
 
 import com.github.tth05.teth.lang.parser.ASTVisitor;
 import com.github.tth05.teth.lang.parser.StatementList;
-import com.github.tth05.teth.lang.span.ISpan;
+import com.github.tth05.teth.lang.span.Span;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
 import java.util.Collections;
@@ -17,11 +17,11 @@ public class StructDeclaration extends Statement implements ITopLevelDeclaration
     private final List<FunctionDeclaration> functions;
     private final boolean intrinsic;
 
-    public StructDeclaration(ISpan span, IdentifierExpression nameExpr, List<GenericParameterDeclaration> genericParameters, List<FieldDeclaration> fields, List<FunctionDeclaration> functions) {
+    public StructDeclaration(Span span, IdentifierExpression nameExpr, List<GenericParameterDeclaration> genericParameters, List<FieldDeclaration> fields, List<FunctionDeclaration> functions) {
         this(span, nameExpr, genericParameters, fields, functions, false);
     }
 
-    public StructDeclaration(ISpan span, IdentifierExpression nameExpr, List<GenericParameterDeclaration> genericParameters, List<FieldDeclaration> fields, List<FunctionDeclaration> functions, boolean intrinsic) {
+    public StructDeclaration(Span span, IdentifierExpression nameExpr, List<GenericParameterDeclaration> genericParameters, List<FieldDeclaration> fields, List<FunctionDeclaration> functions, boolean intrinsic) {
         super(span);
         this.nameExpr = nameExpr;
         this.genericParameters = Collections.unmodifiableList(Objects.requireNonNull(genericParameters));
@@ -110,7 +110,7 @@ public class StructDeclaration extends Statement implements ITopLevelDeclaration
         private final int index;
         private final TypeExpression type;
 
-        public FieldDeclaration(ISpan span, TypeExpression type, IdentifierExpression nameExpr, int index) {
+        public FieldDeclaration(Span span, TypeExpression type, IdentifierExpression nameExpr, int index) {
             super(span);
             this.type = type;
             this.nameExpr = nameExpr;

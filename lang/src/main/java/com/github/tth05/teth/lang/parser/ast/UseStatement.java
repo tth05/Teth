@@ -1,7 +1,7 @@
 package com.github.tth05.teth.lang.parser.ast;
 
 import com.github.tth05.teth.lang.parser.ASTVisitor;
-import com.github.tth05.teth.lang.span.ISpan;
+import com.github.tth05.teth.lang.span.Span;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
 import java.util.Collections;
@@ -14,7 +14,7 @@ public class UseStatement extends Statement implements ITopLevelDeclaration {
     private final List<IdentifierExpression> path;
     private final List<IdentifierExpression> imports;
 
-    public UseStatement(ISpan span, List<IdentifierExpression> path, List<IdentifierExpression> imports) {
+    public UseStatement(Span span, List<IdentifierExpression> path, List<IdentifierExpression> imports) {
         super(span);
         this.path = Collections.unmodifiableList(Objects.requireNonNull(path));
         this.imports = Collections.unmodifiableList(Objects.requireNonNull(imports));

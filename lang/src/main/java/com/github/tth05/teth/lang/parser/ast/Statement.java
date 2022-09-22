@@ -2,21 +2,21 @@ package com.github.tth05.teth.lang.parser.ast;
 
 import com.github.tth05.teth.lang.parser.IDumpable;
 import com.github.tth05.teth.lang.parser.IVisitable;
-import com.github.tth05.teth.lang.span.ISpan;
+import com.github.tth05.teth.lang.span.Span;
 
 public abstract class Statement implements IDumpable, IVisitable {
 
-    private ISpan span;
+    private Span span;
 
-    protected Statement(ISpan span) {
+    protected Statement(Span span) {
         this.span = span;
     }
 
-    protected void setSpan(ISpan span) {
+    protected void setSpan(Span span) {
         this.span = span;
     }
 
-    public ISpan getSpan() {
+    public Span getSpan() {
         return this.span;
     }
 }

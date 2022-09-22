@@ -2,7 +2,7 @@ package com.github.tth05.teth.lang.parser.ast;
 
 import com.github.tth05.teth.lang.lexer.TokenType;
 import com.github.tth05.teth.lang.parser.ASTVisitor;
-import com.github.tth05.teth.lang.span.ISpan;
+import com.github.tth05.teth.lang.span.Span;
 import com.github.tth05.teth.lang.span.Span;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
@@ -13,7 +13,7 @@ public class BinaryExpression extends Expression {
 
     private Operator operator;
 
-    public BinaryExpression(ISpan span, Expression left, Expression right, Operator operator) {
+    public BinaryExpression(Span span, Expression left, Expression right, Operator operator) {
         super(span);
         this.left = left;
         this.right = right;

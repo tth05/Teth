@@ -1,14 +1,14 @@
 package com.github.tth05.teth.lang.parser.ast;
 
 import com.github.tth05.teth.lang.parser.ASTVisitor;
-import com.github.tth05.teth.lang.span.ISpan;
+import com.github.tth05.teth.lang.span.Span;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
 public class DoubleLiteralExpression extends Expression implements IDeclarationReference {
 
     private final double value;
 
-    public DoubleLiteralExpression(ISpan span, double value) {
+    public DoubleLiteralExpression(Span span, double value) {
         super(span);
         this.value = value;
     }

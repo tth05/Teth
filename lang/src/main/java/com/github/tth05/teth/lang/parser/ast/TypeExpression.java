@@ -1,7 +1,7 @@
 package com.github.tth05.teth.lang.parser.ast;
 
 import com.github.tth05.teth.lang.parser.ASTVisitor;
-import com.github.tth05.teth.lang.span.ISpan;
+import com.github.tth05.teth.lang.span.Span;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
 import java.util.Collections;
@@ -15,11 +15,11 @@ public class TypeExpression extends Expression implements IDeclarationReference 
     private final String name;
     private final List<TypeExpression> genericParameters;
 
-    public TypeExpression(ISpan span, String name) {
+    public TypeExpression(Span span, String name) {
         this(span, name, Collections.emptyList());
     }
 
-    public TypeExpression(ISpan span, String name, List<TypeExpression> genericParameters) {
+    public TypeExpression(Span span, String name, List<TypeExpression> genericParameters) {
         super(span);
         this.name = name;
         this.genericParameters = Collections.unmodifiableList(Objects.requireNonNull(genericParameters));

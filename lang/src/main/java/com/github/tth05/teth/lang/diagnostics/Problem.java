@@ -1,8 +1,8 @@
 package com.github.tth05.teth.lang.diagnostics;
 
-import com.github.tth05.teth.lang.span.ISpan;
+import com.github.tth05.teth.lang.span.Span;
 
-public record Problem(ISpan span, String message) {
+public record Problem(Span span, String message) {
 
     public String prettyPrint(boolean useAnsiColors) {
         return ProblemPrettyPrinter.ofSource(this.span.source())

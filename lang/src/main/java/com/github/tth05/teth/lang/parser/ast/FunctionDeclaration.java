@@ -2,7 +2,7 @@ package com.github.tth05.teth.lang.parser.ast;
 
 import com.github.tth05.teth.lang.parser.ASTVisitor;
 import com.github.tth05.teth.lang.parser.IDumpable;
-import com.github.tth05.teth.lang.span.ISpan;
+import com.github.tth05.teth.lang.span.Span;
 import com.github.tth05.teth.lang.span.Span;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
@@ -20,14 +20,14 @@ public class FunctionDeclaration extends Statement implements ITopLevelDeclarati
     private final boolean intrinsic;
     private final List<GenericParameterDeclaration> genericParameters;
 
-    public FunctionDeclaration(ISpan span, IdentifierExpression nameExpr,
+    public FunctionDeclaration(Span span, IdentifierExpression nameExpr,
                                List<GenericParameterDeclaration> genericParameters,
                                List<ParameterDeclaration> parameters, TypeExpression returnTypeExpr,
                                BlockStatement body, boolean instanceFunction) {
         this(span, nameExpr, genericParameters, parameters, returnTypeExpr, body, instanceFunction, false);
     }
 
-    public FunctionDeclaration(ISpan span, IdentifierExpression nameExpr,
+    public FunctionDeclaration(Span span, IdentifierExpression nameExpr,
                                List<GenericParameterDeclaration> genericParameters,
                                List<ParameterDeclaration> parameters, TypeExpression returnTypeExpr,
                                BlockStatement body, boolean instanceFunction, boolean intrinsic) {
@@ -138,7 +138,7 @@ public class FunctionDeclaration extends Statement implements ITopLevelDeclarati
         private final TypeExpression type;
         private final IdentifierExpression name;
 
-        public ParameterDeclaration(ISpan span, TypeExpression type, IdentifierExpression name) {
+        public ParameterDeclaration(Span span, TypeExpression type, IdentifierExpression name) {
             super(span);
             this.type = type;
             this.name = name;

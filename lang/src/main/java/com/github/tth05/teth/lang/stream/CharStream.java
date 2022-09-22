@@ -1,7 +1,7 @@
 package com.github.tth05.teth.lang.stream;
 
 import com.github.tth05.teth.lang.source.ISource;
-import com.github.tth05.teth.lang.span.ISpan;
+import com.github.tth05.teth.lang.span.Span;
 import com.github.tth05.teth.lang.span.Span;
 import com.github.tth05.teth.lang.util.BoundedIntStack;
 import com.github.tth05.teth.lang.util.CharArrayUtils;
@@ -34,7 +34,7 @@ public class CharStream {
         return c;
     }
 
-    public ISpan consumeKnownSingle() {
+    public Span consumeKnownSingle() {
         var span = createCurrentIndexSpan();
         consume();
         return span;
@@ -69,12 +69,12 @@ public class CharStream {
         this.markedIndices.push(this.index);
     }
 
-    public ISpan popMarkedSpan() {
+    public Span popMarkedSpan() {
         var markedIndex = this.markedIndices.pop();
         return new Span(this.source, markedIndex, this.index);
     }
 
-    public ISpan createCurrentIndexSpan() {
+    public Span createCurrentIndexSpan() {
         return new Span(this.source, this.index, this.index + 1);
     }
 

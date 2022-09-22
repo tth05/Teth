@@ -1,7 +1,7 @@
 package com.github.tth05.teth.lang.parser.ast;
 
 import com.github.tth05.teth.lang.parser.ASTVisitor;
-import com.github.tth05.teth.lang.span.ISpan;
+import com.github.tth05.teth.lang.span.Span;
 import com.github.tth05.teth.lang.span.Span;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
@@ -17,7 +17,7 @@ public class StringLiteralExpression extends Expression implements IDeclarationR
         this(Span.of(parts.get(0).getSpan(), parts.get(parts.size() - 1).getSpan()), parts);
     }
 
-    public StringLiteralExpression(ISpan span, List<Part> parts) {
+    public StringLiteralExpression(Span span, List<Part> parts) {
         super(span);
         this.parts = Collections.unmodifiableList(Objects.requireNonNull(parts));
     }
@@ -80,7 +80,7 @@ public class StringLiteralExpression extends Expression implements IDeclarationR
         return dumpToString();
     }
 
-    public static Part stringPart(ISpan span, String string) {
+    public static Part stringPart(Span span, String string) {
         return new Part(span, PartType.STRING, string);
     }
 
@@ -95,17 +95,17 @@ public class StringLiteralExpression extends Expression implements IDeclarationR
 
     public static final class Part {
 
-        private final ISpan span;
+        private final Span span;
         private final PartType type;
         private final Object value;
 
-        public Part(ISpan span, PartType type, Object value) {
+        public Part(Span span, PartType type, Object value) {
             this.span = span;
             this.type = type;
             this.value = value;
         }
 
-        public ISpan getSpan() {
+        public Span getSpan() {
             return this.span;
         }
 

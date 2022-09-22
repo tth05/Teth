@@ -2,7 +2,7 @@ package com.github.tth05.teth.lang.parser.ast;
 
 import com.github.tth05.teth.lang.parser.ASTVisitor;
 import com.github.tth05.teth.lang.parser.ExpressionList;
-import com.github.tth05.teth.lang.span.ISpan;
+import com.github.tth05.teth.lang.span.Span;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
 import java.util.Collections;
@@ -15,7 +15,7 @@ public class ObjectCreationExpression extends Expression implements IDeclaration
     private final List<TypeExpression> genericParameters;
     private final ExpressionList parameters;
 
-    public ObjectCreationExpression(ISpan span, IdentifierExpression targetNameExpr, List<TypeExpression> genericParameters, ExpressionList parameters) {
+    public ObjectCreationExpression(Span span, IdentifierExpression targetNameExpr, List<TypeExpression> genericParameters, ExpressionList parameters) {
         super(span);
         this.targetNameExpr = targetNameExpr;
         this.genericParameters = Collections.unmodifiableList(Objects.requireNonNull(genericParameters));

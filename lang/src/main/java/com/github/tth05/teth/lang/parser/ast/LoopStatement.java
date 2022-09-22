@@ -2,7 +2,7 @@ package com.github.tth05.teth.lang.parser.ast;
 
 import com.github.tth05.teth.lang.parser.ASTVisitor;
 import com.github.tth05.teth.lang.parser.StatementList;
-import com.github.tth05.teth.lang.span.ISpan;
+import com.github.tth05.teth.lang.span.Span;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
 import java.util.List;
@@ -15,7 +15,7 @@ public class LoopStatement extends Statement {
     private final BlockStatement body;
     private final Statement advanceStatement;
 
-    public LoopStatement(ISpan span, List<VariableDeclaration> variableDeclarations, Expression condition, BlockStatement body, Statement advanceStatement) {
+    public LoopStatement(Span span, List<VariableDeclaration> variableDeclarations, Expression condition, BlockStatement body, Statement advanceStatement) {
         super(span);
         if (condition == null && advanceStatement != null)
             throw new IllegalArgumentException("advanceStatement cannot be set if condition is null");

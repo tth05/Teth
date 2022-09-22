@@ -7,7 +7,6 @@ import com.github.tth05.teth.analyzer.prelude.Prelude;
 import com.github.tth05.teth.lang.parser.ASTVisitor;
 import com.github.tth05.teth.lang.parser.SourceFileUnit;
 import com.github.tth05.teth.lang.parser.ast.*;
-import com.github.tth05.teth.lang.span.ISpan;
 import com.github.tth05.teth.lang.span.Span;
 
 import java.util.*;
@@ -324,7 +323,7 @@ public class NameAnalysis extends ASTVisitor {
         validateNotAReservedName(expression.getSpan(), expression.getValue());
     }
 
-    private void validateNotAReservedName(ISpan span, String name) {
+    private void validateNotAReservedName(Span span, String name) {
         if (Prelude.isBuiltInTypeName(name))
             throw new ValidationException(span, "Reserved name '" + name + "'");
     }

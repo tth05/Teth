@@ -1,7 +1,7 @@
 package com.github.tth05.teth.lang.parser.ast;
 
 import com.github.tth05.teth.lang.parser.ASTVisitor;
-import com.github.tth05.teth.lang.span.ISpan;
+import com.github.tth05.teth.lang.span.Span;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
 public class MemberAccessExpression extends Expression implements IAssignmentTarget {
@@ -9,7 +9,7 @@ public class MemberAccessExpression extends Expression implements IAssignmentTar
     private final IdentifierExpression memberNameExpr;
     private final Expression target;
 
-    public MemberAccessExpression(ISpan span, IdentifierExpression memberNameExpr, Expression target) {
+    public MemberAccessExpression(Span span, IdentifierExpression memberNameExpr, Expression target) {
         super(span);
         this.memberNameExpr = memberNameExpr;
         this.target = target;

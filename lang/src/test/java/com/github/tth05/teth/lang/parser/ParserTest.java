@@ -1018,4 +1018,11 @@ public class ParserTest extends AbstractParserTest {
                 """);
         assertStreamsEmpty();
     }
+
+    @Test
+    public void random() {
+        createAST("""
+                else
+                """);
+    }
 }

@@ -2,12 +2,12 @@ package com.github.tth05.teth.lang.parser;
 
 import com.github.tth05.teth.lang.parser.ast.Expression;
 import com.github.tth05.teth.lang.parser.ast.Statement;
+import com.github.tth05.teth.lang.span.ArrayListWithSpan;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
-import java.util.ArrayList;
 import java.util.Collections;
 
-public class ExpressionList extends ArrayList<Expression> implements IDumpable {
+public class ExpressionList extends ArrayListWithSpan<Expression> implements IDumpable {
 
     @Override
     public void dump(ASTDumpBuilder builder) {

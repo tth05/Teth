@@ -2,7 +2,7 @@ package com.github.tth05.teth.lang.parser.ast;
 
 import com.github.tth05.teth.lang.parser.ASTVisitor;
 import com.github.tth05.teth.lang.parser.ExpressionList;
-import com.github.tth05.teth.lang.span.ISpan;
+import com.github.tth05.teth.lang.span.Span;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
 import java.util.Collections;
@@ -15,7 +15,7 @@ public class FunctionInvocationExpression extends Expression {
     private final List<TypeExpression> genericParameters;
     private final ExpressionList parameters;
 
-    public FunctionInvocationExpression(ISpan span, Expression target, List<TypeExpression> genericParameters, ExpressionList parameters) {
+    public FunctionInvocationExpression(Span span, Expression target, List<TypeExpression> genericParameters, ExpressionList parameters) {
         super(span);
         this.target = target;
         this.genericParameters = Collections.unmodifiableList(Objects.requireNonNull(genericParameters));

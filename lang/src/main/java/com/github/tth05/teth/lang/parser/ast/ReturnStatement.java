@@ -1,7 +1,7 @@
 package com.github.tth05.teth.lang.parser.ast;
 
 import com.github.tth05.teth.lang.parser.ASTVisitor;
-import com.github.tth05.teth.lang.span.ISpan;
+import com.github.tth05.teth.lang.span.Span;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
 import java.util.Objects;
@@ -10,7 +10,7 @@ public class ReturnStatement extends Statement {
 
     private final Expression valueExpr;
 
-    public ReturnStatement(ISpan span, Expression valueExpr) {
+    public ReturnStatement(Span span, Expression valueExpr) {
         super(span);
         this.valueExpr = valueExpr;
     }

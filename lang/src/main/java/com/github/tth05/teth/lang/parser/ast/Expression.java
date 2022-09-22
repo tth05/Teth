@@ -1,10 +1,10 @@
 package com.github.tth05.teth.lang.parser.ast;
 
-import com.github.tth05.teth.lang.span.ISpan;
+import com.github.tth05.teth.lang.span.Span;
 
 public abstract class Expression extends Statement {
 
-    protected Expression(ISpan span) {
+    protected Expression(Span span) {
         super(span);
     }
 }

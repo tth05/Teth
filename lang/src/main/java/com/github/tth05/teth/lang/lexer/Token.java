@@ -1,8 +1,8 @@
 package com.github.tth05.teth.lang.lexer;
 
-import com.github.tth05.teth.lang.span.ISpan;
+import com.github.tth05.teth.lang.span.Span;
 
-public record Token(ISpan span, String value, TokenType type) {
+public record Token(Span span, String value, TokenType type) {
 
     public static final Token INVALID = new Token(null, null, null);
 

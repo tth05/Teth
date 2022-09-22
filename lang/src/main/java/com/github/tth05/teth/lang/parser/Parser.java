@@ -10,7 +10,8 @@ import com.github.tth05.teth.lang.parser.ast.*;
 import com.github.tth05.teth.lang.parser.recovery.AnchorSets;
 import com.github.tth05.teth.lang.parser.recovery.AnchorUnion;
 import com.github.tth05.teth.lang.source.ISource;
-import com.github.tth05.teth.lang.span.ISpan;
+import com.github.tth05.teth.lang.span.ArrayListWithSpan;
+import com.github.tth05.teth.lang.span.ListWithSpan;
 import com.github.tth05.teth.lang.span.Span;
 import com.github.tth05.teth.lang.stream.CharStream;
 
@@ -113,6 +114,11 @@ public class Parser {
             case KEYWORD_RETURN -> parseReturnStatement(anchorSet);
             case KEYWORD_LET -> parseVariableDeclaration(anchorSet);
             case KEYWORD_USE -> parseUseStatement(anchorSet);
+            case KEYWORD_ELSE -> {
+                this.problems.add(new Problem(current.span(), "'else' not allowed here"));
+                this.stream.consume();
+                yield new GarbageExpression(current.span());
+            }
             case L_CURLY_PAREN -> parseBlock(anchorSet);
             default -> parseExpression(anchorSet); // Expression statement
         };
@@ -295,7 +301,7 @@ public class Parser {
                 break;
 
             if (!list.isEmpty())
-                expectToken(TokenType.COMMA, anchorSet, () -> "Expected ','");
+                expectToken(TokenType.COMMA, anchorSet, () -> "Expected ',' or '" + endToken.getText() + "'");
 
             consumeLineBreaks();
             var tokensLeft = this.stream.tokensLeft();
@@ -325,7 +331,7 @@ public class Parser {
         var functions = new ArrayList<FunctionDeclaration>();
 
         //TODO: Move this to name analysis
-        var checkDuplicateDeclaration = (BiConsumer<ISpan, String>) (span, value) -> {
+        var checkDuplicateDeclaration = (BiConsumer<Span, String>) (span, value) -> {
             if (fields.stream().anyMatch(f -> f.getNameExpr().getValue().equals(value)) ||
                 functions.stream().anyMatch(f -> f.getNameExpr().getValue().equals(value)))
                 throw new UnexpectedTokenException(span, "Duplicate declaration");
@@ -428,20 +434,24 @@ public class Parser {
     }
 
     private ObjectCreationExpression parseObjectCreationExpression(AnchorUnion anchorSet) {
-        var firstSpan = this.stream.consumeType(TokenType.KEYWORD_NEW).span();
+        var firstSpan = this.stream.consume().span();
+        var lastSpan = firstSpan;
         consumeLineBreaks();
-        var name = this.stream.consumeType(TokenType.IDENTIFIER);
+        var nameToken = expectIdentifier(anchorSet, () -> "Expected type name");
+        if (!nameToken.isInvalid())
+            lastSpan = nameToken.span();
+
         consumeLineBreaks();
 
-        var genericParameters = tryParseGenericParametersOnInvocation(anchorSet, TokenType.LESS);
+        var genericParameters = tryParseGenericParametersOnInvocation(anchorSet.union(AnchorSets.FIRST_SET_PARENTHESISED_EXPRESSION), TokenType.LESS);
+        lastSpan = genericParameters.getSpanOrElse(lastSpan);
 
-        this.stream.consumeType(TokenType.L_PAREN);
         var parameters = parseParameterList(anchorSet);
-        var secondSpan = this.stream.consumeType(TokenType.R_PAREN).span();
+        lastSpan = parameters.getSpanOrElse(lastSpan);
 
         return new ObjectCreationExpression(
-                Span.of(firstSpan, secondSpan),
-                new IdentifierExpression(name.span(), name.value()),
+                Span.of(firstSpan, lastSpan),
+                new IdentifierExpression(nameToken.span(), nameToken.value()),
                 genericParameters, parameters
         );
     }
@@ -479,33 +489,43 @@ public class Parser {
 
     private Expression parseFunctionInvocation(AnchorUnion anchorSet, Expression target) {
         var genericParameters = tryParseGenericParametersOnInvocation(anchorSet.union(AnchorSets.FIRST_SET_PARENTHESISED_EXPRESSION), TokenType.LESS_PIPE);
-
-        expectToken(TokenType.L_PAREN, anchorSet.union(AnchorSets.FIRST_SET_EXPRESSION), () -> "Expected '('");
-        consumeLineBreaks();
         var parameters = parseParameterList(anchorSet);
 
-        var lastSpan = this.stream.peek().span();
-        var rParenToken = expectToken(TokenType.R_PAREN, anchorSet, () -> "Expected closing ')'");
-        if (!rParenToken.isInvalid())
-            lastSpan = rParenToken.span();
-
-        return new FunctionInvocationExpression(Span.of(target.getSpan(), lastSpan), target, genericParameters, parameters);
+        return new FunctionInvocationExpression(Span.of(target.getSpan(), parameters.getSpanOrElse(target.getSpan())), target, genericParameters, parameters);
     }
 
-    private List<TypeExpression> tryParseGenericParametersOnInvocation(AnchorUnion anchorSet, TokenType prefix) {
+    private ListWithSpan<TypeExpression> tryParseGenericParametersOnInvocation(AnchorUnion anchorSet, TokenType prefix) {
         if (this.stream.peek().is(prefix)) {
-            this.stream.consume();
-            var genericParameters = parseList(anchorSet, this::parseType, ArrayList::new, TokenType.GREATER);
-            expectToken(TokenType.GREATER, anchorSet, () -> "Expected '>'");
+            var listStartSpan = this.stream.consume().span();
+            var genericParameters = parseList(anchorSet, this::parseType, ArrayListWithSpan::new, TokenType.GREATER);
+            var greaterToken = expectToken(TokenType.GREATER, anchorSet, () -> "Expected '>'");
+
+            genericParameters.setSpan(Span.of(listStartSpan, greaterToken.isInvalid() ? genericParameters.getSpanOrElse(listStartSpan) : greaterToken.span()));
             consumeLineBreaks();
             return genericParameters;
         } else {
-            return Collections.emptyList();
+            return ArrayListWithSpan.emptyList();
         }
     }
 
     private ExpressionList parseParameterList(AnchorUnion anchorSet) {
-        return parseList(anchorSet, this::parseExpression, ExpressionList::new, TokenType.R_PAREN);
+        // Parse the parameter list
+        var lParenToken = expectToken(TokenType.L_PAREN, anchorSet.union(AnchorSets.FIRST_SET_EXPRESSION), () -> "Expected opening '('");
+        var parameters = parseList(anchorSet, this::parseExpression, ExpressionList::new, TokenType.R_PAREN);
+        var rParenToken = expectToken(TokenType.R_PAREN, anchorSet, () -> "Expected closing ')'");
+
+        if (lParenToken.isInvalid() && rParenToken.isInvalid())
+            return parameters;
+
+        // Extend the span of the list
+        if (lParenToken.isInvalid())
+            parameters.setSpan(Span.of(parameters.getSpanOrElse(rParenToken.span()), rParenToken.span()));
+        else if (rParenToken.isInvalid())
+            parameters.setSpan(Span.of(lParenToken.span(), parameters.getSpanOrElse(lParenToken.span())));
+        else
+            parameters.setSpan(Span.of(lParenToken.span(), rParenToken.span()));
+
+        return parameters;
     }
 
     private Expression parseParenthesisedExpression(AnchorUnion anchorSet) {
@@ -609,7 +629,7 @@ public class Parser {
         return Token.INVALID;
     }
 
-    private void reportAndRecover(AnchorUnion anchorSet, ISpan span, String message) {
+    private void reportAndRecover(AnchorUnion anchorSet, Span span, String message) {
         this.problems.add(new Problem(span, message));
 
         //TODO: Don't discard skipped tokens, auto-completion?
@@ -619,7 +639,7 @@ public class Parser {
             this.stream.consume();
     }
 
-    private static ISpan zeroWidthSpan(ISpan span) {
+    private static Span zeroWidthSpan(Span span) {
         return new Span(span.source(), span.offset(), span.offset());
     }
 
