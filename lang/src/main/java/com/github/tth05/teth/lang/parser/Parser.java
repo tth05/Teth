@@ -237,33 +237,36 @@ public class Parser {
     }
 
     private FunctionDeclaration parseFunctionDeclaration(AnchorUnion anchorSet, boolean instanceMethod) {
-        var firstSpan = this.stream.consumeType(TokenType.KEYWORD_FN).span();
+        var firstSpan = this.stream.consume().span();
         consumeLineBreaks();
-        var functionName = this.stream.consumeType(TokenType.IDENTIFIER);
+        var functionName = expectIdentifier(anchorSet.union(AnchorSets.FIRST_SET_FUNCTION), () -> "Expected function name");
         consumeLineBreaks();
 
-        var genericParameters = parseGenericParameterDeclarations();
+        // TODO: Maybe this could skip invalid tokens? Something like fn foo>() breaks completely without it
+        var genericParameters = parseGenericParameterDeclarations(anchorSet.union(AnchorSets.FIRST_SET_EXPRESSION));
 
         consumeLineBreaks();
-        this.stream.consumeType(TokenType.L_PAREN);
+        expectToken(TokenType.L_PAREN, anchorSet.union(AnchorSets.FIRST_SET_EXPRESSION), () -> "Expected opening '(' after function name");
 
-        var parameters = parseList(anchorSet, (a) -> {
-            var nameToken = this.stream.consumeType(TokenType.IDENTIFIER);
-            if (instanceMethod && nameToken.value().equals("self"))
-                throw new UnexpectedTokenException(nameToken.span(), "Parameter name 'self' is not allowed for instance methods");
+        var parameters = parseList(anchorSet.union(AnchorUnion.leaf(List.of(TokenType.COLON))), (a) -> {
+            var nameToken = expectIdentifier(a, () -> "Expected parameter name");
+            if (instanceMethod && "self".equals(nameToken.value()))
+                this.problems.add(new Problem(nameToken.span(), "Parameter name 'self' is not allowed for instance methods"));
 
             consumeLineBreaks();
-            this.stream.consumeType(TokenType.COLON);
+            var colonToken = expectToken(TokenType.COLON, a, () -> "Expected ':' after parameter name");
             consumeLineBreaks();
             var type = parseType(a);
-            return new FunctionDeclaration.ParameterDeclaration(type, new IdentifierExpression(nameToken.span(), nameToken.value()));
-        }, ArrayList::new, TokenType.R_PAREN);
 
-        this.stream.consumeType(TokenType.R_PAREN);
+            var paramFirstSpan = nameToken.isInvalid() ? colonToken.isInvalid() ? type.getSpan() == null ? null : type.getSpan() : colonToken.span() : nameToken.span();
+            var paramLastSpan = type.getSpan() == null ? colonToken.isInvalid() ? nameToken.isInvalid() ? null : nameToken.span() : colonToken.span() : type.getSpan();
+            return new FunctionDeclaration.ParameterDeclaration(paramFirstSpan == null ? null : Span.of(paramFirstSpan, paramLastSpan), type, new IdentifierExpression(nameToken.span(), nameToken.value()));
+        }, ArrayListWithSpan::new, TokenType.R_PAREN);
 
+        expectToken(TokenType.R_PAREN, anchorSet.union(AnchorSets.FIRST_SET_STATEMENT), () -> "Expected closing ')'");
         consumeLineBreaks();
 
-        var returnType = this.stream.peek().is(TokenType.IDENTIFIER) ? parseType(anchorSet) : null;
+        var returnType = this.stream.peek().is(TokenType.IDENTIFIER) ? parseType(anchorSet.union(AnchorSets.FIRST_SET_STATEMENT)) : null;
         var body = parseBlock(anchorSet);
         return new FunctionDeclaration(
                 Span.of(firstSpan, body.getSpan()),
@@ -272,18 +275,21 @@ public class Parser {
         );
     }
 
-    private List<GenericParameterDeclaration> parseGenericParameterDeclarations() {
-        var genericParameters = Collections.<GenericParameterDeclaration>emptyList();
+    private ListWithSpan<GenericParameterDeclaration> parseGenericParameterDeclarations(AnchorUnion anchorSet) {
         if (this.stream.peek().is(TokenType.LESS)) {
-            this.stream.consumeType(TokenType.LESS);
-            genericParameters = parseList(AnchorSets.EMPTY, (a) -> {
-                var parameterName = this.stream.consumeType(TokenType.IDENTIFIER);
-                consumeLineBreaks();
+            var listStartSpan = this.stream.consume().span();
+            var genericParameters = parseList(anchorSet, (a) -> {
+                var parameterName = expectIdentifier(a, () -> "Expected generic parameter name");
                 return new GenericParameterDeclaration(parameterName.span(), parameterName.value());
-            }, () -> new ArrayList<>(2), TokenType.GREATER);
-            this.stream.consumeType(TokenType.GREATER);
+            }, () -> new ArrayListWithSpan<>(2), TokenType.GREATER);
+            var greaterToken = expectToken(TokenType.GREATER, anchorSet, () -> "Expected '>'");
+
+            genericParameters.setSpan(Span.of(listStartSpan, greaterToken.isInvalid() ? genericParameters.getSpanOrElse(listStartSpan) : greaterToken.span()));
+            consumeLineBreaks();
+            return genericParameters;
+        } else {
+            return ArrayListWithSpan.emptyList();
         }
-        return genericParameters;
     }
 
     private <T, R extends List<T>> R parseList(
@@ -321,7 +327,7 @@ public class Parser {
         var structName = this.stream.consumeType(TokenType.IDENTIFIER);
         consumeLineBreaks();
 
-        var genericParameters = parseGenericParameterDeclarations();
+        var genericParameters = parseGenericParameterDeclarations(anchorSet);
 
         consumeLineBreaks();
         this.stream.consumeType(TokenType.L_CURLY_PAREN);

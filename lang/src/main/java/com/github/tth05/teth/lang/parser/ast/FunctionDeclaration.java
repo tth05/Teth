@@ -3,7 +3,6 @@ package com.github.tth05.teth.lang.parser.ast;
 import com.github.tth05.teth.lang.parser.ASTVisitor;
 import com.github.tth05.teth.lang.parser.IDumpable;
 import com.github.tth05.teth.lang.span.Span;
-import com.github.tth05.teth.lang.span.Span;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
 import java.util.Collections;
@@ -85,6 +84,7 @@ public class FunctionDeclaration extends Statement implements ITopLevelDeclarati
             this.returnTypeExpr.dump(builder);
         else
             builder.append("<none>");
+        builder.newLine().appendAttribute("genericParameters", this.genericParameters);
         builder.newLine().appendAttribute("parameters").append("[").newLine().startBlock();
         this.parameters.forEach(p -> {
             p.dump(builder);
@@ -150,7 +150,7 @@ public class FunctionDeclaration extends Statement implements ITopLevelDeclarati
 
         @Override
         public void dump(ASTDumpBuilder builder) {
-            builder.append(this.type.toString()).append(" ").append(this.name.toString());
+            builder.append(this.name.toString()).append(" ").append(this.type.toString());
         }
 
         @Override

@@ -65,7 +65,12 @@ public record Span(ISource source, int offset, int offsetEnd) {
 
     public static <T extends Statement> Span of(List<T> list, Span fallback) {
         if (list.size() > 0) {
-            return Span.of(list.get(0).getSpan(), list.get(list.size() - 1).getSpan());
+            var a = list.get(0).getSpan();
+            var b = list.get(list.size() - 1).getSpan();
+            if (a == null || b == null)
+                return fallback;
+
+            return Span.of(a, b);
         } else {
             return fallback;
         }

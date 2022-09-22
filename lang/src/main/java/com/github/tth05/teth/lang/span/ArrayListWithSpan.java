@@ -11,6 +11,10 @@ public class ArrayListWithSpan<T extends Statement> extends ArrayList<T> impleme
     public ArrayListWithSpan() {
     }
 
+    public ArrayListWithSpan(int initialCapacity) {
+        super(initialCapacity);
+    }
+
     @Override
     public void setSpan(Span span) {
         this.span = span;
