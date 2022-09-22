@@ -785,18 +785,6 @@ public class ParserTest extends AbstractParserTest {
     public void testParseInvalidStructDeclaration() {
         assertThrows(RuntimeException.class, () -> createAST("""
                 struct d {
-                    a: long
-                    a: long
-                }
-                """));
-        assertThrows(RuntimeException.class, () -> createAST("""
-                struct d {
-                    a: long
-                    fn a() {}
-                }
-                """));
-        assertThrows(RuntimeException.class, () -> createAST("""
-                struct d {
                     5
                 }
                 """));
@@ -1017,12 +1005,5 @@ public class ParserTest extends AbstractParserTest {
                 }
                 """);
         assertStreamsEmpty();
-    }
-
-    @Test
-    public void random() {
-        createAST("""
-                else
-                """);
     }
 }

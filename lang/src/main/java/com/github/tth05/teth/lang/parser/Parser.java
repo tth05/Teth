@@ -18,7 +18,6 @@ import com.github.tth05.teth.lang.stream.CharStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -336,13 +335,6 @@ public class Parser {
         var fields = new ArrayList<StructDeclaration.FieldDeclaration>();
         var functions = new ArrayList<FunctionDeclaration>();
 
-        //TODO: Move this to name analysis
-        var checkDuplicateDeclaration = (BiConsumer<Span, String>) (span, value) -> {
-            if (fields.stream().anyMatch(f -> f.getNameExpr().getValue().equals(value)) ||
-                functions.stream().anyMatch(f -> f.getNameExpr().getValue().equals(value)))
-                throw new UnexpectedTokenException(span, "Duplicate declaration");
-        };
-
         while (!this.stream.peek().is(TokenType.R_CURLY_PAREN)) {
             var token = this.stream.peek();
             if (token.is(TokenType.IDENTIFIER)) {
@@ -350,12 +342,10 @@ public class Parser {
                 this.stream.consumeType(TokenType.COLON);
                 var type = parseType(anchorSet);
 
-                checkDuplicateDeclaration.accept(name.span(), name.value());
                 fields.add(new StructDeclaration.FieldDeclaration(Span.of(name.span(), type.getSpan()), type, new IdentifierExpression(name.span(), name.value()), fields.size()));
             } else if (token.is(TokenType.KEYWORD_FN)) {
                 var function = parseFunctionDeclaration(anchorSet, true);
 
-                checkDuplicateDeclaration.accept(function.getNameExpr().getSpan(), function.getNameExpr().getValue());
                 functions.add(function);
             } else {
                 throw new UnexpectedTokenException(token.span(), "Expected field or function declaration");

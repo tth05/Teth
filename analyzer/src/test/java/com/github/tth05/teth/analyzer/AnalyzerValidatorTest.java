@@ -117,6 +117,25 @@ public class AnalyzerValidatorTest extends AbstractAnalyzerTest {
     }
 
     @Test
+    public void testDuplicateStructMembers() {
+        var problems = analyze("""
+                struct a {b:long b:double}
+                """);
+
+        assertFalse(problems.isEmpty());
+        assertEquals(1, problems.size());
+        assertEquals("Duplicate member name", problems.get(0).message());
+
+        problems = analyze("""
+                struct a {b:long fn b(){}}
+                """);
+
+        assertFalse(problems.isEmpty());
+        assertEquals(1, problems.size());
+        assertEquals("Duplicate member name", problems.get(0).message());
+    }
+
+    @Test
     public void testAccessNonExistentMember() {
         var problems = analyze("let f: string = (5).toStringg()");
 

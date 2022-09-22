@@ -8,6 +8,7 @@ import com.github.tth05.teth.lang.parser.ASTVisitor;
 import com.github.tth05.teth.lang.parser.SourceFileUnit;
 import com.github.tth05.teth.lang.parser.ast.*;
 import com.github.tth05.teth.lang.span.Span;
+import com.github.tth05.teth.lang.util.BiIterator;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -142,6 +143,7 @@ public class NameAnalysis extends ASTVisitor {
             validateNotAReservedName(declaration.getNameExpr());
 
         validateNoDuplicates(declaration.getGenericParameters(), "Duplicate generic parameter name");
+        validateNoDuplicates(BiIterator.of(declaration.getFields(), declaration.getFunctions()), "Duplicate member name");
 
         this.declarationStack.beginStructScope(declaration);
         { // Don't want to visit struct name here
@@ -311,9 +313,14 @@ public class NameAnalysis extends ASTVisitor {
     }
 
     private <T extends IHasName> void validateNoDuplicates(List<T> list, String message) {
+        validateNoDuplicates(list.iterator(), message);
+    }
+
+    private <T extends IHasName> void validateNoDuplicates(Iterator<T> it, String message) {
         DUPLICATION_SET.clear();
 
-        for (var el : list) {
+        while (it.hasNext()) {
+            var el = it.next();
             if (!DUPLICATION_SET.add(el.getNameExpr().getValue()))
                 throw new ValidationException(el.getNameExpr().getSpan(), message);
         }
