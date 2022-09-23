@@ -25,8 +25,7 @@ public class SourceFileUnit implements IDumpable {
     @Override
     public void dump(ASTDumpBuilder builder) {
         builder.append("SourceFileUnit {").newLine().startBlock();
-        builder.appendAttribute("statements");
-        this.statements.dump(builder);
+        builder.appendAttribute("statements", this.statements);
         builder.endBlock().newLine().append("}");
     }
 

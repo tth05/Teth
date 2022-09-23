@@ -41,7 +41,7 @@ public class NameAnalysis extends ASTVisitor {
 
         beginFunctionDeclaration(GLOBAL_FUNCTION);
 
-        var topLevelDeclarations = unit.getStatements().stream()
+        List<? extends Statement> topLevelDeclarations = unit.getStatements().stream()
                 .filter(s -> s instanceof ITopLevelDeclaration && s instanceof IHasName)
                 .sorted(Comparator.comparingInt(s -> switch (s) {
                     case StructDeclaration sd -> 0;
@@ -312,11 +312,11 @@ public class NameAnalysis extends ASTVisitor {
         declaration.getBody().accept(this);
     }
 
-    private <T extends IHasName> void validateNoDuplicates(List<T> list, String message) {
+    private void validateNoDuplicates(List<? extends IHasName> list, String message) {
         validateNoDuplicates(list.iterator(), message);
     }
 
-    private <T extends IHasName> void validateNoDuplicates(Iterator<T> it, String message) {
+    private void validateNoDuplicates(Iterator<? extends IHasName> it, String message) {
         DUPLICATION_SET.clear();
 
         while (it.hasNext()) {

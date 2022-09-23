@@ -46,7 +46,14 @@ public class ListLiteralExpression extends Expression implements IDeclarationRef
     @Override
     public void dump(ASTDumpBuilder builder) {
         builder.append("[");
-        this.initializers.forEach(i -> i.dump(builder));
+        ExpressionList expressions = this.initializers;
+        for (int j = 0; j < expressions.size(); j++) {
+            var i = expressions.get(j);
+            i.dump(builder);
+
+            if (j != expressions.size() - 1)
+                builder.append(", ");
+        }
         builder.append("]");
     }
 

@@ -45,8 +45,7 @@ public class FunctionInvocationExpression extends Expression {
         builder.appendAttribute("target");
         this.target.dump(builder);
         builder.newLine().appendAttribute("genericParameters", this.genericParameters);
-        builder.newLine().appendAttribute("parameters");
-        this.parameters.dump(builder);
+        builder.newLine().appendAttribute("parameters", this.parameters);
         builder.endBlock().newLine().append("}");
     }
 

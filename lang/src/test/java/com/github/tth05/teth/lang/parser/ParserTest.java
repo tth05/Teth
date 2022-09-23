@@ -1006,4 +1006,15 @@ public class ParserTest extends AbstractParserTest {
                 """);
         assertStreamsEmpty();
     }
+
+    @Test
+    public void yeet() {
+        createAST("""
+                struct s<d>{
+                                
+                    let a = 5
+                                
+                }
+                """);
+    }
 }

@@ -1,7 +1,6 @@
 package com.github.tth05.teth.lang.parser.ast;
 
 import com.github.tth05.teth.lang.parser.ASTVisitor;
-import com.github.tth05.teth.lang.parser.StatementList;
 import com.github.tth05.teth.lang.span.Span;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
@@ -51,8 +50,7 @@ public class LoopStatement extends Statement {
     public void dump(ASTDumpBuilder builder) {
         builder.append("Loop {").newLine();
         builder.startBlock();
-        builder.appendAttribute("declarations");
-        new StatementList(this.variableDeclarations).dump(builder);
+        builder.appendAttribute("declarations", this.variableDeclarations);
         if (this.condition != null) {
             builder.newLine().appendAttribute("condition");
             this.condition.dump(builder);

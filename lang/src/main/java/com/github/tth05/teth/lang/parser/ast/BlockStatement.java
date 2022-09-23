@@ -21,10 +21,9 @@ public class BlockStatement extends Statement {
 
     @Override
     public void dump(ASTDumpBuilder builder) {
-        builder.append("BlockStatement {").newLine();
-        builder.startBlock();
-        this.statements.dump(builder);
-        builder.endBlock().newLine().append("}");
+        builder.append("BlockStatement {").newLine().startBlock();
+        builder.appendAttribute("statements", this.statements);
+        builder.newLine().endBlock().append("}");
     }
 
     public StatementList getStatements() {

@@ -85,12 +85,8 @@ public class FunctionDeclaration extends Statement implements ITopLevelDeclarati
         else
             builder.append("<none>");
         builder.newLine().appendAttribute("genericParameters", this.genericParameters);
-        builder.newLine().appendAttribute("parameters").append("[").newLine().startBlock();
-        this.parameters.forEach(p -> {
-            p.dump(builder);
-            builder.newLine();
-        });
-        builder.endBlock().append("]").newLine().appendAttribute("body");
+        builder.newLine().appendAttribute("parameters", this.parameters);
+        builder.newLine().appendAttribute("body");
         this.body.dump(builder);
         builder.newLine().appendAttribute("isInstanceMethod", String.valueOf(this.instanceFunction));
         builder.newLine().appendAttribute("isInstrinsic", String.valueOf(this.intrinsic));

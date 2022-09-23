@@ -44,8 +44,7 @@ public class ObjectCreationExpression extends Expression implements IDeclaration
         builder.append("ObjectCreationExpression {").startBlock().newLine();
         builder.appendAttribute("targetName");
         this.targetNameExpr.dump(builder);
-        builder.newLine().appendAttribute("parameters");
-        this.parameters.dump(builder);
+        builder.newLine().appendAttribute("parameters", this.parameters);
         builder.endBlock().newLine().append("}");
     }
 

@@ -1,7 +1,6 @@
 package com.github.tth05.teth.lang.parser.ast;
 
 import com.github.tth05.teth.lang.parser.ASTVisitor;
-import com.github.tth05.teth.lang.parser.StatementList;
 import com.github.tth05.teth.lang.span.Span;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
@@ -73,10 +72,8 @@ public class StructDeclaration extends Statement implements ITopLevelDeclaration
         builder.startBlock();
         builder.appendAttribute("name");
         this.nameExpr.dump(builder);
-        builder.newLine().appendAttribute("fields");
-        new StatementList(this.fields).dump(builder);
-        builder.newLine().appendAttribute("functions");
-        new StatementList(this.functions).dump(builder);
+        builder.newLine().appendAttribute("fields", this.fields);
+        builder.newLine().appendAttribute("functions", this.functions);
         builder.endBlock().newLine().append("}");
     }
 

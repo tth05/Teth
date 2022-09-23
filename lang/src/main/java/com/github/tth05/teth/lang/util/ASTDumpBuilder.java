@@ -48,6 +48,12 @@ public class ASTDumpBuilder {
 
     public ASTDumpBuilder appendAttribute(String name, List<? extends IDumpable> list) {
         appendAttribute(name);
+
+        if (list.isEmpty()) {
+            append("[]");
+            return this;
+        }
+
         append("[").newLine().startBlock();
 
         for (int i = 0; i < list.size(); i++) {
