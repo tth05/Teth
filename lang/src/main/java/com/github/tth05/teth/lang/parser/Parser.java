@@ -2,10 +2,7 @@ package com.github.tth05.teth.lang.parser;
 
 import com.github.tth05.teth.lang.diagnostics.Problem;
 import com.github.tth05.teth.lang.diagnostics.ProblemList;
-import com.github.tth05.teth.lang.lexer.Token;
-import com.github.tth05.teth.lang.lexer.TokenStream;
-import com.github.tth05.teth.lang.lexer.TokenType;
-import com.github.tth05.teth.lang.lexer.Tokenizer;
+import com.github.tth05.teth.lang.lexer.*;
 import com.github.tth05.teth.lang.parser.ast.*;
 import com.github.tth05.teth.lang.parser.recovery.AnchorSets;
 import com.github.tth05.teth.lang.parser.recovery.AnchorUnion;
@@ -23,11 +20,20 @@ import java.util.function.Supplier;
 
 public class Parser {
 
-    private final ProblemList problems = new ProblemList();
+    private final ProblemList problems;
     private final TokenStream stream;
 
+    private Parser(TokenizerResult tokenizerResult) {
+        this(tokenizerResult.getTokenStream(), tokenizerResult.getProblems());
+    }
+
     private Parser(TokenStream stream) {
+        this(stream, ProblemList.of());
+    }
+
+    private Parser(TokenStream stream, ProblemList problems) {
         this.stream = stream;
+        this.problems = problems;
     }
 
     public ParserResult parse() {
@@ -572,7 +578,7 @@ public class Parser {
         return switch (token.type()) {
             case LONG_LITERAL -> new LongLiteralExpression(span, Long.parseLong(this.stream.consume().value()));
             case DOUBLE_LITERAL -> new DoubleLiteralExpression(span, Double.parseDouble(this.stream.consume().value()));
-            case STRING_LITERAL -> parseStringLiteralExpression(anchorSet);
+            case STRING_LITERAL -> parseStringLiteralExpression();
             case BOOLEAN_LITERAL ->
                     new BooleanLiteralExpression(span, Boolean.parseBoolean(this.stream.consume().value()));
             case IDENTIFIER -> new IdentifierExpression(span, this.stream.consume().value());
@@ -596,7 +602,7 @@ public class Parser {
         };
     }
 
-    private StringLiteralExpression parseStringLiteralExpression(AnchorUnion anchorSet) {
+    private StringLiteralExpression parseStringLiteralExpression() {
         var parts = new ArrayList<StringLiteralExpression.Part>(1);
         while (this.stream.peek().is(TokenType.STRING_LITERAL)) {
             var token = this.stream.consume();
@@ -604,8 +610,9 @@ public class Parser {
 
             if (this.stream.peek().is(TokenType.STRING_LITERAL_CODE_START)) {
                 this.stream.consume();
-                parts.add(StringLiteralExpression.expressionPart(parseExpression(AnchorSets.END_SET_STRING_LITERAL)));
-                this.stream.consumeType(TokenType.STRING_LITERAL_CODE_END);
+                parts.add(StringLiteralExpression.expressionPart(parseExpression(AnchorSets.END_SET_STRING_CODE_LITERAL)));
+                //STRING_LITERAL_CODE_END
+                this.stream.consume();
             }
         }
 
@@ -657,6 +664,7 @@ public class Parser {
         this.problems.add(new Problem(span, message));
 
         //TODO: Don't discard skipped tokens, auto-completion?
+
         // Skip until next anchor
         Token current;
         while (!(current = this.stream.peek()).is(TokenType.EOF) && !anchorSet.contains(current.type()))
@@ -669,9 +677,7 @@ public class Parser {
 
     public static ParserResult parse(ISource source) {
         var tokenizerResult = Tokenizer.tokenize(CharStream.fromSource(source));
-        if (tokenizerResult.hasProblems())
-            return new ParserResult(source, null, tokenizerResult.getProblems());
-        return new Parser(tokenizerResult.getTokenStream()).parse();
+        return new Parser(tokenizerResult).parse();
     }
 
     public static ParserResult parse(TokenStream tokenStream) {

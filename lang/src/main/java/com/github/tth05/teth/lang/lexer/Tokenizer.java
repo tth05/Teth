@@ -1,5 +1,6 @@
 package com.github.tth05.teth.lang.lexer;
 
+import com.github.tth05.teth.lang.diagnostics.Problem;
 import com.github.tth05.teth.lang.diagnostics.ProblemList;
 import com.github.tth05.teth.lang.source.ISource;
 import com.github.tth05.teth.lang.span.Span;
@@ -8,6 +9,7 @@ import com.github.tth05.teth.lang.stream.CharStream;
 public class Tokenizer {
 
     private final StringBuilder identifierBuffer = new StringBuilder(8);
+    private final ProblemList problems = new ProblemList();
 
     private final CharStream stream;
     private final TokenStream tokenStream;
@@ -18,18 +20,14 @@ public class Tokenizer {
     }
 
     public TokenizerResult tokenize() {
-        try {
-            emitUntil(c -> {
-                if (c != 0)
-                    return false;
-                emit(this.stream.createCurrentIndexSpan(), "", TokenType.EOF);
-                return true;
-            });
-        } catch (UnexpectedCharException e) {
-            return new TokenizerResult(this.stream.getSource(), this.tokenStream, ProblemList.of(e.asProblem()));
-        }
+        emitUntil(c -> {
+            if (c != 0)
+                return false;
+            emit(this.stream.createCurrentIndexSpan(), "", TokenType.EOF);
+            return true;
+        });
 
-        return new TokenizerResult(this.stream.getSource(), this.tokenStream);
+        return new TokenizerResult(this.stream.getSource(), this.tokenStream, this.problems);
     }
 
     private void emitUntil(CharPredicate breakPredicate) {
@@ -65,7 +63,8 @@ public class Tokenizer {
             } else if (isColon(c)) {
                 emit(this.stream.consumeKnownSingle(), ":", TokenType.COLON);
             } else {
-                throw new UnexpectedCharException(this.stream.createCurrentIndexSpan(), "Invalid character '%s'", c);
+                this.stream.consume();
+                report(this.stream.createCurrentIndexSpan(), "Invalid character '" + c + "'");
             }
         }
     }
@@ -104,9 +103,11 @@ public class Tokenizer {
         do {
             char c = this.stream.peek();
             if (!isIdentifierChar(c))
-                throw new UnexpectedCharException(this.stream.createCurrentIndexSpan(), "Invalid character '%s' in identifier", c);
+                report(this.stream.createCurrentIndexSpan(), "Invalid character '" + c + "' in identifier");
+            else
+                this.identifierBuffer.append(c);
 
-            this.identifierBuffer.append(this.stream.consume());
+            this.stream.consume();
         } while (!isSeparator(this.stream.peek()) && !isDot(this.stream.peek()));
 
         return new Token(this.stream.popMarkedSpan(), this.identifierBuffer.toString(), TokenType.IDENTIFIER);
@@ -121,14 +122,17 @@ public class Tokenizer {
         var escaped = false;
         while (true) {
             var next = this.stream.peek();
-            if (next == 0 || isLineBreak(next))
-                throw new UnexpectedCharException(this.stream.createCurrentIndexSpan(), "Unclosed string literal");
+            if (next == 0 || isLineBreak(next)) {
+                report(this.stream.createCurrentIndexSpan(), "Unclosed string literal");
+                break;
+            }
 
             if (escaped) { // Escaped character
                 //TODO: Actual escape sequences
                 string.append(this.stream.consume());
                 escaped = false;
             } else if (isQuote(next)) { // End string
+                this.stream.consume(); //Suffix
                 break;
             } else if (next == '\\') { // Escape next char
                 escaped = true;
@@ -149,7 +153,6 @@ public class Tokenizer {
                 string.append(this.stream.consume());
             }
         }
-        this.stream.consume(); //Suffix
 
         emit(string.toString(), TokenType.STRING_LITERAL);
     }
@@ -163,16 +166,21 @@ public class Tokenizer {
             char c = this.stream.peek();
 
             if (c == '.') {
+                if (isDouble) {
+                    report(this.stream.createCurrentIndexSpan(), "Second decimal point in number literal");
+                    break;
+                }
+
                 this.stream.consume();
-                if (isDouble)
-                    throw new UnexpectedCharException(this.stream.createCurrentIndexSpan(), "Second decimal point in number literal");
                 isDouble = true;
                 this.identifierBuffer.append('.');
                 continue;
             }
 
-            if (!isNumber(c))
-                throw new UnexpectedCharException(this.stream.createCurrentIndexSpan(), "Invalid character '%s' in number literal", c);
+            if (!isNumber(c)) {
+                report(this.stream.createCurrentIndexSpan(), "Invalid character '" + c + "' in number literal");
+                break;
+            }
 
             this.identifierBuffer.append(this.stream.consume());
         } while (!isSeparator(this.stream.peek()));
@@ -185,7 +193,8 @@ public class Tokenizer {
             else
                 Long.parseLong(numberString);
         } catch (NumberFormatException e) {
-            throw new UnexpectedCharException(span, "Number is too big");
+            report(span, "Number is too big");
+            numberString = "1";
         }
 
         emit(span, numberString, isDouble ? TokenType.DOUBLE_LITERAL : TokenType.LONG_LITERAL);
@@ -235,20 +244,18 @@ public class Tokenizer {
                 }
             }
             case '&' -> {
-                if (this.stream.peek() == '&') {
-                    this.stream.consume();
-                    emit("&&", TokenType.AMPERSAND_AMPERSAND);
-                } else {
-                    throw new UnexpectedCharException(this.stream.createCurrentIndexSpan(), "Invalid character '&', did you mean '&&'");
-                }
+                if (this.stream.peek() != '&')
+                    report(this.stream.createCurrentIndexSpan(), "Invalid character '&', did you mean '&&'?");
+
+                this.stream.consume();
+                emit("&&", TokenType.AMPERSAND_AMPERSAND);
             }
             case '|' -> {
-                if (this.stream.peek() == '|') {
-                    this.stream.consume();
-                    emit("||", TokenType.PIPE_PIPE);
-                } else {
-                    throw new UnexpectedCharException(this.stream.createCurrentIndexSpan(), "Invalid character '|', did you mean '||'");
-                }
+                if (this.stream.peek() != '|')
+                    report(this.stream.createCurrentIndexSpan(), "Invalid character '|', did you mean '||'?");
+
+                this.stream.consume();
+                emit("||", TokenType.PIPE_PIPE);
             }
             case '+' -> emit("+", TokenType.PLUS);
             case '-' -> emit("-", TokenType.MINUS);
@@ -297,6 +304,10 @@ public class Tokenizer {
                 return;
             }
         }
+    }
+
+    private void report(Span span, String message) {
+        this.problems.add(new Problem(span, message));
     }
 
     private static boolean isKeyword(String value) {

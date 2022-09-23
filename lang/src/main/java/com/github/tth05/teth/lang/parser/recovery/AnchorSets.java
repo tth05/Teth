@@ -45,7 +45,7 @@ public class AnchorSets {
     public static final AnchorUnion FIRST_SET_USE_STATEMENT = FIRST_SET_BLOCK.union(AnchorUnion.leaf(List.of(TokenType.SLASH)));
     public static final AnchorUnion END_SET_USE_STATEMENT = END_SET_BLOCK.union(FIRST_SET_LIST);
 
-    public static final AnchorUnion END_SET_STRING_LITERAL = AnchorUnion.leaf(List.of(TokenType.STRING_LITERAL, TokenType.STRING_LITERAL_CODE_END));
+    public static final AnchorUnion END_SET_STRING_CODE_LITERAL = AnchorUnion.leaf(List.of(TokenType.STRING_LITERAL_CODE_END));
 
     public static final AnchorUnion FIRST_SET_LET_STATEMENT = FIRST_SET_EXPRESSION.union(AnchorUnion.leaf(List.of(TokenType.COLON, TokenType.EQUAL)));
     public static final AnchorUnion MIDDLE_SET_LET_STATEMENT = FIRST_SET_EXPRESSION.union(AnchorUnion.leaf(List.of(TokenType.EQUAL)));

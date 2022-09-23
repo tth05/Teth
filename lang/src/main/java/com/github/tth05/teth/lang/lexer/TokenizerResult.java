@@ -11,10 +11,6 @@ public class TokenizerResult {
     private final TokenStream stream;
     private final ProblemList problems;
 
-    public TokenizerResult(ISource source, TokenStream stream) {
-        this(source, stream, ProblemList.of());
-    }
-
     public TokenizerResult(ISource source, TokenStream stream, ProblemList problems) {
         this.source = source;
         this.stream = stream;
