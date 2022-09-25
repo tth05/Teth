@@ -38,6 +38,7 @@ public class Parser {
 
     public ParserResult parse() {
         var unit = new SourceFileUnit(this.stream.getSource().getModuleName(), parseStatementList(AnchorSets.FIRST_SET_STATEMENT, TokenType.EOF));
+        expectToken(TokenType.EOF, AnchorSets.EMPTY, () -> "Expected end of file");
 
         if (this.problems.isEmpty())
             return new ParserResult(this.stream.getSource(), unit);
@@ -597,6 +598,7 @@ public class Parser {
             }
             default -> {
                 reportAndRecover(anchorSet, token.span(), "Expected an expression");
+                //TODO: GarbageExpression should contain skipped tokens -> auto-completion?
                 yield new GarbageExpression(new Span(token.span().source(), token.span().offset(), token.span().offset()));
             }
         };
@@ -662,8 +664,6 @@ public class Parser {
 
     private void reportAndRecover(AnchorUnion anchorSet, Span span, String message) {
         this.problems.add(new Problem(span, message));
-
-        //TODO: Don't discard skipped tokens, auto-completion?
 
         // Skip until next anchor
         Token current;

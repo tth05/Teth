@@ -4,7 +4,6 @@ import com.github.tth05.teth.analyzer.prelude.Prelude;
 import com.github.tth05.teth.analyzer.visitor.NameAnalysis;
 import com.github.tth05.teth.analyzer.visitor.ReturnStatementVerifier;
 import com.github.tth05.teth.analyzer.visitor.TypeAnalysis;
-import com.github.tth05.teth.lang.diagnostics.ProblemList;
 import com.github.tth05.teth.lang.parser.SourceFileUnit;
 import com.github.tth05.teth.lang.parser.ast.*;
 
@@ -23,45 +22,43 @@ public class Analyzer {
             this.unitIndexMap.put(unit.getModuleName(), new SourceFileUnitIndex(unit));
     }
 
-    public ProblemList analyze() {
-        var problems = new ProblemList();
-
+    public List<AnalyzerResult> analyze() {
+        var results = new ArrayList<AnalyzerResult>(this.unitIndexMap.size());
         var nameAnalysisStates = new ArrayList<NameAnalysis>(this.unitIndexMap.size());
+
         // Pre-decl visit for all units
         this.unitIndexMap.forEach((name, index) -> {
-            try {
-                var unit = index.getUnit();
-                Prelude.injectStatements(unit.getStatements());
-                var nameAnalysis = new NameAnalysis(this, this.resolvedReferences, this.functionLocalsCount);
-                nameAnalysis.preDeclVisit(unit);
-                // Temporary save the name analysis state
-                nameAnalysisStates.add(nameAnalysis);
-            } catch (TypeResolverException | ValidationException e) {
-                problems.add(e.asProblem());
-                nameAnalysisStates.add(null);
-            }
+            var unit = index.getUnit();
+            Prelude.injectStatements(unit.getStatements());
+            var nameAnalysis = new NameAnalysis(this, this.resolvedReferences, this.functionLocalsCount);
+            nameAnalysis.preDeclVisit(unit);
+            // Temporary save the name analysis state
+            nameAnalysisStates.add(nameAnalysis);
         });
 
         var i = 0;
-        for (var index : this.unitIndexMap.values()) {
+        for (var entry : this.unitIndexMap.entrySet()) {
+            var index = entry.getValue();
+            var unit = index.getUnit();
+
             // Safe, because the map is ordered
             var nameAnalysis = nameAnalysisStates.get(i);
-            if (nameAnalysis == null)
-                continue;
+            nameAnalysis.visit(unit);
+            var problems = nameAnalysis.getProblems();
 
-            try {
-                var unit = index.getUnit();
-                nameAnalysis.visit(unit);
-                new TypeAnalysis(this.resolvedReferences).visit(unit);
-                new ReturnStatementVerifier().visit(unit);
-            } catch (TypeResolverException | ValidationException e) {
-                problems.add(e.asProblem());
-            }
+            var typeAnalysis = new TypeAnalysis(this.resolvedReferences);
+            typeAnalysis.visit(unit);
+            problems.merge(typeAnalysis.getProblems());
 
+            var returnStatementVerifier = new ReturnStatementVerifier();
+            returnStatementVerifier.visit(unit);
+            problems.merge(returnStatementVerifier.getProblems());
+
+            results.add(new AnalyzerResult(entry.getKey(), problems));
             i++;
         }
 
-        return problems;
+        return results;
     }
 
     public Statement resolvedReference(IDeclarationReference reference) {

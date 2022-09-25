@@ -20,7 +20,12 @@ public abstract class AbstractAnalyzerTest {
 
     protected Analyzer analyzer;
 
-    protected ProblemList analyze(String main, Source... others) {
+    protected ProblemList analyze(String main) {
+        var problems = analyze(main, new Source[0]);
+        return problems.get(0).getProblems();
+    }
+
+    protected List<AnalyzerResult> analyze(String main, Source... others) {
         createASTs(main, others);
         assertStreamsEmpty();
 
@@ -53,5 +58,6 @@ public abstract class AbstractAnalyzerTest {
     }
 
     protected record Source(String name, String content) {}
+
     protected record AST(TokenStream tokenStream, CharStream charStream, SourceFileUnit unit) {}
 }

@@ -48,8 +48,10 @@ public abstract class AbstractInterpreterTest {
         c.addSourceFileUnit(this.unit);
         c.setEntryPoint(this.unit);
         var result = c.compile();
-        if (result.hasProblems())
-            throw new RuntimeException("Compiler failed\n" + result.getProblems().prettyPrint(true));
+        if (result.hasProblems()) {
+            result.logProblems(System.err, true);
+            fail("Compiler failed");
+        }
 
         return result.getProgram();
     }
@@ -57,8 +59,10 @@ public abstract class AbstractInterpreterTest {
     protected void createAST(String str) {
         createStreams(str);
         var parserResult = Parser.parse(this.tokenStream);
-        if (parserResult.hasProblems())
-            throw new RuntimeException("Parser failed\n" + parserResult.getProblems().prettyPrint(true));
+        if (parserResult.hasProblems()) {
+            parserResult.logProblems(System.err, true);
+            fail("Parser failed");
+        }
 
         assertStreamsEmpty();
         this.unit = parserResult.getUnit();
@@ -67,8 +71,10 @@ public abstract class AbstractInterpreterTest {
     private void createStreams(String str) {
         this.charStream = CharStream.fromSource(new InMemorySource("main", str));
         var tokenizerResult = Tokenizer.tokenize(this.charStream);
-        if (tokenizerResult.hasProblems())
-            throw new RuntimeException("Tokenizer failed\n" + tokenizerResult.getProblems().prettyPrint(true));
+        if (tokenizerResult.hasProblems()) {
+            tokenizerResult.logProblems(System.err, true);
+            fail("Tokenizer failed");
+        }
         this.tokenStream = tokenizerResult.getTokenStream();
     }
 

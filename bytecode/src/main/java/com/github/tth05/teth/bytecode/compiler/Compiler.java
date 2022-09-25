@@ -1,6 +1,7 @@
 package com.github.tth05.teth.bytecode.compiler;
 
 import com.github.tth05.teth.analyzer.Analyzer;
+import com.github.tth05.teth.analyzer.AnalyzerResult;
 import com.github.tth05.teth.analyzer.prelude.Prelude;
 import com.github.tth05.teth.analyzer.visitor.NameAnalysis;
 import com.github.tth05.teth.bytecode.op.*;
@@ -54,9 +55,9 @@ public class Compiler {
         this.compiled = true;
 
         var analyzer = new Analyzer(this.units);
-        var problems = analyzer.analyze();
-        if (!problems.isEmpty())
-            return new CompilationResult(problems);
+        var analyzerResults = analyzer.analyze();
+        if (analyzerResults.stream().anyMatch(AnalyzerResult::hasProblems))
+            return new CompilationResult(analyzerResults);
 
         for (var unit : this.units) {
             var generator = new BytecodeGeneratorVisitor(analyzer, unit != this.mainUnit);

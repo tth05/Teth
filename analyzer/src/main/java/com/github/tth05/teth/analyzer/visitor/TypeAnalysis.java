@@ -5,7 +5,6 @@ import com.github.tth05.teth.analyzer.TypeResolverException;
 import com.github.tth05.teth.analyzer.ValidationException;
 import com.github.tth05.teth.analyzer.type.SemanticType;
 import com.github.tth05.teth.analyzer.type.TypeCache;
-import com.github.tth05.teth.lang.parser.ASTVisitor;
 import com.github.tth05.teth.lang.parser.ExpressionList;
 import com.github.tth05.teth.lang.parser.ast.*;
 
@@ -13,7 +12,7 @@ import java.util.*;
 
 import static com.github.tth05.teth.analyzer.prelude.Prelude.*;
 
-public class TypeAnalysis extends ASTVisitor {
+public class TypeAnalysis extends AnalysisASTVisitor {
 
     private final TypeCache typeCache = new TypeCache();
     private final Map<Integer, BinaryExpression.Operator[]> binaryOperatorsAllowedTypes = new HashMap<>();

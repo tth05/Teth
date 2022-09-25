@@ -1,39 +1,41 @@
 package com.github.tth05.teth.bytecode.compiler;
 
+import com.github.tth05.teth.analyzer.AnalyzerResult;
 import com.github.tth05.teth.bytecode.program.TethProgram;
-import com.github.tth05.teth.lang.diagnostics.ProblemList;
 
 import java.io.PrintStream;
+import java.util.Collections;
+import java.util.List;
 
 public class CompilationResult {
 
     private final TethProgram program;
-    private final ProblemList problems;
+    private final List<AnalyzerResult> analyzerResults;
 
-    public CompilationResult(ProblemList problems) {
-        this.problems = problems;
+    public CompilationResult(List<AnalyzerResult> analyzerResults) {
+        this.analyzerResults = analyzerResults;
         this.program = null;
     }
 
     public CompilationResult(TethProgram program) {
         this.program = program;
-        this.problems = ProblemList.of();
+        this.analyzerResults = Collections.emptyList();
     }
 
     public boolean logProblems(PrintStream out, boolean useAnsiColors) {
         if (!hasProblems())
             return false;
 
-        out.append(this.problems.prettyPrint(useAnsiColors));
+        this.analyzerResults.forEach(r -> out.append(r.getProblems().prettyPrint(useAnsiColors)));
         return true;
     }
 
     public boolean hasProblems() {
-        return !this.problems.isEmpty();
+        return this.analyzerResults.stream().anyMatch(AnalyzerResult::hasProblems);
     }
 
-    public ProblemList getProblems() {
-        return this.problems;
+    public List<AnalyzerResult> getAnalyzerResults() {
+        return this.analyzerResults;
     }
 
     public TethProgram getProgram() {

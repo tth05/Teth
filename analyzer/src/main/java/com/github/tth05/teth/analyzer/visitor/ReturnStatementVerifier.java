@@ -1,12 +1,10 @@
 package com.github.tth05.teth.analyzer.visitor;
 
-import com.github.tth05.teth.analyzer.ValidationException;
-import com.github.tth05.teth.lang.parser.ASTVisitor;
 import com.github.tth05.teth.lang.parser.ast.*;
 
 import java.util.Optional;
 
-public class ReturnStatementVerifier extends ASTVisitor {
+public class ReturnStatementVerifier extends AnalysisASTVisitor {
 
     public ReturnStatementVerifier() {
         // Skips imports, top level code etc.
@@ -19,7 +17,7 @@ public class ReturnStatementVerifier extends ASTVisitor {
             return;
 
         validateLastChildReturns(declaration.getBody()).ifPresent(offendingStatement -> {
-            throw new ValidationException(offendingStatement.getSpan(), "Missing return statement");
+            report(offendingStatement.getSpan(), "Missing return statement");
         });
     }
 

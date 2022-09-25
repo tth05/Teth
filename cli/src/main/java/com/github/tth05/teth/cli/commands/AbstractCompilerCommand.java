@@ -80,8 +80,8 @@ public abstract class AbstractCompilerCommand implements Runnable {
 
             var parserResults = Parser.parse(sources);
             for (var parserResult : parserResults) {
-                if (parserResult.logProblems(System.out, true))
-                    return;
+                // Always log problems, compiler will be called even with invalid input to get analyzer results
+                parserResult.logProblems(System.out, true);
 
                 compiler.addSourceFileUnit(parserResult.getUnit());
             }

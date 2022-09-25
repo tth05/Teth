@@ -4,7 +4,6 @@ import com.github.tth05.teth.analyzer.Analyzer;
 import com.github.tth05.teth.analyzer.DeclarationStack;
 import com.github.tth05.teth.analyzer.ValidationException;
 import com.github.tth05.teth.analyzer.prelude.Prelude;
-import com.github.tth05.teth.lang.parser.ASTVisitor;
 import com.github.tth05.teth.lang.parser.SourceFileUnit;
 import com.github.tth05.teth.lang.parser.ast.*;
 import com.github.tth05.teth.lang.span.Span;
@@ -13,7 +12,7 @@ import com.github.tth05.teth.lang.util.BiIterator;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class NameAnalysis extends ASTVisitor {
+public class NameAnalysis extends AnalysisASTVisitor {
 
     public static final FunctionDeclaration GLOBAL_FUNCTION = new FunctionDeclaration(null, null, List.of(), List.of(), null, null, false);
 
@@ -88,13 +87,17 @@ public class NameAnalysis extends ASTVisitor {
     @Override
     public void visit(UseStatement useStatement) {
         var moduleName = useStatement.getPath().stream().map(IdentifierExpression::getValue).collect(Collectors.joining("/"));
-        if (!this.analyzer.hasModule(moduleName))
-            throw new ValidationException(Span.of(useStatement.getPath(), useStatement.getSpan()), "Module '" + moduleName + "' does not exist");
+        if (!this.analyzer.hasModule(moduleName)) {
+            report(Span.of(useStatement.getPath(), useStatement.getSpan()), "Module '" + moduleName + "' does not exist");
+            return;
+        }
 
         for (var importNameExpr : useStatement.getImports()) {
             var decl = this.analyzer.findExportedDeclaration(moduleName, importNameExpr.getValue());
-            if (decl == null)
-                throw new ValidationException(importNameExpr.getSpan(), "Type or function '" + importNameExpr.getValue() + "' not found in module '" + moduleName + "'");
+            if (decl == null) {
+                report(importNameExpr.getSpan(), "Type or function '" + importNameExpr.getValue() + "' not found in module '" + moduleName + "'");
+                continue;
+            }
 
             addDeclaration(decl);
             this.resolvedReferences.put(importNameExpr, decl);
