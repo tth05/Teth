@@ -1,14 +1,41 @@
 package com.github.tth05.teth.analyzer.visitor;
 
 import com.github.tth05.teth.analyzer.GenericParameterInfo;
-import com.github.tth05.teth.analyzer.TypeResolverException;
-import com.github.tth05.teth.analyzer.ValidationException;
 import com.github.tth05.teth.analyzer.type.SemanticType;
 import com.github.tth05.teth.analyzer.type.TypeCache;
 import com.github.tth05.teth.lang.parser.ExpressionList;
-import com.github.tth05.teth.lang.parser.ast.*;
+import com.github.tth05.teth.lang.parser.ast.BinaryExpression;
+import com.github.tth05.teth.lang.parser.ast.BooleanLiteralExpression;
+import com.github.tth05.teth.lang.parser.ast.DoubleLiteralExpression;
+import com.github.tth05.teth.lang.parser.ast.Expression;
+import com.github.tth05.teth.lang.parser.ast.FunctionDeclaration;
+import com.github.tth05.teth.lang.parser.ast.FunctionInvocationExpression;
+import com.github.tth05.teth.lang.parser.ast.GenericParameterDeclaration;
+import com.github.tth05.teth.lang.parser.ast.IDeclarationReference;
+import com.github.tth05.teth.lang.parser.ast.IVariableDeclaration;
+import com.github.tth05.teth.lang.parser.ast.IdentifierExpression;
+import com.github.tth05.teth.lang.parser.ast.IfStatement;
+import com.github.tth05.teth.lang.parser.ast.ListLiteralExpression;
+import com.github.tth05.teth.lang.parser.ast.LongLiteralExpression;
+import com.github.tth05.teth.lang.parser.ast.LoopStatement;
+import com.github.tth05.teth.lang.parser.ast.MemberAccessExpression;
+import com.github.tth05.teth.lang.parser.ast.ObjectCreationExpression;
+import com.github.tth05.teth.lang.parser.ast.ReturnStatement;
+import com.github.tth05.teth.lang.parser.ast.Statement;
+import com.github.tth05.teth.lang.parser.ast.StringLiteralExpression;
+import com.github.tth05.teth.lang.parser.ast.StructDeclaration;
+import com.github.tth05.teth.lang.parser.ast.TypeExpression;
+import com.github.tth05.teth.lang.parser.ast.UnaryExpression;
+import com.github.tth05.teth.lang.parser.ast.VariableDeclaration;
 
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Deque;
+import java.util.HashMap;
+import java.util.IdentityHashMap;
+import java.util.List;
+import java.util.Map;
 
 import static com.github.tth05.teth.analyzer.prelude.Prelude.*;
 
@@ -20,7 +47,7 @@ public class TypeAnalysis extends AnalysisASTVisitor {
         var all = BinaryExpression.Operator.values();
         this.binaryOperatorsAllowedTypes.put(this.typeCache.internalizeType(LONG_STRUCT_DECLARATION), all);
         this.binaryOperatorsAllowedTypes.put(this.typeCache.internalizeType(DOUBLE_STRUCT_DECLARATION), all);
-        this.binaryOperatorsAllowedTypes.put(this.typeCache.internalizeType(BOOLEAN_STRUCT_DECLARATION), new BinaryExpression.Operator[]{
+        this.binaryOperatorsAllowedTypes.put(this.typeCache.internalizeType(BOOLEAN_STRUCT_DECLARATION), new BinaryExpression.Operator[] {
                 BinaryExpression.Operator.OP_EQUAL, BinaryExpression.Operator.OP_NOT_EQUAL,
                 BinaryExpression.Operator.OP_AND, BinaryExpression.Operator.OP_OR
         });
@@ -28,7 +55,6 @@ public class TypeAnalysis extends AnalysisASTVisitor {
 
     private final Deque<FunctionDeclaration> currentFunctionStack = new ArrayDeque<>(5);
     private final Map<Expression, SemanticType> resolvedExpressionTypes = new IdentityHashMap<>();
-    private final Map<Expression, GenericParameterInfo> genericParameterInfos = new IdentityHashMap<>();
 
     private final Map<IDeclarationReference, Statement> resolvedReferences;
 
@@ -65,8 +91,16 @@ public class TypeAnalysis extends AnalysisASTVisitor {
     public void visit(FunctionInvocationExpression invocation) {
         super.visit(invocation);
 
-        if (!(this.resolvedReferences.get(((IDeclarationReference) invocation.getTarget())) instanceof FunctionDeclaration decl))
-            throw new ValidationException(invocation.getTarget().getSpan(), "Function invocation target must be a function");
+        if (!(invocation.getTarget() instanceof IDeclarationReference))
+            return;
+
+        var targetReference = this.resolvedReferences.get(((IDeclarationReference) invocation.getTarget()));
+        if (targetReference == null)
+            return;
+        if (!(targetReference instanceof FunctionDeclaration decl)) {
+            report(invocation.getTarget().getSpan(), "Function invocation target must be a function");
+            return;
+        }
 
         var genericParameterInfo = new GenericParameterInfo();
         // This inherits bound generic parameters from the struct instance which we're calling this function on
@@ -80,7 +114,7 @@ public class TypeAnalysis extends AnalysisASTVisitor {
             }
         }
 
-        genericParameterInfo = typeCheckInvocationExpression(
+        typeCheckInvocationExpression(
                 invocation,
                 genericParameterInfo,
                 decl.getGenericParameters(), invocation.getGenericParameters(),
@@ -88,8 +122,10 @@ public class TypeAnalysis extends AnalysisASTVisitor {
         );
 
         var returnType = decl.getReturnTypeExpr() != null ? asTypeGeneric(genericParameterInfo, decl.getReturnTypeExpr(), null) : this.typeCache.voidType();
-        if (returnType == null)
-            throw new TypeResolverException(invocation.getSpan(), "Return type is generic, but not bound");
+        if (returnType == null) {
+            report(invocation.getSpan(), "Return type is generic, but not bound");
+            return;
+        }
 
         this.resolvedExpressionTypes.put(invocation, returnType);
     }
@@ -98,7 +134,10 @@ public class TypeAnalysis extends AnalysisASTVisitor {
     public void visit(ObjectCreationExpression expression) {
         super.visit(expression);
 
-        var structDeclaration = (StructDeclaration) this.resolvedReferences.get(expression.getTargetNameExpr());
+        if (!(this.resolvedReferences.get(expression.getTargetNameExpr()) instanceof StructDeclaration structDeclaration)) {
+            report(expression.getTargetNameExpr().getSpan(), "Cannot instantiate this type");
+            return;
+        }
 
         var genericParameterInfo = typeCheckInvocationExpression(
                 expression,
@@ -131,24 +170,35 @@ public class TypeAnalysis extends AnalysisASTVisitor {
 
         var valueExpr = returnStatement.getValueExpr();
         var returnType = valueExpr == null ? this.typeCache.voidType() : this.resolvedExpressionTypes.get(valueExpr);
+        if (returnType == null)
+            return;
+
+        if (this.currentFunctionStack.isEmpty())
+            return;
+
         var currentFunction = this.currentFunctionStack.getLast();
         var functionReturnType = currentFunction.getReturnTypeExpr() == null ? this.typeCache.voidType() : asType(currentFunction.getReturnTypeExpr());
         if (!this.typeCache.isSubtypeOf(returnType, functionReturnType))
-            throw new TypeResolverException(returnStatement.getSpan(), "Cannot return " + this.typeCache.toString(returnType) + " from function returning " + this.typeCache.toString(functionReturnType));
+            report(returnStatement.getSpan(), "Cannot return " + this.typeCache.toString(returnType) + " from function returning " + this.typeCache.toString(functionReturnType));
     }
 
     @Override
     public void visit(VariableDeclaration declaration) {
         { // Don't want to visit name here
             declaration.getInitializerExpr().accept(this);
+            if (declaration.getTypeExpr() != null)
+                declaration.getTypeExpr().accept(this);
         }
 
         var varTypeExpr = declaration.getTypeExpr();
         var expression = declaration.getInitializerExpr();
         if (varTypeExpr != null) {
             var resolvedType = this.resolvedExpressionTypes.get(expression);
+            if (resolvedType == null)
+                return;
+
             if (!this.typeCache.isSubtypeOf(resolvedType, asType(varTypeExpr)))
-                throw new TypeResolverException(expression.getSpan(), "Cannot assign value of type " + this.typeCache.toString(resolvedType) + " to variable of type " + varTypeExpr);
+                report(expression.getSpan(), "Cannot assign value of type " + this.typeCache.toString(resolvedType) + " to variable of type " + varTypeExpr);
         }
     }
 
@@ -159,14 +209,21 @@ public class TypeAnalysis extends AnalysisASTVisitor {
         }
 
         var type = this.resolvedExpressionTypes.get(expression.getTarget());
+        if (type == null) {
+            report(expression.getTarget().getSpan(), "Target does not have any members");
+            return;
+        }
+
         var decl = this.typeCache.getDeclaration(type);
         if (!(decl instanceof StructDeclaration structDeclaration))
             throw new IllegalStateException("Declaration not found");
 
         var member = structDeclaration.getMember(expression.getMemberNameExpr().getValue());
 
-        if (member == null)
-            throw new TypeResolverException(expression.getMemberNameExpr().getSpan(), "Member " + expression.getMemberNameExpr().getValue() + " not found in type " + this.typeCache.toString(type));
+        if (member == null) {
+            report(expression.getMemberNameExpr().getSpan(), "Member " + expression.getMemberNameExpr().getValue() + " not found in type " + this.typeCache.toString(type));
+            return;
+        }
 
         this.resolvedExpressionTypes.put(expression, switch (member) {
             case FunctionDeclaration ignored -> this.typeCache.voidType(); // Not implemented
@@ -181,16 +238,16 @@ public class TypeAnalysis extends AnalysisASTVisitor {
     public void visit(IfStatement statement) {
         super.visit(statement);
 
-        if (!this.resolvedExpressionTypes.get(statement.getCondition()).equals(this.typeCache.getType(BOOLEAN_STRUCT_DECLARATION)))
-            throw new TypeResolverException(statement.getCondition().getSpan(), "Condition of if statement must be a bool");
+        if (!this.typeCache.getType(BOOLEAN_STRUCT_DECLARATION).equals(this.resolvedExpressionTypes.get(statement.getCondition())))
+            report(statement.getCondition().getSpan(), "Condition of if statement must be a bool");
     }
 
     @Override
     public void visit(LoopStatement statement) {
         super.visit(statement);
 
-        if (statement.getCondition() != null && !this.resolvedExpressionTypes.get(statement.getCondition()).equals(this.typeCache.getType(BOOLEAN_STRUCT_DECLARATION)))
-            throw new TypeResolverException(statement.getCondition().getSpan(), "Condition of loop statement must be a bool");
+        if (statement.getCondition() != null && !this.typeCache.getType(BOOLEAN_STRUCT_DECLARATION).equals(this.resolvedExpressionTypes.get(statement.getCondition())))
+            report(statement.getCondition().getSpan(), "Condition of loop statement must be a bool");
     }
 
     @Override
@@ -198,10 +255,15 @@ public class TypeAnalysis extends AnalysisASTVisitor {
         super.visit(expression);
 
         var type = this.resolvedExpressionTypes.get(expression.getExpression());
+        if (type == null)
+            return;
+
         var operator = expression.getOperator();
         if ((operator == UnaryExpression.Operator.OP_NEGATIVE && !this.typeCache.isNumber(type)) ||
-            (operator == UnaryExpression.Operator.OP_NOT && type != this.typeCache.getType(BOOLEAN_STRUCT_DECLARATION)))
-            throw new TypeResolverException(expression.getExpression().getSpan(), "Unary operator " + operator.asString() + " cannot be applied to " + this.typeCache.toString(type));
+                (operator == UnaryExpression.Operator.OP_NOT && type != this.typeCache.getType(BOOLEAN_STRUCT_DECLARATION))) {
+            report(expression.getExpression().getSpan(), "Unary operator " + operator.asString() + " cannot be applied to " + this.typeCache.toString(type));
+            return;
+        }
 
         this.resolvedExpressionTypes.put(expression, type);
     }
@@ -216,16 +278,24 @@ public class TypeAnalysis extends AnalysisASTVisitor {
         }
 
         var leftType = this.resolvedExpressionTypes.get(expression.getLeft());
+        if (leftType == null)
+            return;
+
         var rightType = this.resolvedExpressionTypes.get(expression.getRight());
+        if (rightType == null)
+            return;
+
         var leftIsNumber = this.typeCache.isNumber(leftType);
         var rightIsNumber = this.typeCache.isNumber(rightType);
         var anyNumber = leftIsNumber || rightIsNumber;
         var typesMatch = anyNumber ? leftIsNumber && rightIsNumber : leftType.equals(rightType);
 
         if (!typesMatch ||
-            !this.binaryOperatorsAllowedTypes.containsKey(leftType.getTypeId()) ||
-            Arrays.stream(this.binaryOperatorsAllowedTypes.get(leftType.getTypeId())).noneMatch(op -> op == expression.getOperator()))
-            throw new TypeResolverException(expression.getSpan(), "Operator " + expression.getOperator().asString() + " cannot be applied to " + this.typeCache.toString(leftType) + " and " + this.typeCache.toString(rightType));
+                !this.binaryOperatorsAllowedTypes.containsKey(leftType.getTypeId()) ||
+                Arrays.stream(this.binaryOperatorsAllowedTypes.get(leftType.getTypeId())).noneMatch(op -> op == expression.getOperator())) {
+            report(expression.getSpan(), "Operator " + expression.getOperator().asString() + " cannot be applied to " + this.typeCache.toString(leftType) + " and " + this.typeCache.toString(rightType));
+            return;
+        }
 
         SemanticType binaryType;
         if (expression.getOperator().producesBoolean()) {
@@ -243,12 +313,17 @@ public class TypeAnalysis extends AnalysisASTVisitor {
 
     public void visitAssignmentExpression(BinaryExpression expression) {
         // Can only be done after type resolution, therefore not contained in NameAnalysis
-        if (!(this.resolvedReferences.get((IDeclarationReference) expression.getLeft()) instanceof IVariableDeclaration varDecl))
-            throw new TypeResolverException(expression.getSpan(), "Invalid assignment target");
+        if (!(this.resolvedReferences.get((IDeclarationReference) expression.getLeft()) instanceof IVariableDeclaration varDecl)) {
+            report(expression.getSpan(), "Invalid assignment target");
+            return;
+        }
 
         var type = this.resolvedExpressionTypes.get(expression.getRight());
+        if (type == null)
+            return;
+
         if (!type.equals(getVariableDeclarationType(varDecl)))
-            throw new TypeResolverException(expression.getRight().getSpan(), "Cannot assign expression of type " + this.typeCache.toString(type) + " to variable of type " + this.typeCache.toString(getVariableDeclarationType(varDecl)));
+            report(expression.getRight().getSpan(), "Cannot assign expression of type " + this.typeCache.toString(type) + " to variable of type " + this.typeCache.toString(getVariableDeclarationType(varDecl)));
 
         this.resolvedExpressionTypes.put(expression, type);
     }
@@ -263,9 +338,12 @@ public class TypeAnalysis extends AnalysisASTVisitor {
         }
 
         var elementType = this.resolvedExpressionTypes.get(listLiteralExpression.getInitializers().get(0));
+        if (elementType == null)
+            return;
+
         for (Expression initializer : listLiteralExpression.getInitializers()) {
             if (!this.typeCache.isSubtypeOf(this.resolvedExpressionTypes.get(initializer), elementType))
-                throw new TypeResolverException(initializer.getSpan(), "List element type mismatch");
+                report(initializer.getSpan(), "List element type mismatch");
         }
 
         this.resolvedExpressionTypes.put(listLiteralExpression, new SemanticType(this.typeCache.internalizeType(LIST_STRUCT_DECLARATION), List.of(elementType)));
@@ -285,8 +363,8 @@ public class TypeAnalysis extends AnalysisASTVisitor {
                 continue;
 
             var type = this.resolvedExpressionTypes.get(part.asExpression());
-            if (!type.equals(this.typeCache.getType(STRING_STRUCT_DECLARATION)))
-                throw new TypeResolverException(part.asExpression().getSpan(), "String literal part must be a string");
+            if (!this.typeCache.getType(STRING_STRUCT_DECLARATION).equals(type))
+                report(part.asExpression().getSpan(), "String literal part must be a string");
         }
 
         this.resolvedExpressionTypes.put(stringLiteralExpression, this.typeCache.getType(STRING_STRUCT_DECLARATION));
@@ -311,6 +389,8 @@ public class TypeAnalysis extends AnalysisASTVisitor {
             case FunctionDeclaration ignored -> null;
             case FunctionDeclaration.ParameterDeclaration declaration -> asType(declaration.getTypeExpr());
             case StructDeclaration structDeclaration -> null;
+            case GenericParameterDeclaration genericParameterDeclaration -> null;
+            case null -> null;
             default -> throw new IllegalStateException();
         };
 
@@ -349,7 +429,7 @@ public class TypeAnalysis extends AnalysisASTVisitor {
 
             var ref = this.resolvedReferences.get(typeExpr);
             if (ref == null)
-                throw new IllegalStateException();
+                return null;
 
             // This resolves inner generic parameters when converting the expression to a type. Allows list<T> to
             // become list<long>
@@ -386,21 +466,22 @@ public class TypeAnalysis extends AnalysisASTVisitor {
             List<T> parameterDeclarations,
             ExpressionList parameters
     ) {
-        if (!genericParameterDeclarations.isEmpty()) {
-            this.genericParameterInfos.put(invocation, genericParameterInfo);
+        // Explicit generic parameters have priority over inferred generic parameters
+        if (!explicitGenericParameters.isEmpty()) {
+            if (explicitGenericParameters.size() != genericParameterDeclarations.size()) {
+                report(invocation.getSpan(), "Wrong number of generic bounds. Expected " + genericParameterDeclarations.size() + ", got " + explicitGenericParameters.size());
+                return genericParameterInfo;
+            }
 
-            // Explicit generic parameters have priority over inferred generic parameters
-            if (!explicitGenericParameters.isEmpty()) {
-                if (explicitGenericParameters.size() != genericParameterDeclarations.size())
-                    throw new ValidationException(invocation.getSpan(), "Wrong number of generic bounds. Expected " + genericParameterDeclarations.size() + ", got " + explicitGenericParameters.size());
-
-                for (var i = 0; i < explicitGenericParameters.size(); i++)
-                    genericParameterInfo.bindGenericParameter(genericParameterDeclarations.get(i).getNameExpr().getValue(), asType(explicitGenericParameters.get(i)));
+            for (var i = 0; i < explicitGenericParameters.size(); i++) {
+                genericParameterInfo.bindGenericParameter(genericParameterDeclarations.get(i).getNameExpr().getValue(), asType(explicitGenericParameters.get(i)));
             }
         }
 
-        if (parameterDeclarations.size() != parameters.size())
-            throw new ValidationException(invocation.getSpan(), "Wrong number of parameters. Expected %d, got %d".formatted(parameterDeclarations.size(), parameters.size()));
+        if (parameterDeclarations.size() != parameters.size()) {
+            report(invocation.getSpan(), "Wrong number of parameters. Expected %d, got %d".formatted(parameterDeclarations.size(), parameters.size()));
+            return genericParameterInfo;
+        }
 
         for (int i = 0; i < parameterDeclarations.size(); i++) {
             var param = parameterDeclarations.get(i);
@@ -411,14 +492,17 @@ public class TypeAnalysis extends AnalysisASTVisitor {
             var paramType = asTypeGeneric(genericParameterInfo, paramTypeExpr, expressionType);
 
             if (paramType == null)
-                throw new TypeResolverException(expression.getSpan(), "Parameter type mismatch. Expected " + paramTypeExpr + ", got " + this.typeCache.toString(expressionType));
-            if (!this.typeCache.isSubtypeOf(expressionType, paramType))
-                throw new TypeResolverException(expression.getSpan(), "Parameter type mismatch. Expected " + this.typeCache.toString(paramType) + ", got " + this.typeCache.toString(expressionType));
+                report(expression.getSpan(), "Parameter type mismatch. Expected " + paramTypeExpr + ", got " + this.typeCache.toString(expressionType));
+            else if (!this.typeCache.isSubtypeOf(expressionType, paramType))
+                report(expression.getSpan(), "Parameter type mismatch. Expected " + this.typeCache.toString(paramType) + ", got " + this.typeCache.toString(expressionType));
         }
 
         for (var genericParameterDeclaration : genericParameterDeclarations) {
-            if (!genericParameterInfo.isGenericParameterBound(genericParameterDeclaration.getNameExpr().getValue()))
-                throw new TypeResolverException(invocation.getSpan(), "Generic parameter " + genericParameterDeclaration.getNameExpr() + " is not bound");
+            var name = genericParameterDeclaration.getNameExpr().getValue();
+            if (!genericParameterInfo.isGenericParameterBound(name)) {
+                report(invocation.getSpan(), "Generic parameter " + genericParameterDeclaration.getNameExpr() + " is not bound");
+                genericParameterInfo.bindGenericParameter(name, SemanticType.UNRESOLVED);
+            }
         }
 
         return genericParameterInfo;
@@ -427,6 +511,8 @@ public class TypeAnalysis extends AnalysisASTVisitor {
     private SemanticType asType(TypeExpression typeExpr) {
         var ref = this.resolvedReferences.get(typeExpr);
 
+        if (ref == null)
+            return SemanticType.UNRESOLVED;
         if (typeExpr.getGenericParameters().isEmpty())
             return this.typeCache.getType(ref);
 

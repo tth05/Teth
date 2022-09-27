@@ -33,9 +33,6 @@ public class TypeCache {
     }
 
     public SemanticType getType(Statement statement) {
-        if (statement instanceof StructDeclaration s && !s.getGenericParameters().isEmpty())
-            throw new IllegalArgumentException();
-
         return this.rawTypeCache.computeIfAbsent(this.internalizeType(statement), SemanticType::new);
     }
 
@@ -76,6 +73,8 @@ public class TypeCache {
     }
 
     public String toString(SemanticType type) {
+        if (type == null || type == SemanticType.UNRESOLVED)
+            return "???";
         if (type == VOID)
             return "void";
         var name = switch (getDeclaration(type)) {

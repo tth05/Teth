@@ -10,7 +10,7 @@ public class ProblemList {
 
     public void add(Problem problem) {
         for (var other : this.problems) {
-            if (other.span().equals(problem.span()))
+            if (other.span().offset() == problem.span().offset())
                 return;
         }
 

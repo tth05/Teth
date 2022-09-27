@@ -31,7 +31,7 @@ public class AnalyzerValidatorTest extends AbstractAnalyzerTest {
 
     @Test
     public void testAssignToVariableOutOfScope() {
-        var problems = analyze("{long a}\n a = 5");
+        var problems = analyze("{let a: long = 1}\n a = 5");
 
         assertFalse(problems.isEmpty());
         assertEquals(1, problems.size());
@@ -253,8 +253,9 @@ public class AnalyzerValidatorTest extends AbstractAnalyzerTest {
     @Test
     public void testWrongNumberOfGenericParameters() {
         var problems = analyze("""
-                struct s<T, D> {}
-                let a: s = new s<long, long>()
+                struct s<T, D> {
+                    a: s
+                }
                 """);
 
         assertFalse(problems.isEmpty());
@@ -279,8 +280,8 @@ public class AnalyzerValidatorTest extends AbstractAnalyzerTest {
     @Test
     public void testGenericParametersCannotHaveGenericParameters() {
         var problems = analyze("""
-                fn test<T>(t: T) {
-                let a: T<long> = t
+                struct s<T> {
+                    a: T<long>
                 }
                 """);
 

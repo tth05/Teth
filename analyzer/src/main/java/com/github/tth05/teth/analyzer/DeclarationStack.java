@@ -13,6 +13,9 @@ public class DeclarationStack {
     private final Deque<Scope> stack = new ArrayDeque<>();
 
     public Statement resolveIdentifier(String ident) {
+        if (ident == null)
+            return null;
+
         for (var it = this.stack.descendingIterator(); it.hasNext(); ) {
             var scope = it.next();
             var decl = scope.declarations.get(ident);
@@ -60,7 +63,7 @@ public class DeclarationStack {
         this.stack.removeLast();
     }
 
-    private final class Scope {
+    private static final class Scope {
 
         private final Map<String, Statement> declarations = new HashMap<>();
         private final StructDeclaration struct;

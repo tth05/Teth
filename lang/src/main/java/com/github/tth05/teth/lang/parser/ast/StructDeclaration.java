@@ -51,6 +51,9 @@ public class StructDeclaration extends Statement implements ITopLevelDeclaration
     }
 
     public Statement getMember(String name) {
+        if (name == null)
+            return null;
+        
         return this.fields.stream()
                 .filter(f -> f.getNameExpr().getValue().equals(name))
                 .map(Statement.class::cast)

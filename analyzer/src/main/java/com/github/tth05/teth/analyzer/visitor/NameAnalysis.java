@@ -2,14 +2,35 @@ package com.github.tth05.teth.analyzer.visitor;
 
 import com.github.tth05.teth.analyzer.Analyzer;
 import com.github.tth05.teth.analyzer.DeclarationStack;
-import com.github.tth05.teth.analyzer.ValidationException;
 import com.github.tth05.teth.analyzer.prelude.Prelude;
 import com.github.tth05.teth.lang.parser.SourceFileUnit;
-import com.github.tth05.teth.lang.parser.ast.*;
+import com.github.tth05.teth.lang.parser.ast.BlockStatement;
+import com.github.tth05.teth.lang.parser.ast.FunctionDeclaration;
+import com.github.tth05.teth.lang.parser.ast.FunctionInvocationExpression;
+import com.github.tth05.teth.lang.parser.ast.GenericParameterDeclaration;
+import com.github.tth05.teth.lang.parser.ast.IDeclarationReference;
+import com.github.tth05.teth.lang.parser.ast.IHasName;
+import com.github.tth05.teth.lang.parser.ast.ITopLevelDeclaration;
+import com.github.tth05.teth.lang.parser.ast.IdentifierExpression;
+import com.github.tth05.teth.lang.parser.ast.MemberAccessExpression;
+import com.github.tth05.teth.lang.parser.ast.ObjectCreationExpression;
+import com.github.tth05.teth.lang.parser.ast.ReturnStatement;
+import com.github.tth05.teth.lang.parser.ast.Statement;
+import com.github.tth05.teth.lang.parser.ast.StructDeclaration;
+import com.github.tth05.teth.lang.parser.ast.TypeExpression;
+import com.github.tth05.teth.lang.parser.ast.UseStatement;
+import com.github.tth05.teth.lang.parser.ast.VariableDeclaration;
 import com.github.tth05.teth.lang.span.Span;
 import com.github.tth05.teth.lang.util.BiIterator;
 
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Deque;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class NameAnalysis extends AnalysisASTVisitor {
@@ -50,8 +71,9 @@ public class NameAnalysis extends AnalysisASTVisitor {
                 .collect(Collectors.toCollection(() -> new ArrayList<>(unit.getStatements().size())));
 
         // Pre-process 1: Collect all declarations
-        for (var decl : topLevelDeclarations)
+        for (var decl : topLevelDeclarations) {
             addDeclaration(decl);
+        }
 
         // Pre-process 2: Analyze headers of top level functions and structs and check for duplicates
         //noinspection unchecked
@@ -136,8 +158,9 @@ public class NameAnalysis extends AnalysisASTVisitor {
     public void visit(FunctionInvocationExpression invocation) {
         super.visit(invocation);
 
-        if (!(invocation.getTarget() instanceof IDeclarationReference reference))
-            throw new ValidationException(invocation.getTarget().getSpan(), "Function invocation target must be a function");
+        //TODO: Move to parser
+        if (!(invocation.getTarget() instanceof IDeclarationReference))
+            report(invocation.getTarget().getSpan(), "Function invocation target must be a function");
     }
 
     @Override
@@ -170,8 +193,12 @@ public class NameAnalysis extends AnalysisASTVisitor {
         super.visit(expression);
 
         var struct = this.resolvedReferences.get(expression.getTargetNameExpr());
-        if (!(struct instanceof StructDeclaration))
-            throw new ValidationException(expression.getTargetNameExpr().getSpan(), "Object creation target must be a struct");
+        if (struct == null)
+            return;
+        if (!(struct instanceof StructDeclaration)) {
+            report(expression.getTargetNameExpr().getSpan(), "Object creation target must be a struct");
+            return;
+        }
 
         this.resolvedReferences.put(expression, struct);
     }
@@ -190,7 +217,7 @@ public class NameAnalysis extends AnalysisASTVisitor {
         super.visit(returnStatement);
 
         if (this.currentFunctionStack.size() == 1)
-            throw new ValidationException(returnStatement.getSpan(), "Return statement outside of function");
+            report(returnStatement.getSpan(), "Return statement outside of function");
     }
 
     @Override
@@ -236,18 +263,22 @@ public class NameAnalysis extends AnalysisASTVisitor {
         else
             decl = this.declarationStack.resolveIdentifier(type);
 
-        if (decl == null)
-            throw new ValidationException(span, "Unknown type " + type);
-        if (!(decl instanceof StructDeclaration) && !(decl instanceof GenericParameterDeclaration))
-            throw new ValidationException(span, "Type " + type + " is not a struct or builtin type");
+        if (decl == null) {
+            report(span, "Unknown type " + type);
+            return;
+        } if (!(decl instanceof StructDeclaration) && !(decl instanceof GenericParameterDeclaration)) {
+            report(span, "Type " + type + " is not a struct or builtin type");
+            return;
+        }
+
         // Ensure all generic parameters are bound
         if (decl instanceof StructDeclaration struct) {
             var genericParameterDeclarations = struct.getGenericParameters();
             if (genericParameterDeclarations.size() != genericParameters.size())
-                throw new ValidationException(Span.of(genericParameters, span), "Wrong number of generic parameters. Expected %d, got %d".formatted(genericParameterDeclarations.size(), genericParameters.size()));
+                report(Span.of(genericParameters, span), "Wrong number of generic parameters. Expected %d, got %d".formatted(genericParameterDeclarations.size(), genericParameters.size()));
         }
         if (decl instanceof GenericParameterDeclaration && !genericParameters.isEmpty())
-            throw new ValidationException(span, "Generic parameter cannot have generic parameters");
+            report(span, "Generic parameter cannot have generic parameters");
 
         this.resolvedReferences.put(typeExpression, decl);
     }
@@ -257,14 +288,16 @@ public class NameAnalysis extends AnalysisASTVisitor {
         var decl = this.declarationStack.resolveIdentifier(identifierExpression.getValue());
         if (decl == null)
             decl = Prelude.getGlobalFunction(identifierExpression.getValue());
-        if (decl == null)
-            throw new ValidationException(identifierExpression.getSpan(), "Unresolved identifier");
+        if (decl == null) {
+            report(identifierExpression.getSpan(), "Unresolved identifier");
+            return;
+        }
 
         if (!(decl instanceof VariableDeclaration) &&
-            !(decl instanceof FunctionDeclaration) &&
-            !(decl instanceof FunctionDeclaration.ParameterDeclaration) &&
-            !(decl instanceof StructDeclaration))
-            throw new ValidationException(identifierExpression.getSpan(), "Identifier is not a variable, function or struct");
+                !(decl instanceof FunctionDeclaration) &&
+                !(decl instanceof FunctionDeclaration.ParameterDeclaration) &&
+                !(decl instanceof StructDeclaration))
+            report(identifierExpression.getSpan(), "Identifier is not a variable, function or struct");
 
         this.resolvedReferences.put(identifierExpression, decl);
     }
@@ -325,7 +358,7 @@ public class NameAnalysis extends AnalysisASTVisitor {
         while (it.hasNext()) {
             var el = it.next();
             if (!DUPLICATION_SET.add(el.getNameExpr().getValue()))
-                throw new ValidationException(el.getNameExpr().getSpan(), message);
+                report(el.getNameExpr().getSpan(), message);
         }
     }
 
@@ -335,14 +368,17 @@ public class NameAnalysis extends AnalysisASTVisitor {
 
     private void validateNotAReservedName(Span span, String name) {
         if (Prelude.isBuiltInTypeName(name))
-            throw new ValidationException(span, "Reserved name '" + name + "'");
+            report(span, "Reserved name '" + name + "'");
     }
 
     private void addDeclaration(Statement declaration) {
-        var name = switch (declaration) {
-            case IHasName named -> named.getNameExpr().getValue();
-            default -> throw new IllegalArgumentException(declaration + "");
-        };
+        if (!(declaration instanceof IHasName named))
+            throw new IllegalArgumentException(declaration + "");
+
+        var name = named.getNameExpr().getValue();
+        if (name == null)
+            return;
+
         this.declarationStack.addDeclaration(name, declaration);
     }
 

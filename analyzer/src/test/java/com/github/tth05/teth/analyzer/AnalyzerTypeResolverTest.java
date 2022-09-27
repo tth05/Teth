@@ -137,7 +137,7 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
 
     @Test
     public void testVariableDeclarationUnknownType() {
-        var problems = analyze("let a: list<list<longg>> = 5");
+        var problems = analyze("struct a {b:list<list<longg>>}");
 
         assertFalse(problems.isEmpty());
         assertEquals(1, problems.size());
@@ -146,7 +146,7 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
         problems = analyze("let a: test = 5");
 
         assertFalse(problems.isEmpty());
-        assertEquals(1, problems.size());
+        assertEquals(2, problems.size());
         assertEquals("Unknown type test", problems.get(0).message());
     }
 
@@ -209,6 +209,7 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
 
         problems = analyze("loop (let a = 5, a < 5) {}");
 
+        System.out.println(problems.prettyPrint(true));
         assertTrue(problems.isEmpty());
     }
 
@@ -397,7 +398,7 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
                     return t
                 }
                                 
-                let a: long = test<|double>(5)
+                test<|double>(5)
                 """);
 
         assertFalse(problems.isEmpty());
@@ -459,8 +460,9 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
                 """);
 
         assertFalse(problems.isEmpty());
-        assertEquals(1, problems.size());
+        assertEquals(2, problems.size());
         assertEquals("Parameter type mismatch. Expected list<T>, got long", problems.get(0).message());
+        assertEquals("Generic parameter T is not bound", problems.get(1).message());
     }
 
     @Test
@@ -488,7 +490,9 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
                         """)
         );
 
-        assertTrue(problems.isEmpty());
+        assertEquals(2, problems.size());
+        assertFalse(problems.get(0).hasProblems());
+        assertFalse(problems.get(1).hasProblems());
     }
 
     @Test
@@ -502,7 +506,9 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
                         """)
         );
 
-        assertTrue(problems.isEmpty());
+        assertEquals(2, problems.size());
+        assertFalse(problems.get(0).hasProblems());
+        assertFalse(problems.get(1).hasProblems());
     }
 
     @Test
@@ -539,7 +545,10 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
                         """)
         );
 
-        assertTrue(problems.isEmpty());
+        assertEquals(3, problems.size());
+        assertFalse(problems.get(0).hasProblems());
+        assertFalse(problems.get(1).hasProblems());
+        assertFalse(problems.get(2).hasProblems());
     }
 
     @Test
@@ -552,7 +561,8 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
                         """)
         );
 
-        assertFalse(problems.isEmpty());
         assertEquals(2, problems.size());
+        assertTrue(problems.get(0).hasProblems());
+        assertTrue(problems.get(1).hasProblems());
     }
 }

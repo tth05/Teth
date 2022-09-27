@@ -6,6 +6,8 @@ import java.util.Objects;
 
 public class SemanticType {
 
+    public static final SemanticType UNRESOLVED = new SemanticType(-1);
+
     private final int typeId;
     private final List<SemanticType> genericBounds;
 
@@ -36,7 +38,7 @@ public class SemanticType {
     public boolean equals(Object o) {
         if (this == o)
             return true;
-        if (o == null || getClass() != o.getClass())
+        if (o == null || getClass() != o.getClass() || this == UNRESOLVED || o == UNRESOLVED)
             return false;
 
         SemanticType type = (SemanticType) o;
