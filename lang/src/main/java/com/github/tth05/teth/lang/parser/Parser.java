@@ -23,6 +23,8 @@ public class Parser {
     private final ProblemList problems;
     private final TokenStream stream;
 
+    private boolean suppressErrors;
+
     private Parser(TokenizerResult tokenizerResult) {
         this(tokenizerResult.getTokenStream(), tokenizerResult.getProblems());
     }
@@ -47,7 +49,7 @@ public class Parser {
     }
 
     private UseStatement parseUseStatement(AnchorUnion anchorSet) {
-        var firstSpan = this.stream.consume().span();
+        var firstSpan = consume(false).span();
         var lastSpan = firstSpan;
         consumeLineBreaks();
 
@@ -59,7 +61,7 @@ public class Parser {
 
             if (!this.stream.peek().is(TokenType.SLASH))
                 break;
-            lastSpan = this.stream.consume().span();
+            lastSpan = consume(false).span();
         }
 
         consumeLineBreaks();
@@ -77,7 +79,7 @@ public class Parser {
 
             if (!this.stream.peek().is(TokenType.COMMA))
                 break;
-            lastSpan = this.stream.consume().span();
+            lastSpan = consume(false).span();
         }
 
         var endToken = expectToken(TokenType.R_CURLY_PAREN, anchorSet, () -> "Missing closing '}'");
@@ -105,7 +107,7 @@ public class Parser {
 
     private void consumeLineBreaks() {
         while (this.stream.peek().is(TokenType.LINE_BREAK))
-            this.stream.consume();
+            consume(false);
     }
 
     private Statement parseStatement(AnchorUnion anchorSet) {
@@ -121,7 +123,7 @@ public class Parser {
             case KEYWORD_USE -> parseUseStatement(anchorSet);
             case KEYWORD_ELSE -> {
                 this.problems.add(new Problem(current.span(), "'else' not allowed here"));
-                this.stream.consume();
+                consume(false);
                 yield new GarbageExpression(current.span());
             }
             case L_CURLY_PAREN -> parseBlock(anchorSet);
@@ -130,19 +132,19 @@ public class Parser {
     }
 
     private Statement parseReturnStatement(AnchorUnion anchorSet) {
-        var firstSpan = this.stream.consume().span();
+        var firstSpan = consume(false).span();
         var next = this.stream.peek();
         var expression = next.is(TokenType.LINE_BREAK) || next.is(TokenType.L_CURLY_PAREN) || next.is(TokenType.R_CURLY_PAREN) ? null : parseExpression(anchorSet);
         return new ReturnStatement(Span.of(firstSpan, expression == null ? firstSpan : expression.getSpan()), expression);
     }
 
     private IfStatement parseIfStatement(AnchorUnion anchorSet) {
-        var firstSpan = this.stream.consume().span();
+        var firstSpan = consume(false).span();
         var condition = parseParenthesisedExpression(AnchorSets.FIRST_SET_ELSE_STATEMENT.union(AnchorSets.FIRST_SET_STATEMENT));
         var body = parseBlock(AnchorSets.FIRST_SET_ELSE_STATEMENT.union(anchorSet));
         var next = this.stream.peek();
         if (next.is(TokenType.KEYWORD_ELSE)) {
-            this.stream.consume();
+            consume(false);
             var elseBody = parseBlock(anchorSet);
             return new IfStatement(Span.of(firstSpan, elseBody.getSpan()), condition, body, elseBody);
         }
@@ -151,7 +153,7 @@ public class Parser {
     }
 
     private LoopStatement parseLoopStatement(AnchorUnion anchorSet) {
-        var firstSpan = this.stream.consume().span();
+        var firstSpan = consume(false).span();
         consumeLineBreaks();
 
         // Infinite loop with no header
@@ -161,7 +163,7 @@ public class Parser {
         }
 
         // L_PAREN
-        this.stream.consume();
+        consume(false);
         consumeLineBreaks();
 
         var variableDeclarations = new ArrayList<VariableDeclaration>();
@@ -171,7 +173,7 @@ public class Parser {
         var hasCondition = true;
         while (true) {
             if (this.stream.peek().is(TokenType.COMMA)) {
-                this.stream.consume();
+                consume(false);
                 hasCondition = true;
             }
             consumeLineBreaks();
@@ -188,7 +190,7 @@ public class Parser {
         if (hasCondition)
             condition = parseExpression(anchorSet.union(AnchorSets.END_SET_PARENTHESISED_LIST));
         if (hasCondition && this.stream.peek().is(TokenType.COMMA)) {
-            this.stream.consume();
+            consume(false);
             // Well, this will make for some interesting code
             advance = parseStatement(anchorSet.union(AnchorSets.END_SET_PARENTHESISED_EXPRESSION));
         }
@@ -202,7 +204,7 @@ public class Parser {
 
     private BlockStatement parseBlock(AnchorUnion anchorSet) {
         if (this.stream.peek().is(TokenType.L_CURLY_PAREN)) {
-            var firstSpan = this.stream.consume().span();
+            var firstSpan = consume(false).span();
             var lastSpan = firstSpan;
             consumeLineBreaks();
             var statements = parseStatementList(AnchorSets.END_SET_BLOCK.union(AnchorSets.FIRST_SET_STATEMENT), TokenType.R_CURLY_PAREN);
@@ -225,14 +227,14 @@ public class Parser {
     }
 
     private VariableDeclaration parseVariableDeclaration(AnchorUnion anchorSet) {
-        var firstSpan = this.stream.consume().span();
+        var firstSpan = consume(false).span();
         consumeLineBreaks();
         var name = expectIdentifier(anchorSet.union(AnchorSets.FIRST_SET_LET_STATEMENT), () -> "Expected variable name");
         consumeLineBreaks();
 
         TypeExpression type = null;
         if (this.stream.peek().is(TokenType.COLON)) {
-            this.stream.consume();
+            consume(false);
             consumeLineBreaks();
             type = parseType(anchorSet.union(AnchorSets.MIDDLE_SET_LET_STATEMENT));
             consumeLineBreaks();
@@ -253,7 +255,7 @@ public class Parser {
     }
 
     private FunctionDeclaration parseFunctionDeclaration(AnchorUnion anchorSet, boolean instanceMethod) {
-        var firstSpan = this.stream.consume().span();
+        var firstSpan = consume(false).span();
         consumeLineBreaks();
         var functionName = expectIdentifier(anchorSet.union(AnchorSets.FIRST_SET_FUNCTION), () -> "Expected function name");
         consumeLineBreaks();
@@ -293,7 +295,7 @@ public class Parser {
 
     private ListWithSpan<GenericParameterDeclaration> parseGenericParameterDeclarations(AnchorUnion anchorSet) {
         if (this.stream.peek().is(TokenType.LESS)) {
-            var listStartSpan = this.stream.consume().span();
+            var listStartSpan = consume(false).span();
             var genericParameters = parseList(anchorSet, (a) -> {
                 var parameterName = expectIdentifier(a, () -> "Expected generic parameter name");
                 return new GenericParameterDeclaration(parameterName.span(), parameterName.value());
@@ -338,7 +340,7 @@ public class Parser {
     }
 
     private StructDeclaration parseStructDeclaration(AnchorUnion anchorSet) {
-        var firstSpan = this.stream.consume().span();
+        var firstSpan = consume(false).span();
         consumeLineBreaks();
         var structName = expectIdentifier(anchorSet.union(AnchorSets.FIRST_SET_STRUCT), () -> "Expected struct name");
         consumeLineBreaks();
@@ -356,7 +358,7 @@ public class Parser {
         }
 
         // L_CURLY_PAREN
-        this.stream.consume();
+        consume(false);
         consumeLineBreaks();
 
         var fields = new ArrayList<StructDeclaration.FieldDeclaration>();
@@ -367,7 +369,7 @@ public class Parser {
         Token currentToken;
         while (!(currentToken = this.stream.peek()).is(TokenType.EOF) && !currentToken.is(TokenType.R_CURLY_PAREN)) {
             if (currentToken.is(TokenType.IDENTIFIER)) {
-                var name = this.stream.consume();
+                var name = consume(false);
                 var lastSpan = name.span();
                 var colonToken = expectToken(TokenType.COLON, anchorSet, () -> "Expected ':' after field name");
                 if (!colonToken.isInvalid())
@@ -414,7 +416,7 @@ public class Parser {
             if (operator == null)
                 break;
 
-            this.stream.consume();
+            consume(false);
 
             if (current instanceof BinaryExpression old) {
                 if (operator.getPrecedence() < old.getOperator().getPrecedence()) {
@@ -445,7 +447,7 @@ public class Parser {
         if (op == null)
             return parsePostfixExpression(set);
 
-        this.stream.consume();
+        consume(false);
         var expr = parseUnaryExpression(set);
         return new UnaryExpression(Span.of(token.span(), expr.getSpan()), expr, op);
     }
@@ -469,7 +471,7 @@ public class Parser {
     }
 
     private ObjectCreationExpression parseObjectCreationExpression(AnchorUnion anchorSet) {
-        var firstSpan = this.stream.consume().span();
+        var firstSpan = consume(false).span();
         var lastSpan = firstSpan;
         consumeLineBreaks();
         var nameToken = expectIdentifier(anchorSet, () -> "Expected type name");
@@ -512,7 +514,7 @@ public class Parser {
     }
 
     private Expression parseMemberAccessExpression(AnchorUnion anchorSet, Expression target) {
-        this.stream.consume();
+        consume(false);
 
         var lastSpan = this.stream.peek().span();
         var name = expectIdentifier(anchorSet, () -> "Expected member name after '.'");
@@ -531,7 +533,7 @@ public class Parser {
 
     private ListWithSpan<TypeExpression> tryParseGenericParametersOnInvocation(AnchorUnion anchorSet, TokenType prefix) {
         if (this.stream.peek().is(prefix)) {
-            var listStartSpan = this.stream.consume().span();
+            var listStartSpan = consume(false).span();
             var genericParameters = parseList(anchorSet, this::parseType, ArrayListWithSpan::new, TokenType.GREATER);
             var greaterToken = expectToken(TokenType.GREATER, anchorSet, () -> "Expected '>'");
 
@@ -577,14 +579,14 @@ public class Parser {
         var span = token.span();
 
         return switch (token.type()) {
-            case LONG_LITERAL -> new LongLiteralExpression(span, Long.parseLong(this.stream.consume().value()));
-            case DOUBLE_LITERAL -> new DoubleLiteralExpression(span, Double.parseDouble(this.stream.consume().value()));
+            case LONG_LITERAL -> new LongLiteralExpression(span, Long.parseLong(consume(false).value()));
+            case DOUBLE_LITERAL -> new DoubleLiteralExpression(span, Double.parseDouble(consume(false).value()));
             case STRING_LITERAL -> parseStringLiteralExpression();
             case BOOLEAN_LITERAL ->
-                    new BooleanLiteralExpression(span, Boolean.parseBoolean(this.stream.consume().value()));
-            case IDENTIFIER -> new IdentifierExpression(span, this.stream.consume().value());
+                    new BooleanLiteralExpression(span, Boolean.parseBoolean(consume(false).value()));
+            case IDENTIFIER -> new IdentifierExpression(span, consume(false).value());
             case L_SQUARE_BRACKET -> {
-                this.stream.consume();
+                consume(false);
                 var lastSpan = span;
 
                 var elements = parseList(anchorSet, this::parseExpression, ExpressionList::new, TokenType.R_SQUARE_BRACKET);
@@ -607,14 +609,14 @@ public class Parser {
     private StringLiteralExpression parseStringLiteralExpression() {
         var parts = new ArrayList<StringLiteralExpression.Part>(1);
         while (this.stream.peek().is(TokenType.STRING_LITERAL)) {
-            var token = this.stream.consume();
+            var token = consume(false);
             parts.add(StringLiteralExpression.stringPart(token.span(), token.value()));
 
             if (this.stream.peek().is(TokenType.STRING_LITERAL_CODE_START)) {
-                this.stream.consume();
+                consume(false);
                 parts.add(StringLiteralExpression.expressionPart(parseExpression(AnchorSets.END_SET_STRING_CODE_LITERAL)));
                 //STRING_LITERAL_CODE_END
-                this.stream.consume();
+                consume(false);
             }
         }
 
@@ -632,7 +634,7 @@ public class Parser {
 
         List<TypeExpression> genericParameters;
         if (this.stream.peek().is(TokenType.LESS)) {
-            var genericStartSpan = this.stream.consume().span();
+            var genericStartSpan = consume(false).span();
             genericParameters = parseList(anchorSet, this::parseType, ArrayList::new, TokenType.GREATER);
             if (genericParameters.isEmpty())
                 this.problems.add(new Problem(genericStartSpan, "Empty generic parameter list"));
@@ -656,19 +658,31 @@ public class Parser {
     private Token expectToken(TokenType expectedType, AnchorUnion anchorSet, Supplier<String> messageSupplier) {
         var token = this.stream.peek();
         if (token.is(expectedType))
-            return this.stream.consume();
+            return consume(false);
 
         reportAndRecover(anchorSet, token.span(), messageSupplier.get());
         return Token.INVALID;
     }
 
     private void reportAndRecover(AnchorUnion anchorSet, Span span, String message) {
-        this.problems.add(new Problem(span, message));
+        if (!this.suppressErrors)
+            this.problems.add(new Problem(span, message));
+
+        // Prevents consecutive errors caused by multiple recoveries without consuming any tokens
+        this.suppressErrors = true;
 
         // Skip until next anchor
         Token current;
         while (!(current = this.stream.peek()).is(TokenType.EOF) && !anchorSet.contains(current.type()))
-            this.stream.consume();
+            consume(true);
+    }
+
+    private Token consume(boolean recovering) {
+        // We consumed something valid, let's allow errors again
+        if (!recovering)
+            this.suppressErrors = false;
+
+        return this.stream.consume();
     }
 
     private static Span zeroWidthSpan(Span span) {
