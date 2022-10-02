@@ -21,7 +21,6 @@ public class ParserTest extends AbstractParserTest {
                 new StringLiteralExpression(null, List.of(StringLiteralExpression.stringPart(null, "A string!")))
         )
         ), this.unit);
-        assertStreamsEmpty();
 
         createAST("""
                 "5+{5} is equal to \\{=}{calc(5+5)}"
@@ -50,7 +49,6 @@ public class ParserTest extends AbstractParserTest {
                 ))
         )
         ), this.unit);
-        assertStreamsEmpty();
     }
 
     @Test
@@ -61,7 +59,6 @@ public class ParserTest extends AbstractParserTest {
                 new BooleanLiteralExpression(null, true)
         )
         ), this.unit);
-        assertStreamsEmpty();
 
         createAST("false");
         assertEquals(new SourceFileUnit(
@@ -69,7 +66,6 @@ public class ParserTest extends AbstractParserTest {
                 new BooleanLiteralExpression(null, false)
         )
         ), this.unit);
-        assertStreamsEmpty();
     }
 
     @Test
@@ -87,7 +83,6 @@ public class ParserTest extends AbstractParserTest {
                 )
         )
         ), this.unit);
-        assertStreamsEmpty();
     }
 
     @Test
@@ -158,7 +153,6 @@ public class ParserTest extends AbstractParserTest {
                 )
         )
         ), this.unit);
-        assertStreamsEmpty();
     }
 
     @Test
@@ -195,7 +189,6 @@ public class ParserTest extends AbstractParserTest {
                 )
         )
         ), this.unit);
-        assertStreamsEmpty();
     }
 
     @Test
@@ -266,7 +259,6 @@ public class ParserTest extends AbstractParserTest {
                 )
         )
         ), this.unit);
-        assertStreamsEmpty();
 
         createAST("a && b || c && d");
         assertEquals(new SourceFileUnit(
@@ -289,7 +281,6 @@ public class ParserTest extends AbstractParserTest {
                 )
         )
         ), this.unit);
-        assertStreamsEmpty();
     }
 
     @Test
@@ -347,7 +338,6 @@ public class ParserTest extends AbstractParserTest {
                 ),
                 this.unit
         );
-        assertStreamsEmpty();
     }
 
     @Test
@@ -425,7 +415,6 @@ public class ParserTest extends AbstractParserTest {
                 ),
                 this.unit
         );
-        assertStreamsEmpty();
     }
 
     @Test
@@ -535,7 +524,6 @@ public class ParserTest extends AbstractParserTest {
                 ),
                 this.unit
         );
-        assertStreamsEmpty();
     }
 
     @Test
@@ -560,7 +548,6 @@ public class ParserTest extends AbstractParserTest {
                 ),
                 this.unit
         );
-        assertStreamsEmpty();
     }
 
     @Test
@@ -609,7 +596,6 @@ public class ParserTest extends AbstractParserTest {
                 ),
                 this.unit
         );
-        assertStreamsEmpty();
     }
 
     @Test
@@ -666,7 +652,6 @@ public class ParserTest extends AbstractParserTest {
                 ),
                 this.unit
         );
-        assertStreamsEmpty();
     }
 
     @Test
@@ -717,7 +702,6 @@ public class ParserTest extends AbstractParserTest {
                 ),
                 this.unit
         );
-        assertStreamsEmpty();
     }
 
     @Test
@@ -778,7 +762,6 @@ public class ParserTest extends AbstractParserTest {
                 ),
                 this.unit
         );
-        assertStreamsEmpty();
     }
 
     @Test
@@ -816,7 +799,6 @@ public class ParserTest extends AbstractParserTest {
                 ),
                 this.unit
         );
-        assertStreamsEmpty();
     }
 
     @Test
@@ -854,7 +836,6 @@ public class ParserTest extends AbstractParserTest {
                 ),
                 this.unit
         );
-        assertStreamsEmpty();
     }
 
     @Test
@@ -862,7 +843,7 @@ public class ParserTest extends AbstractParserTest {
         createAST("""
                 use foo/bar { Test }
                 use test { thing, otherThing }
-                
+                                
                 if(true){
                     use foo/bar { Test2 }
                 }
@@ -871,36 +852,35 @@ public class ParserTest extends AbstractParserTest {
         assertEquals(
                 new SourceFileUnit(
                         "main", StatementList.of(
-                                new UseStatement(
+                        new UseStatement(
+                                null,
+                                List.of(new IdentifierExpression(null, "foo"), new IdentifierExpression(null, "bar")),
+                                List.of(new IdentifierExpression(null, "Test"))
+                        ),
+                        new UseStatement(
+                                null,
+                                List.of(new IdentifierExpression(null, "test")),
+                                List.of(new IdentifierExpression(null, "thing"), new IdentifierExpression(null, "otherThing"))
+                        ),
+                        new IfStatement(
+                                null,
+                                new BooleanLiteralExpression(null, true),
+                                new BlockStatement(
                                         null,
-                                        List.of(new IdentifierExpression(null, "foo"), new IdentifierExpression(null, "bar")),
-                                        List.of(new IdentifierExpression(null, "Test"))
-                                ),
-                                new UseStatement(
-                                        null,
-                                        List.of(new IdentifierExpression(null, "test")),
-                                        List.of(new IdentifierExpression(null, "thing"), new IdentifierExpression(null, "otherThing"))
-                                ),
-                                new IfStatement(
-                                        null,
-                                        new BooleanLiteralExpression(null, true),
-                                        new BlockStatement(
-                                                null,
-                                                StatementList.of(
-                                                        new UseStatement(
-                                                                null,
-                                                                List.of(new IdentifierExpression(null, "foo"), new IdentifierExpression(null, "bar")),
-                                                                List.of(new IdentifierExpression(null, "Test2"))
-                                                        )
+                                        StatementList.of(
+                                                new UseStatement(
+                                                        null,
+                                                        List.of(new IdentifierExpression(null, "foo"), new IdentifierExpression(null, "bar")),
+                                                        List.of(new IdentifierExpression(null, "Test2"))
                                                 )
-                                        ),
-                                        null
-                                )
+                                        )
+                                ),
+                                null
                         )
+                )
                 ),
                 this.unit
         );
-        assertStreamsEmpty();
     }
 
     @Test
@@ -931,13 +911,13 @@ public class ParserTest extends AbstractParserTest {
             assertEquals(
                     new SourceFileUnit(
                             "main", StatementList.of(
-                                    new VariableDeclaration(
-                                            null,
-                                            null,
-                                            new IdentifierExpression(null, "a"),
-                                            new LongLiteralExpression(null, Long.parseLong(result.getSource().getModuleName().substring(4)))
-                                    )
+                            new VariableDeclaration(
+                                    null,
+                                    null,
+                                    new IdentifierExpression(null, "a"),
+                                    new LongLiteralExpression(null, Long.parseLong(result.getSource().getModuleName().substring(4)))
                             )
+                    )
                     ),
                     result.getUnit()
             );
@@ -1004,6 +984,5 @@ public class ParserTest extends AbstractParserTest {
                 {
                 }
                 """);
-        assertStreamsEmpty();
     }
 }

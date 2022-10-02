@@ -18,10 +18,9 @@ public class TokenizerTest extends AbstractTokenizerTest {
     public void testPositiveNumber() {
         createStreams("12345");
         assertIterableEquals(tokenList(new Token(makeSpan(0, 5), "12345", TokenType.LONG_LITERAL)), tokensIntoList());
-        assertStreamsEmpty();
+
         createStreams("12345.12345");
         assertIterableEquals(tokenList(new Token(makeSpan(0, 11), "12345.12345", TokenType.DOUBLE_LITERAL)), tokensIntoList());
-        assertStreamsEmpty();
     }
 
     @Test
@@ -31,13 +30,12 @@ public class TokenizerTest extends AbstractTokenizerTest {
                 new Token(makeSpan(0, 1), "-", TokenType.MINUS),
                 new Token(makeSpan(1, 6), "12345", TokenType.LONG_LITERAL)
         ), tokensIntoList());
-        assertStreamsEmpty();
+
         createStreams("-12345.54");
         assertIterableEquals(tokenList(
                 new Token(makeSpan(0, 1), "-", TokenType.MINUS),
                 new Token(makeSpan(1, 9), "12345.54", TokenType.DOUBLE_LITERAL)
         ), tokensIntoList());
-        assertStreamsEmpty();
     }
 
     @Test
@@ -49,19 +47,15 @@ public class TokenizerTest extends AbstractTokenizerTest {
     public void testSimpleString() {
         createStreams("\"a cool string\"");
         assertIterableEquals(tokenList(new Token(makeSpan(0, 15), "a cool string", TokenType.STRING_LITERAL)), tokensIntoList());
-        assertStreamsEmpty();
 
         createStreams("\"teth_is_great!\"");
         assertIterableEquals(tokenList(new Token(makeSpan(0, 16), "teth_is_great!", TokenType.STRING_LITERAL)), tokensIntoList());
-        assertStreamsEmpty();
 
         createStreams("\"teth\\\"hi\\\"1\\\\\"");
         assertIterableEquals(tokenList(new Token(makeSpan(0, 15), "teth\"hi\"1\\", TokenType.STRING_LITERAL)), tokensIntoList());
-        assertStreamsEmpty();
 
         createStreams("\"hi \\{t}\"");
         assertIterableEquals(tokenList(new Token(makeSpan(0, 9), "hi {t}", TokenType.STRING_LITERAL)), tokensIntoList());
-        assertStreamsEmpty();
 
         createStreams("\"hi {5 + 5} 1\"");
         assertIterableEquals(tokenList(
@@ -73,7 +67,6 @@ public class TokenizerTest extends AbstractTokenizerTest {
                 new Token(makeSpan(10, 11), "}", TokenType.STRING_LITERAL_CODE_END),
                 new Token(makeSpan(11, 14), " 1", TokenType.STRING_LITERAL)
         ), tokensIntoList());
-        assertStreamsEmpty();
     }
 
     @Test
@@ -86,18 +79,15 @@ public class TokenizerTest extends AbstractTokenizerTest {
     public void testBoolean() {
         createStreams("true");
         assertIterableEquals(tokenList(new Token(makeSpan(0, 4), "true", TokenType.BOOLEAN_LITERAL)), tokensIntoList());
-        assertStreamsEmpty();
 
         createStreams("false");
         assertIterableEquals(tokenList(new Token(makeSpan(0, 5), "false", TokenType.BOOLEAN_LITERAL)), tokensIntoList());
-        assertStreamsEmpty();
     }
 
     @Test
     public void testIdentifier() {
         createStreams("anIdentifier");
         assertIterableEquals(tokenList(new Token(makeSpan(0, 12), "anIdentifier", TokenType.IDENTIFIER)), tokensIntoList());
-        assertStreamsEmpty();
     }
 
     @Test
@@ -114,7 +104,6 @@ public class TokenizerTest extends AbstractTokenizerTest {
                 new Token(makeSpan(14, 19), "str", TokenType.STRING_LITERAL),
                 new Token(makeSpan(19, 20), "]", TokenType.R_SQUARE_BRACKET)
         ), tokensIntoList());
-        assertStreamsEmpty();
     }
 
     @Test
@@ -140,7 +129,6 @@ public class TokenizerTest extends AbstractTokenizerTest {
                 new Token(makeSpan(23, 24), "=", TokenType.EQUAL),
                 new Token(makeSpan(25, 27), "56", TokenType.LONG_LITERAL)
         ), tokensIntoList());
-        assertStreamsEmpty();
     }
 
     @Test
@@ -154,7 +142,6 @@ public class TokenizerTest extends AbstractTokenizerTest {
                 new Token(makeSpan(19, 20), "\n", TokenType.LINE_BREAK),
                 new Token(makeSpan(21, 23), "56", TokenType.LONG_LITERAL)
         ), tokensIntoList());
-        assertStreamsEmpty();
     }
 
     @Test
@@ -175,7 +162,6 @@ public class TokenizerTest extends AbstractTokenizerTest {
                 new Token(makeSpan(13, 14), "+", TokenType.PLUS),
                 new Token(makeSpan(14, 18), "1.01", TokenType.DOUBLE_LITERAL)
         ), tokensIntoList());
-        assertStreamsEmpty();
     }
 
     @Test
@@ -192,7 +178,6 @@ public class TokenizerTest extends AbstractTokenizerTest {
                 new Token(makeSpan(14, 15), "3", TokenType.LONG_LITERAL),
                 new Token(makeSpan(16, 17), "}", TokenType.R_CURLY_PAREN)
         ), tokensIntoList());
-        assertStreamsEmpty();
 
         createStreams("if (a && b || c) { 3 }");
         assertIterableEquals(tokenList(
@@ -208,7 +193,6 @@ public class TokenizerTest extends AbstractTokenizerTest {
                 new Token(makeSpan(19, 20), "3", TokenType.LONG_LITERAL),
                 new Token(makeSpan(21, 22), "}", TokenType.R_CURLY_PAREN)
         ), tokensIntoList());
-        assertStreamsEmpty();
 
         createStreams("if (1 == 2) { 35.45 } else 5 == 5");
         assertIterableEquals(tokenList(
@@ -226,7 +210,6 @@ public class TokenizerTest extends AbstractTokenizerTest {
                 new Token(makeSpan(29, 31), "==", TokenType.EQUAL_EQUAL),
                 new Token(makeSpan(32, 33), "5", TokenType.LONG_LITERAL)
         ), tokensIntoList());
-        assertStreamsEmpty();
 
         createStreams("if (1 == 2) 3 else if (a) 5");
         assertIterableEquals(tokenList(
@@ -244,7 +227,6 @@ public class TokenizerTest extends AbstractTokenizerTest {
                 new Token(makeSpan(24, 25), ")", TokenType.R_PAREN),
                 new Token(makeSpan(26, 27), "5", TokenType.LONG_LITERAL)
         ), tokensIntoList());
-        assertStreamsEmpty();
     }
 
     @Test
@@ -255,7 +237,6 @@ public class TokenizerTest extends AbstractTokenizerTest {
                 new Token(makeSpan(5, 6), "{", TokenType.L_CURLY_PAREN),
                 new Token(makeSpan(6, 7), "}", TokenType.R_CURLY_PAREN)
         ), tokensIntoList());
-        assertStreamsEmpty();
     }
 
     @Test
@@ -274,7 +255,6 @@ public class TokenizerTest extends AbstractTokenizerTest {
                 new Token(makeSpan(25, 26), "(", TokenType.L_PAREN),
                 new Token(makeSpan(26, 27), ")", TokenType.R_PAREN)
         ), tokensIntoList());
-        assertStreamsEmpty();
     }
 
     @Test
@@ -290,7 +270,6 @@ public class TokenizerTest extends AbstractTokenizerTest {
                 new Token(makeSpan(16, 17), "(", TokenType.L_PAREN),
                 new Token(makeSpan(17, 18), ")", TokenType.R_PAREN)
         ), tokensIntoList());
-        assertStreamsEmpty();
     }
 
     @Test
@@ -303,20 +282,24 @@ public class TokenizerTest extends AbstractTokenizerTest {
                 Multi
                 line
                 */
-                6 /*7*/ + /*hi*/8
-                """);
+                6 /*7*/ + /*hi*/8""");
 
         assertIterableEquals(tokenList(
+                new Token(makeSpan(0, 8), "// Hello", TokenType.COMMENT),
                 new Token(makeSpan(8, 9), "\n", TokenType.LINE_BREAK),
                 new Token(makeSpan(9, 10), "5", TokenType.LONG_LITERAL),
+                new Token(makeSpan(11, 18), "// Test", TokenType.COMMENT),
                 new Token(makeSpan(18, 19), "\n", TokenType.LINE_BREAK),
+                new Token(makeSpan(19, 27), "// World", TokenType.COMMENT),
                 new Token(makeSpan(27, 28), "\n", TokenType.LINE_BREAK),
+                new Token(makeSpan(28, 44), "/*\nMulti\nline\n*/", TokenType.COMMENT),
                 new Token(makeSpan(44, 45), "\n", TokenType.LINE_BREAK),
                 new Token(makeSpan(45, 46), "6", TokenType.LONG_LITERAL),
+                new Token(makeSpan(47, 52), "/*7*/", TokenType.COMMENT),
                 new Token(makeSpan(53, 54), "+", TokenType.PLUS),
+                new Token(makeSpan(55, 61), "/*hi*/", TokenType.COMMENT),
                 new Token(makeSpan(61, 62), "8", TokenType.LONG_LITERAL)
         ), tokensIntoList());
-        assertStreamsEmpty();
     }
 
     private static List<Token> tokenList(Token... tokens) {

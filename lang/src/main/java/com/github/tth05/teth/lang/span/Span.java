@@ -9,14 +9,23 @@ import java.util.List;
 public record Span(ISource source, int offset, int offsetEnd) {
 
     public int getStartLine() {
+        if (source() == null)
+            return -1;
+
         return CharArrayUtils.getLineNumber(source().getContents(), offset());
     }
 
     public int getEndLine() {
+        if (source() == null)
+            return -1;
+
         return CharArrayUtils.getLineNumber(source().getContents(), offsetEnd());
     }
 
     public int getStartColumn() {
+        if (source() == null)
+            return -1;
+
         return offset() - CharArrayUtils.getLineStart(source().getContents(), offset());
     }
 
@@ -24,6 +33,9 @@ public record Span(ISource source, int offset, int offsetEnd) {
      * @return The exclusive end column of the span.
      */
     public int getEndColumn() {
+        if (source() == null)
+            return -1;
+
         return offsetEnd() - CharArrayUtils.getLineStart(source().getContents(), offsetEnd());
     }
 

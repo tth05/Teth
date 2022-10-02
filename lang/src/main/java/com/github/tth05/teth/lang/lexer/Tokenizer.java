@@ -55,7 +55,7 @@ public class Tokenizer {
             } else if (isLineBreak(c)) {
                 emit(this.stream.consumeKnownSingle(), "\n", TokenType.LINE_BREAK);
             } else if (isWhitespace(c)) {
-                this.stream.consume();
+                emit(this.stream.consumeKnownSingle(), " ", TokenType.WHITESPACE);
             } else if (isComma(c)) {
                 emit(this.stream.consumeKnownSingle(), ",", TokenType.COMMA);
             } else if (isDot(c)) {
@@ -63,8 +63,11 @@ public class Tokenizer {
             } else if (isColon(c)) {
                 emit(this.stream.consumeKnownSingle(), ":", TokenType.COLON);
             } else {
+                var span = this.stream.createCurrentIndexSpan();
                 this.stream.consume();
-                report(this.stream.createCurrentIndexSpan(), "Invalid character '" + c + "'");
+
+                emit(span, c + "", TokenType.INVALID);
+                report(span, "Invalid character '" + c + "'");
             }
         }
     }
@@ -263,10 +266,10 @@ public class Tokenizer {
             case '/' -> {
                 if (this.stream.peek() == '/') {
                     this.stream.consume();
-                    skipLineComment();
+                    emitLineComment();
                 } else if (this.stream.peek() == '*') {
                     this.stream.consume();
-                    skipMultiLineComment();
+                    emitMultiLineComment();
                 } else {
                     emit("/", TokenType.SLASH);
                 }
@@ -290,20 +293,33 @@ public class Tokenizer {
         });
     }
 
-    private void skipLineComment() {
+    private void emitLineComment() {
+        this.identifierBuffer.setLength(0);
+        this.identifierBuffer.append("//");
+
         char current;
         while ((current = this.stream.peek()) != '\n' && current != 0)
-            this.stream.consume();
+            this.identifierBuffer.append(this.stream.consume());
+
+        emit(this.stream.popMarkedSpan(), this.identifierBuffer.toString(), TokenType.COMMENT);
     }
 
-    private void skipMultiLineComment() {
+    private void emitMultiLineComment() {
+        this.identifierBuffer.setLength(0);
+        this.identifierBuffer.append("/*");
+
         while (this.stream.peek() != 0) {
             var c = this.stream.consume();
             if (c == '*' && this.stream.peek() == '/') {
                 this.stream.consume();
-                return;
+                break;
             }
+
+            this.identifierBuffer.append(c);
         }
+
+        this.identifierBuffer.append("*/");
+        emit(this.stream.popMarkedSpan(), this.identifierBuffer.toString(), TokenType.COMMENT);
     }
 
     private void report(Span span, String message) {

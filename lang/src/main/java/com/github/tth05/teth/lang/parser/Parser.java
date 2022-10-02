@@ -34,7 +34,7 @@ public class Parser {
     }
 
     private Parser(TokenStream stream, ProblemList problems) {
-        this.stream = stream;
+        this.stream = stream.sanitized();
         this.problems = problems;
     }
 

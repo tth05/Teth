@@ -2,26 +2,24 @@ package com.github.tth05.teth.lang.stream;
 
 import com.github.tth05.teth.lang.source.ISource;
 import com.github.tth05.teth.lang.span.Span;
-import com.github.tth05.teth.lang.span.Span;
 import com.github.tth05.teth.lang.util.BoundedIntStack;
-import com.github.tth05.teth.lang.util.CharArrayUtils;
 
 public class CharStream {
 
     private final BoundedIntStack markedIndices = new BoundedIntStack(10);
     private final ISource source;
     private final char[] chars;
-    private final int length;
 
     private int index;
 
 
     private CharStream(ISource source) {
-        this.chars = source.getContents();
-        this.source = source;
+        this(source, source.getContents());
+    }
 
-        this.index = CharArrayUtils.trimStart(this.chars);
-        this.length = CharArrayUtils.trimEnd(this.chars);
+    private CharStream(ISource source, char[] chars) {
+        this.source = source;
+        this.chars = chars;
     }
 
     public char consume() {
@@ -62,7 +60,7 @@ public class CharStream {
     }
 
     private boolean isValidIndex(int offset) {
-        return this.index + offset < this.length;
+        return this.index + offset < this.chars.length;
     }
 
     public void markSpan() {
@@ -80,6 +78,10 @@ public class CharStream {
 
     public ISource getSource() {
         return this.source;
+    }
+
+    public static CharStream fromChars(char[] chars) {
+        return new CharStream(null, chars);
     }
 
     public static CharStream fromSource(ISource source) {

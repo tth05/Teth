@@ -4,6 +4,7 @@ import com.github.tth05.teth.lang.source.ISource;
 import com.github.tth05.teth.lang.stream.EndOfStreamException;
 
 import java.util.ArrayDeque;
+import java.util.Deque;
 
 public class TokenStream {
 
@@ -18,6 +19,10 @@ public class TokenStream {
 
     void push(Token token) {
         this.tokens.addLast(token);
+    }
+
+    public TokenStream sanitized() {
+        return new SanitizedTokenStream(this);
     }
 
     public Token consume() {
@@ -45,6 +50,10 @@ public class TokenStream {
         return this.source;
     }
 
+    public Deque<Token> getTokens() {
+        return this.tokens;
+    }
+
     private boolean isValidIndex(int offset) {
         return offset < this.tokens.size();
     }
@@ -52,5 +61,58 @@ public class TokenStream {
     private void validateIndex(int offset) {
         if (!isValidIndex(offset))
             throw new EndOfStreamException();
+    }
+
+    private static class SanitizedTokenStream extends TokenStream {
+
+        private final TokenStream delegate;
+
+        private SanitizedTokenStream(TokenStream delegate) {
+            super(delegate.getSource());
+            this.delegate = delegate;
+        }
+
+        @Override
+        public TokenStream sanitized() {
+            return this;
+        }
+
+        @Override
+        public Token consume() {
+            var token = this.delegate.consume();
+            if (shouldSkip(token.type())) {
+                skip();
+                return this.delegate.consume();
+            }
+
+            return token;
+        }
+
+        @Override
+        public Token peek() {
+            skip();
+            return this.delegate.peek();
+        }
+
+        @Override
+        public int tokensLeft() {
+            skip();
+            return this.delegate.tokensLeft();
+        }
+
+        @Override
+        public boolean isEmpty() {
+            skip();
+            return this.delegate.isEmpty();
+        }
+
+        private void skip() {
+            while (shouldSkip(this.delegate.peek().type()))
+                this.delegate.consume();
+        }
+
+        private static boolean shouldSkip(TokenType type) {
+            return type == TokenType.WHITESPACE || type == TokenType.COMMENT || type == TokenType.INVALID;
+        }
     }
 }

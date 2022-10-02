@@ -2,16 +2,14 @@ package com.github.tth05.teth.lang;
 
 import com.github.tth05.teth.lang.lexer.Token;
 import com.github.tth05.teth.lang.lexer.TokenStream;
+import com.github.tth05.teth.lang.lexer.TokenType;
 import com.github.tth05.teth.lang.lexer.Tokenizer;
 import com.github.tth05.teth.lang.source.ISource;
 import com.github.tth05.teth.lang.source.InMemorySource;
 import com.github.tth05.teth.lang.span.Span;
 import com.github.tth05.teth.lang.stream.CharStream;
 
-import java.util.ArrayList;
 import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 public abstract class AbstractTokenizerTest {
 
@@ -29,19 +27,10 @@ public abstract class AbstractTokenizerTest {
     }
 
     protected List<Token> tokensIntoList() {
-        List<Token> tokens = new ArrayList<>();
-        while (!this.tokenStream.isEmpty())
-            tokens.add(this.tokenStream.consume());
-
-        return tokens;
+        return this.tokenStream.getTokens().stream().filter(t -> t.type() != TokenType.WHITESPACE).toList();
     }
 
     protected Span makeSpan(int offset, int offsetEnd) {
         return new Span(this.source, offset, offsetEnd);
-    }
-
-    public void assertStreamsEmpty() {
-        assertTrue(this.charStream.isEmpty());
-        assertTrue(this.tokenStream.isEmpty());
     }
 }

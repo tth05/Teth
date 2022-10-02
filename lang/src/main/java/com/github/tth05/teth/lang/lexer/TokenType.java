@@ -43,7 +43,10 @@ public enum TokenType {
     R_SQUARE_BRACKET("]"),
     L_CURLY_PAREN("{"),
     R_CURLY_PAREN("}"),
+    COMMENT("Comment"),
+    WHITESPACE("Whitespace"),
     LINE_BREAK("Line break"),
+    INVALID("Invalid"),
     EOF("End of file");
 
     private final String text;
