@@ -1,0 +1,27 @@
+<!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
+<idea-plugin>
+    <!-- Unique identifier of the plugin. It should be FQN. It cannot be changed between the plugin versions. -->
+    <id>com.github.tth05.teth-intellij-plugin</id>
+
+    <!-- Public plugin name should be written in Title Case.
+         Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-name -->
+    <name>Teth Language</name>
+
+    <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
+    <vendor>tth05</vendor>
+
+    <!-- Product and plugin compatibility requirements.
+         Read more: https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
+    <depends>com.intellij.modules.platform</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <fileType name="Teth file"
+                  implementationClass="com.github.tth05.tethintellijplugin.TethLanguageFileType"
+                  fieldName="INSTANCE"
+                  language="Teth"
+                  extensions="teth"/>
+
+        <lang.syntaxHighlighter language="Teth"
+                                implementationClass="com.github.tth05.tethintellijplugin.syntax.TethSyntaxHighlighter"/>
+    </extensions>
+</idea-plugin>
