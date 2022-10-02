@@ -23,5 +23,9 @@
 
         <lang.syntaxHighlighter language="Teth"
                                 implementationClass="com.github.tth05.tethintellijplugin.syntax.TethSyntaxHighlighter"/>
+        <lang.parserDefinition language="Teth"
+                               implementationClass="com.github.tth05.tethintellijplugin.TethParserDefinition"/>
+        <completion.contributor language="Teth"
+                                implementationClass="com.github.tth05.tethintellijplugin.TethCompletionContributor"/>
     </extensions>
 </idea-plugin>
