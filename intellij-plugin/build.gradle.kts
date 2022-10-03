@@ -1,4 +1,6 @@
 plugins {
+    id("java")
+    id("org.jetbrains.kotlin.jvm") version "1.7.10"
     id("org.jetbrains.intellij") version "1.9.0"
 }
 
@@ -7,10 +9,6 @@ version = "1.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
-}
-
-dependencies {
-    implementation(project(":lang"))
 }
 
 // Configure Gradle IntelliJ Plugin
@@ -22,11 +20,20 @@ intellij {
     plugins.set(listOf(/* Plugin Dependencies */))
 }
 
+sourceSets["main"].java.srcDirs("src/main/gen")
+
 tasks {
+    buildSearchableOptions {
+        enabled = false
+    }
+
     // Set the JVM compatibility versions
     withType<JavaCompile> {
         sourceCompatibility = "17"
         targetCompatibility = "17"
+    }
+    withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+        kotlinOptions.jvmTarget = "17"
     }
 
     patchPluginXml {

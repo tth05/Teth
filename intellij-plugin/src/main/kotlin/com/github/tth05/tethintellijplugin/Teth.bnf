@@ -1,0 +1,92 @@
+{
+  parserClass="com.github.tth05.tethintellijplugin.syntax.TethParser"
+
+  extends="com.intellij.extapi.psi.ASTWrapperPsiElement"
+
+  psiClassPrefix="Teth"
+  psiImplClassSuffix="Impl"
+  psiPackage="com.github.tth05.tethintellijplugin.syntax.psi"
+  psiImplPackage="com.github.tth05.tethintellijplugin.syntax.psi.impl"
+
+  tokens=[
+    COMMENT="regexp:(//[^\r\n]*)|(/*.*?\*/)"
+  ]
+
+  elementTypeHolderClass="com.github.tth05.tethintellijplugin.syntax.TethTypes"
+  elementTypeClass="com.github.tth05.tethintellijplugin.syntax.TethElementType"
+  tokenTypeClass="com.github.tth05.tethintellijplugin.syntax.TethTokenType"
+
+  extends(".+BinaryExpression")=BinaryExpression
+  extends(".+Expression")=Expression
+  extends(".+Statement")=Statement
+
+  name(".*Expression")="expression"
+  name(".*Statement")="statement"
+
+  consumeTokenMethod(".*Expression")="consumeTokenFast"
+}
+
+TethUnit ::= StatementList?
+
+// Statements
+
+StatementList ::= NL Statement (NL Statement)* NL
+
+Statement ::=
+      IfStatement
+    | BlockStatement
+    | ExpressionStatement
+
+ExpressionStatement ::= Expression
+
+BlockStatement ::= L_CURLY_PAREN StatementList? R_CURLY_PAREN
+
+IfStatement ::= KEYWORD_IF ParenExpression Body
+
+private Body ::= BlockStatement | Statement
+
+// Expressions
+
+ParenExpression ::= L_PAREN Expression R_PAREN
+
+MemberAccessExpression ::= Expression DOT MemberName
+private MemberName ::= IDENTIFIER {
+    name = "identifier"
+    pin = 1
+}
+
+Expression ::=
+      AdditiveBinaryExpression
+    | MultiplicativeBinaryExpression
+    | MemberAccessExpression
+    | LiteralExpression
+    | ParenExpression
+    { name = "expression" }
+
+// Binary expressions
+
+fake BinaryExpression ::= Expression+ {
+    methods=[left="Expression[0]" right="Expression[1]"]
+}
+
+AdditiveBinaryExpression ::= Expression NL AdditiveOp NL Expression
+MultiplicativeBinaryExpression ::= Expression NL MultiplicativeOp NL Expression
+
+private AdditiveOp ::= PLUS | MINUS
+private MultiplicativeOp ::= STAR | SLASH
+
+// Literals
+
+LiteralExpression ::=
+      LONG_LITERAL
+    | DOUBLE_LITERAL
+    | BooleanLiteral
+    | IDENTIFIER
+    {extends=Expression}
+
+BooleanLiteral ::= KEYWORD_TRUE | KEYWORD_FALSE {extends=Expression}
+
+// Helpers
+
+private NL ::= NEWLINE*
+private meta commaList ::= NL? <<p>> (NL? COMMA NL? <<p>>)*
