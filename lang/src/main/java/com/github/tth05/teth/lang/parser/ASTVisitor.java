@@ -67,6 +67,7 @@ public abstract class ASTVisitor {
 
     public void visit(StructDeclaration declaration) {
         declaration.getNameExpr().accept(this);
+        declaration.getGenericParameters().forEach(param -> param.accept(this));
         declaration.getFields().forEach(p -> p.accept(this));
         declaration.getFunctions().forEach(p -> {
             if (!this.blockStatementFilter.test(p))
@@ -150,6 +151,7 @@ public abstract class ASTVisitor {
     }
 
     public void visit(TypeExpression typeExpression) {
+        typeExpression.getGenericParameters().forEach(p -> p.accept(this));
     }
 
     public void visit(GarbageExpression garbageExpression) {

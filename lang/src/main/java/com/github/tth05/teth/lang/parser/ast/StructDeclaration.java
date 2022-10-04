@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
+// TODO: Migrate to list with span
 public class StructDeclaration extends Statement implements ITopLevelDeclaration, IHasName {
 
     private final IdentifierExpression nameExpr;
@@ -53,12 +54,14 @@ public class StructDeclaration extends Statement implements ITopLevelDeclaration
     public Statement getMember(String name) {
         if (name == null)
             return null;
-        
+
         return this.fields.stream()
+                .filter(f -> Objects.nonNull(f.getNameExpr().getValue()))
                 .filter(f -> f.getNameExpr().getValue().equals(name))
                 .map(Statement.class::cast)
                 .findFirst()
                 .orElse(this.functions.stream()
+                        .filter(f -> Objects.nonNull(f.getNameExpr().getValue()))
                         .filter(f -> f.getNameExpr().getValue().equals(name))
                         .findFirst()
                         .orElse(null));

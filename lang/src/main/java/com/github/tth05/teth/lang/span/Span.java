@@ -39,6 +39,10 @@ public record Span(ISource source, int offset, int offsetEnd) {
         return offsetEnd() - CharArrayUtils.getLineStart(source().getContents(), offsetEnd());
     }
 
+    public int getLength() {
+        return offsetEnd() - offset();
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o)

@@ -10,6 +10,10 @@ public class StatementList extends ArrayListWithSpan<Statement> {
     public StatementList() {
     }
 
+    public StatementList(StatementList list) {
+        super(list);
+    }
+
     public static StatementList of(Statement... statements) {
         var list = new StatementList();
         Collections.addAll(list, statements);

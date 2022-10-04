@@ -3,6 +3,7 @@ package com.github.tth05.teth.lang.span;
 import com.github.tth05.teth.lang.parser.ast.Statement;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class ArrayListWithSpan<T extends Statement> extends ArrayList<T> implements ListWithSpan<T> {
 
@@ -13,6 +14,10 @@ public class ArrayListWithSpan<T extends Statement> extends ArrayList<T> impleme
 
     public ArrayListWithSpan(int initialCapacity) {
         super(initialCapacity);
+    }
+
+    public ArrayListWithSpan(List<T> list) {
+        super(list);
     }
 
     @Override
