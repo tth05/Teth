@@ -216,8 +216,10 @@ public class TypeAnalysis extends AnalysisASTVisitor {
         }
 
         var decl = this.typeCache.getDeclaration(type);
-        if (!(decl instanceof StructDeclaration structDeclaration))
-            throw new IllegalStateException("Declaration not found");
+        if (!(decl instanceof StructDeclaration structDeclaration)) {
+            report(expression.getTarget().getSpan(), "Target does not have any members");
+            return;
+        }
 
         var member = structDeclaration.getMember(expression.getMemberNameExpr().getValue());
 
