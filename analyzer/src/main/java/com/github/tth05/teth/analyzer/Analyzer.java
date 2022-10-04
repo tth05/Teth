@@ -5,6 +5,7 @@ import com.github.tth05.teth.analyzer.visitor.NameAnalysis;
 import com.github.tth05.teth.analyzer.visitor.ReturnStatementVerifier;
 import com.github.tth05.teth.analyzer.visitor.TypeAnalysis;
 import com.github.tth05.teth.lang.parser.SourceFileUnit;
+import com.github.tth05.teth.lang.parser.StatementList;
 import com.github.tth05.teth.lang.parser.ast.*;
 
 import java.util.*;
@@ -29,7 +30,6 @@ public class Analyzer {
         // Pre-decl visit for all units
         this.unitIndexMap.forEach((name, index) -> {
             var unit = index.getUnit();
-            Prelude.injectStatements(unit.getStatements());
             var nameAnalysis = new NameAnalysis(this, this.resolvedReferences, this.functionLocalsCount);
             nameAnalysis.preDeclVisit(unit);
             // Temporary save the name analysis state
@@ -87,11 +87,15 @@ public class Analyzer {
         private final Map<String, Statement> exportedStatementsMap;
 
         public SourceFileUnitIndex(SourceFileUnit unit) {
-            this.unit = unit;
             this.exportedStatementsMap = new HashMap<>(unit.getStatements().size());
             unit.getStatements().stream()
                     .filter(s -> s instanceof ITopLevelDeclaration && s instanceof IHasName)
                     .forEach(s -> this.exportedStatementsMap.put(((IHasName) s).getNameExpr().getValue(), s));
+
+            // Don't modify the original unit
+            var newStatements = new StatementList(unit.getStatements());
+            Prelude.injectStatements(newStatements);
+            this.unit = new SourceFileUnit(unit.getModuleName(), newStatements);
         }
 
         public SourceFileUnit getUnit() {

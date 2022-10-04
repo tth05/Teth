@@ -49,6 +49,8 @@ public class TypeCache {
     }
 
     public boolean isSubtypeOf(SemanticType subType, SemanticType type) {
+        if (subType == null || type == null)
+            return false;
         if (subType == VOID)
             return type == VOID;
 
@@ -77,11 +79,16 @@ public class TypeCache {
             return "???";
         if (type == VOID)
             return "void";
-        var name = switch (getDeclaration(type)) {
-            case StructDeclaration struct -> struct.getNameExpr().getValue();
-            case GenericParameterDeclaration generic -> generic.getNameExpr().getValue();
-            default -> throw new IllegalStateException();
-        };
+        String name;
+        // TODO: Switch preview disabled
+        var declaration = getDeclaration(type);
+        if (declaration instanceof StructDeclaration struct) {
+            name = struct.getNameExpr().getValue();
+        } else if (declaration instanceof GenericParameterDeclaration generic) {
+            name = generic.getNameExpr().getValue();
+        } else {
+            throw new IllegalStateException();
+        }
 
         if (type.hasGenericBounds())
             return name + "<" + type.getGenericBounds().stream()

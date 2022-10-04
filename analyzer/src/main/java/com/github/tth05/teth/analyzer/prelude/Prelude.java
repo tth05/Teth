@@ -98,6 +98,9 @@ public class Prelude {
     }
 
     public static boolean isBuiltInTypeName(String name) {
+        if (name == null)
+            return false;
+
         return switch (name) {
             case "long", "double", "bool", "string", "list", "any" -> true;
             default -> false;

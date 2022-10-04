@@ -27,6 +27,7 @@ import com.github.tth05.teth.lang.parser.ast.StructDeclaration;
 import com.github.tth05.teth.lang.parser.ast.TypeExpression;
 import com.github.tth05.teth.lang.parser.ast.UnaryExpression;
 import com.github.tth05.teth.lang.parser.ast.VariableDeclaration;
+import com.github.tth05.teth.lang.span.Span;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -47,7 +48,7 @@ public class TypeAnalysis extends AnalysisASTVisitor {
         var all = BinaryExpression.Operator.values();
         this.binaryOperatorsAllowedTypes.put(this.typeCache.internalizeType(LONG_STRUCT_DECLARATION), all);
         this.binaryOperatorsAllowedTypes.put(this.typeCache.internalizeType(DOUBLE_STRUCT_DECLARATION), all);
-        this.binaryOperatorsAllowedTypes.put(this.typeCache.internalizeType(BOOLEAN_STRUCT_DECLARATION), new BinaryExpression.Operator[] {
+        this.binaryOperatorsAllowedTypes.put(this.typeCache.internalizeType(BOOLEAN_STRUCT_DECLARATION), new BinaryExpression.Operator[]{
                 BinaryExpression.Operator.OP_EQUAL, BinaryExpression.Operator.OP_NOT_EQUAL,
                 BinaryExpression.Operator.OP_AND, BinaryExpression.Operator.OP_OR
         });
@@ -225,13 +226,19 @@ public class TypeAnalysis extends AnalysisASTVisitor {
             return;
         }
 
-        this.resolvedExpressionTypes.put(expression, switch (member) {
-            case FunctionDeclaration ignored -> this.typeCache.voidType(); // Not implemented
-            case StructDeclaration.FieldDeclaration field -> asType(field.getTypeExpr());
-            default -> throw new IllegalStateException();
-        });
+        // TODO: Switch preview disabled
+        SemanticType resolvedType;
+        if (member instanceof FunctionDeclaration)
+            resolvedType = this.typeCache.voidType(); // Not implemented
+        else if (member instanceof StructDeclaration.FieldDeclaration field)
+            resolvedType = asType(field.getTypeExpr());
+        else
+            throw new IllegalStateException();
+
+        this.resolvedExpressionTypes.put(expression, resolvedType);
         // Can only be done after type resolution, therefore not contained in NameAnalysis
         this.resolvedReferences.put(expression, member);
+        this.resolvedReferences.put(expression.getMemberNameExpr(), member);
     }
 
     @Override
@@ -260,7 +267,7 @@ public class TypeAnalysis extends AnalysisASTVisitor {
 
         var operator = expression.getOperator();
         if ((operator == UnaryExpression.Operator.OP_NEGATIVE && !this.typeCache.isNumber(type)) ||
-                (operator == UnaryExpression.Operator.OP_NOT && type != this.typeCache.getType(BOOLEAN_STRUCT_DECLARATION))) {
+            (operator == UnaryExpression.Operator.OP_NOT && type != this.typeCache.getType(BOOLEAN_STRUCT_DECLARATION))) {
             report(expression.getExpression().getSpan(), "Unary operator " + operator.asString() + " cannot be applied to " + this.typeCache.toString(type));
             return;
         }
@@ -291,8 +298,8 @@ public class TypeAnalysis extends AnalysisASTVisitor {
         var typesMatch = anyNumber ? leftIsNumber && rightIsNumber : leftType.equals(rightType);
 
         if (!typesMatch ||
-                !this.binaryOperatorsAllowedTypes.containsKey(leftType.getTypeId()) ||
-                Arrays.stream(this.binaryOperatorsAllowedTypes.get(leftType.getTypeId())).noneMatch(op -> op == expression.getOperator())) {
+            !this.binaryOperatorsAllowedTypes.containsKey(leftType.getTypeId()) ||
+            Arrays.stream(this.binaryOperatorsAllowedTypes.get(leftType.getTypeId())).noneMatch(op -> op == expression.getOperator())) {
             report(expression.getSpan(), "Operator " + expression.getOperator().asString() + " cannot be applied to " + this.typeCache.toString(leftType) + " and " + this.typeCache.toString(rightType));
             return;
         }
@@ -384,15 +391,14 @@ public class TypeAnalysis extends AnalysisASTVisitor {
     public void visit(IdentifierExpression identifierExpression) {
         var decl = this.resolvedReferences.get(identifierExpression);
 
-        var type = (SemanticType) switch (decl) {
-            case VariableDeclaration declaration -> getVariableDeclarationType(declaration);
-            case FunctionDeclaration ignored -> null;
-            case FunctionDeclaration.ParameterDeclaration declaration -> asType(declaration.getTypeExpr());
-            case StructDeclaration structDeclaration -> null;
-            case GenericParameterDeclaration genericParameterDeclaration -> null;
-            case null -> null;
-            default -> throw new IllegalStateException();
-        };
+        SemanticType type;
+        if (decl instanceof IVariableDeclaration varDecl) {
+            type = getVariableDeclarationType(varDecl);
+        } else if (decl == null || decl instanceof FunctionDeclaration || decl instanceof StructDeclaration || decl instanceof GenericParameterDeclaration) {
+            type = null;
+        } else {
+            throw new IllegalStateException("Unexpected declaration type: " + decl.getClass().getName());
+        }
 
         if (type == null)
             return;
@@ -466,20 +472,22 @@ public class TypeAnalysis extends AnalysisASTVisitor {
             List<T> parameterDeclarations,
             ExpressionList parameters
     ) {
-        // Explicit generic parameters have priority over inferred generic parameters
-        if (!explicitGenericParameters.isEmpty()) {
-            if (explicitGenericParameters.size() != genericParameterDeclarations.size()) {
-                report(invocation.getSpan(), "Wrong number of generic bounds. Expected " + genericParameterDeclarations.size() + ", got " + explicitGenericParameters.size());
-                return genericParameterInfo;
-            }
+        if (explicitGenericParameters.size() != genericParameterDeclarations.size()) {
+            var span = Span.of(explicitGenericParameters, invocation.getSpan());
+            report(span, "Wrong number of generic bounds. Expected " + genericParameterDeclarations.size() + ", got " + explicitGenericParameters.size());
+            ensureAllGenericParametersBound(span, genericParameterInfo, genericParameterDeclarations);
+            return genericParameterInfo;
+        }
 
-            for (var i = 0; i < explicitGenericParameters.size(); i++) {
-                genericParameterInfo.bindGenericParameter(genericParameterDeclarations.get(i).getNameExpr().getValue(), asType(explicitGenericParameters.get(i)));
-            }
+        // Explicit generic parameters have priority over inferred generic parameters
+        for (var i = 0; i < explicitGenericParameters.size(); i++) {
+            genericParameterInfo.bindGenericParameter(genericParameterDeclarations.get(i).getNameExpr().getValue(), asType(explicitGenericParameters.get(i)));
         }
 
         if (parameterDeclarations.size() != parameters.size()) {
-            report(invocation.getSpan(), "Wrong number of parameters. Expected %d, got %d".formatted(parameterDeclarations.size(), parameters.size()));
+            var span = parameters.getSpanOrElse(invocation.getSpan());
+            report(span, "Wrong number of parameters. Expected %d, got %d".formatted(parameterDeclarations.size(), parameters.size()));
+            ensureAllGenericParametersBound(span, genericParameterInfo, genericParameterDeclarations);
             return genericParameterInfo;
         }
 
@@ -497,15 +505,18 @@ public class TypeAnalysis extends AnalysisASTVisitor {
                 report(expression.getSpan(), "Parameter type mismatch. Expected " + this.typeCache.toString(paramType) + ", got " + this.typeCache.toString(expressionType));
         }
 
+        ensureAllGenericParametersBound(Span.of(explicitGenericParameters, invocation.getSpan()), genericParameterInfo, genericParameterDeclarations);
+        return genericParameterInfo;
+    }
+
+    private void ensureAllGenericParametersBound(Span span, GenericParameterInfo genericParameterInfo, List<GenericParameterDeclaration> genericParameterDeclarations) {
         for (var genericParameterDeclaration : genericParameterDeclarations) {
             var name = genericParameterDeclaration.getNameExpr().getValue();
             if (!genericParameterInfo.isGenericParameterBound(name)) {
-                report(invocation.getSpan(), "Generic parameter " + genericParameterDeclaration.getNameExpr() + " is not bound");
+                report(span, "Generic parameter " + genericParameterDeclaration.getNameExpr() + " is not bound");
                 genericParameterInfo.bindGenericParameter(name, SemanticType.UNRESOLVED);
             }
         }
-
-        return genericParameterInfo;
     }
 
     private SemanticType asType(TypeExpression typeExpr) {

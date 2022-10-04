@@ -14,6 +14,9 @@ public class AnalysisASTVisitor extends ASTVisitor {
     }
 
     protected void report(Span span, String message) {
+        if (span == null)
+            return;
+
         this.problems.add(new Problem(span, message));
     }
 }

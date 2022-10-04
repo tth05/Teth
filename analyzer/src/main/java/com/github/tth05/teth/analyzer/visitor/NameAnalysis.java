@@ -63,10 +63,13 @@ public class NameAnalysis extends AnalysisASTVisitor {
 
         List<? extends Statement> topLevelDeclarations = unit.getStatements().stream()
                 .filter(s -> s instanceof ITopLevelDeclaration && s instanceof IHasName)
-                .sorted(Comparator.comparingInt(s -> switch (s) {
-                    case StructDeclaration sd -> 0;
-                    case FunctionDeclaration fd -> 1;
-                    default -> 2;
+                .sorted(Comparator.comparingInt(s -> {
+                    // TODO: Switch preview disabled
+                    if (s instanceof StructDeclaration)
+                        return 0;
+                    else if (s instanceof FunctionDeclaration)
+                        return 1;
+                    return 2;
                 }))
                 .collect(Collectors.toCollection(() -> new ArrayList<>(unit.getStatements().size())));
 
@@ -80,20 +83,18 @@ public class NameAnalysis extends AnalysisASTVisitor {
         validateNoDuplicates((List<? extends IHasName>) (Object) topLevelDeclarations, "Duplicate top level declaration");
 
         for (var decl : topLevelDeclarations) {
-            switch (decl) {
-                case StructDeclaration structDeclaration -> {
-                    this.declarationStack.beginScope(false);
-                    structDeclaration.getGenericParameters().forEach(this::addDeclaration);
-                    structDeclaration.getFields().forEach(f -> visit(f.getTypeExpr()));
-                    structDeclaration.getFunctions().forEach(this::visitFunctionDeclarationHeader);
-                    this.declarationStack.endScope();
-                }
-                case FunctionDeclaration functionDeclaration -> {
-                    this.declarationStack.beginScope(false);
-                    visitFunctionDeclarationHeader(functionDeclaration);
-                    this.declarationStack.endScope();
-                }
-                default -> throw new IllegalStateException();
+            if (decl instanceof StructDeclaration structDeclaration) {
+                this.declarationStack.beginScope(false);
+                structDeclaration.getGenericParameters().forEach(this::addDeclaration);
+                structDeclaration.getFields().forEach(f -> visit(f.getTypeExpr()));
+                structDeclaration.getFunctions().forEach(this::visitFunctionDeclarationHeader);
+                this.declarationStack.endScope();
+            } else if (decl instanceof FunctionDeclaration functionDeclaration) {
+                this.declarationStack.beginScope(false);
+                visitFunctionDeclarationHeader(functionDeclaration);
+                this.declarationStack.endScope();
+            } else {
+                throw new IllegalStateException();
             }
         }
     }
@@ -257,6 +258,9 @@ public class NameAnalysis extends AnalysisASTVisitor {
         var genericParameters = typeExpression.getGenericParameters();
         genericParameters.forEach(t -> t.accept(this));
 
+        if (typeExpression.getName() == null)
+            return;
+
         Statement decl;
         if (Prelude.isBuiltInTypeName(typeExpression.getName()))
             decl = Prelude.getStructForTypeName(typeExpression.getName());
@@ -266,7 +270,8 @@ public class NameAnalysis extends AnalysisASTVisitor {
         if (decl == null) {
             report(span, "Unknown type " + type);
             return;
-        } if (!(decl instanceof StructDeclaration) && !(decl instanceof GenericParameterDeclaration)) {
+        }
+        if (!(decl instanceof StructDeclaration) && !(decl instanceof GenericParameterDeclaration)) {
             report(span, "Type " + type + " is not a struct or builtin type");
             return;
         }
@@ -294,9 +299,9 @@ public class NameAnalysis extends AnalysisASTVisitor {
         }
 
         if (!(decl instanceof VariableDeclaration) &&
-                !(decl instanceof FunctionDeclaration) &&
-                !(decl instanceof FunctionDeclaration.ParameterDeclaration) &&
-                !(decl instanceof StructDeclaration))
+            !(decl instanceof FunctionDeclaration) &&
+            !(decl instanceof FunctionDeclaration.ParameterDeclaration) &&
+            !(decl instanceof StructDeclaration))
             report(identifierExpression.getSpan(), "Identifier is not a variable, function or struct");
 
         this.resolvedReferences.put(identifierExpression, decl);
