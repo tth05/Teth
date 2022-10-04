@@ -34,6 +34,8 @@ StatementList ::= NL Statement (NL Statement)* NL
 
 Statement ::=
       IfStatement
+    | FunctionDeclarationStatement
+    | StructDeclarationStatement
     | BlockStatement
     | ExpressionStatement
 
@@ -43,7 +45,22 @@ BlockStatement ::= L_CURLY_PAREN StatementList? R_CURLY_PAREN
 
 IfStatement ::= KEYWORD_IF ParenExpression Body
 
-private Body ::= BlockStatement | Statement
+FunctionDeclarationStatement ::= KEYWORD_FN IDENTIFIER GenericParameters? FunctionDeclarationParameters Body
+FunctionDeclarationParameters ::= L_PAREN (<<commaList (IDENTIFIER COLON Type)>>)* R_PAREN
+
+StructDeclarationStatement ::=
+    KEYWORD_STRUCT IDENTIFIER GenericParameters? NL L_CURLY_PAREN
+        (NL (StructFieldDeclaration | FunctionDeclarationStatement))* NL
+    R_CURLY_PAREN
+StructFieldDeclaration ::= IDENTIFIER COLON Type
+
+Body ::= BlockStatement | Statement
+Arguments ::= L_PAREN <<commaList Expression>>? R_PAREN
+GenericParameters ::= LESS <<commaList IDENTIFIER>> GREATER
+
+// Type
+
+Type ::= IDENTIFIER (LESS <<commaList Type>> GREATER)?
 
 // Expressions
 
@@ -52,16 +69,25 @@ ParenExpression ::= L_PAREN Expression R_PAREN
 MemberAccessExpression ::= Expression DOT MemberName
 private MemberName ::= IDENTIFIER {
     name = "identifier"
-    pin = 1
 }
 
+FunctionInvocationExpression ::= Expression Arguments
+
 Expression ::=
-      AdditiveBinaryExpression
-    | MultiplicativeBinaryExpression
-    | MemberAccessExpression
-    | LiteralExpression
-    | ParenExpression
+      AssignGroup
+    | EqualityBinaryExpression
+    | ConditionalGroup
+    | AddGroup
+    | MulGroup
+    | ExpBinaryExpression
+    | PrimaryGroup
     { name = "expression" }
+
+private AssignGroup ::= AssignBinaryExpression
+private ConditionalGroup ::= LogicalBinaryExpression | RelationalBinaryExpression
+private AddGroup ::= AddBinaryExpression | SubtractBinaryExpression
+private MulGroup ::= MultiplyBinaryExpression | DivideBinaryExpression
+private PrimaryGroup ::= MemberAccessExpression | FunctionInvocationExpression | LiteralExpression | ParenExpression
 
 // Binary expressions
 
@@ -69,11 +95,15 @@ fake BinaryExpression ::= Expression+ {
     methods=[left="Expression[0]" right="Expression[1]"]
 }
 
-AdditiveBinaryExpression ::= Expression NL AdditiveOp NL Expression
-MultiplicativeBinaryExpression ::= Expression NL MultiplicativeOp NL Expression
-
-private AdditiveOp ::= PLUS | MINUS
-private MultiplicativeOp ::= STAR | SLASH
+AssignBinaryExpression ::= Expression EQUALS Expression {rightAssociative=true}
+RelationalBinaryExpression ::= Expression (LESS | LESS_EQUALS | GREATER | GREATER_EQUALS) Expression
+EqualityBinaryExpression ::= Expression (EQUALS_EQUALS | NOT_EQUALS) Expression
+LogicalBinaryExpression ::= Expression (PIPE_PIPE | AMPERSAND_AMPERSAND) Expression
+AddBinaryExpression ::= Expression NL PLUS NL Expression
+SubtractBinaryExpression ::= Expression NL MINUS NL Expression
+MultiplyBinaryExpression ::= Expression NL STAR NL Expression
+DivideBinaryExpression ::= Expression NL SLASH NL Expression
+ExpBinaryExpression ::= Expression NL CARET NL Expression
 
 // Literals
 
@@ -82,6 +112,7 @@ LiteralExpression ::=
     | DOUBLE_LITERAL
     | BooleanLiteral
     | IDENTIFIER
+    | STRING_LITERAL
     {extends=Expression}
 
 BooleanLiteral ::= KEYWORD_TRUE | KEYWORD_FALSE {extends=Expression}

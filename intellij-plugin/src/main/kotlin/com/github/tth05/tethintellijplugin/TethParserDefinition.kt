@@ -22,9 +22,9 @@ class TethParserDefinition : ParserDefinition {
 
     override fun getFileNodeType(): IFileElementType = FILE
 
-    override fun getCommentTokens(): TokenSet = TokenSet.EMPTY
+    override fun getCommentTokens(): TokenSet = COMMENT_TOKENS
 
-    override fun getStringLiteralElements(): TokenSet = TokenSet.EMPTY
+    override fun getStringLiteralElements(): TokenSet = STRING_LITERAL_TOKENS
 
     override fun createElement(node: ASTNode?): PsiElement = TethTypes.Factory.createElement(node)
 
@@ -32,5 +32,8 @@ class TethParserDefinition : ParserDefinition {
 
     companion object {
         val FILE = IFileElementType(TethLanguage.INSTANCE)
+
+        val COMMENT_TOKENS = TokenSet.create(TethTypes.COMMENT)
+        val STRING_LITERAL_TOKENS = TokenSet.create(TethTypes.STRING_LITERAL)
     }
 }

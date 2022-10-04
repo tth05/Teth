@@ -24,10 +24,11 @@ import static com.github.tth05.tethintellijplugin.syntax.TethTypes.*;
 
 WHITE_SPACE=\s+
 NEWLINE=[\r\n]
-COMMENT=(\/\/[^\r\n]*)|(\/*.*?\*\/)
+COMMENT=(\/\/[^\r\n]*)|(\/\*(.|\R)*?\*\/)
 IDENTIFIER=[A-Za-z][a-zA-Z_0-9]*
 NUMBER=[0-9]+
 DECIMAL_NUMBER=[0-9]+\.[0-9]+
+STRING_LITERAL=\".*?\"
 
 %%
 <YYINITIAL> {
@@ -36,6 +37,7 @@ DECIMAL_NUMBER=[0-9]+\.[0-9]+
   {COMMENT}          { return COMMENT; }
   {DECIMAL_NUMBER}   { return DOUBLE_LITERAL; }
   {NUMBER}           { return LONG_LITERAL; }
+  {STRING_LITERAL}   { return STRING_LITERAL; }
 
   ","                { return COMMA; }
   "("                { return L_PAREN; }
@@ -47,9 +49,22 @@ DECIMAL_NUMBER=[0-9]+\.[0-9]+
   "*"                { return STAR; }
   "/"                { return SLASH; }
   "."                { return DOT; }
+  ":"                { return COLON; }
+  "="                { return EQUALS; }
+  "^"                { return CARET; }
+  "<"                { return LESS; }
+  "<="               { return LESS_EQUALS; }
+  ">"                { return GREATER; }
+  ">="               { return GREATER_EQUALS; }
+  "=="               { return EQUALS_EQUALS; }
+  "!="               { return NOT_EQUALS; }
+  "&&"               { return AMPERSAND_AMPERSAND; }
+  "||"               { return PIPE_PIPE; }
   "false"            { return KEYWORD_FALSE; }
   "true"             { return KEYWORD_TRUE; }
   "if"               { return KEYWORD_IF; }
+  "fn"               { return KEYWORD_FN; }
+  "struct"           { return KEYWORD_STRUCT; }
 
   {IDENTIFIER}       { return IDENTIFIER; }
 }
