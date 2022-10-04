@@ -37,6 +37,7 @@ class TethColorSettingsPage : ColorSettingsPage {
             AttributesDescriptor("Comment", TethSyntaxHighlighter.COMMENT),
             AttributesDescriptor("Function call", TethSyntaxHighlighter.FUNCTION_CALL),
             AttributesDescriptor("Type", TethSyntaxHighlighter.TYPE),
+            AttributesDescriptor("Type parameter", TethSyntaxHighlighter.TYPE_PARAMETER),
             AttributesDescriptor("Field", TethSyntaxHighlighter.FIELD),
             AttributesDescriptor("Bad value", TethSyntaxHighlighter.BAD_CHARACTER)
         )

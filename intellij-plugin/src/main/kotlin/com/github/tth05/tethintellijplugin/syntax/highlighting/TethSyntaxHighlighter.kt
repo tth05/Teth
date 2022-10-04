@@ -49,6 +49,8 @@ class TethSyntaxHighlighter : SyntaxHighlighterBase() {
             createTextAttributesKey("TETH_FUNCTION_CALL", DefaultLanguageHighlighterColors.FUNCTION_CALL)
         val TYPE: TextAttributesKey =
             createTextAttributesKey("TETH_TYPE", DefaultLanguageHighlighterColors.CLASS_REFERENCE)
+        val TYPE_PARAMETER: TextAttributesKey =
+            createTextAttributesKey("TETH_TYPE_PARAMETER", DefaultLanguageHighlighterColors.PARAMETER)
         val FIELD: TextAttributesKey =
             createTextAttributesKey("TETH_FIELD", DefaultLanguageHighlighterColors.INSTANCE_FIELD)
         val BAD_CHARACTER: TextAttributesKey =

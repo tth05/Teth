@@ -12,6 +12,7 @@ import com.github.tth05.teth.lang.span.Span
 import com.intellij.lang.annotation.AnnotationHolder
 import com.intellij.lang.annotation.Annotator
 import com.intellij.lang.annotation.HighlightSeverity
+import com.intellij.openapi.editor.DefaultLanguageHighlighterColors
 import com.intellij.openapi.editor.colors.TextAttributesKey
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
@@ -34,15 +35,18 @@ class TethAnnotator : Annotator {
             annotateError(holder, validTextRange, it)
         }
 
+        val d = (System.nanoTime() - t) / 1_000_000.0
+        println("Annotating 1 took ${d}ms")
         AnnotatingVisitor(analyzer, holder).visit(parserResult.unit)
-
-        println("Annotating took ${(System.nanoTime() - t) / 1_000_000.0}ms")
+        val d2 = (System.nanoTime() - t) / 1_000_000.0
+        println("Annotating took ${d2}ms")
     }
 
     private fun annotateError(
         holder: AnnotationHolder, validTextRange: TextRange, it: Problem
     ) {
         var range = it.span.toTextRange()
+        // Fixes errors at EOF
         if (!validTextRange.contains(range)) {
             range = if (validTextRange.endOffset - 1 >= 0) TextRange(
                 validTextRange.endOffset - 1,
@@ -77,7 +81,7 @@ private class AnnotatingVisitor(val analyzer: Analyzer, val holder: AnnotationHo
 
         if (declaration!!.nameExpr.value == null) return
 
-        annotateWithColor(declaration.nameExpr.span, TethSyntaxHighlighter.TYPE)
+        annotateWithColor(declaration.nameExpr.span, TethSyntaxHighlighter.TYPE_PARAMETER)
     }
 
     override fun visit(declaration: FieldDeclaration?) {
@@ -102,8 +106,12 @@ private class AnnotatingVisitor(val analyzer: Analyzer, val holder: AnnotationHo
                 identifierExpression.span, TethSyntaxHighlighter.FUNCTION_CALL
             )
 
-            is StructDeclaration, is GenericParameterDeclaration -> annotateWithColor(
+            is StructDeclaration -> annotateWithColor(
                 identifierExpression.span, TethSyntaxHighlighter.TYPE
+            )
+
+            is GenericParameterDeclaration -> annotateWithColor(
+                identifierExpression.span, TethSyntaxHighlighter.TYPE_PARAMETER
             )
 
             is ParameterDeclaration -> annotateWithColor(
@@ -119,15 +127,18 @@ private class AnnotatingVisitor(val analyzer: Analyzer, val holder: AnnotationHo
     override fun visit(typeExpression: TypeExpression?) {
         super.visit(typeExpression)
 
-        when (analyzer.resolvedReference(typeExpression!!)) {
-            is StructDeclaration, is GenericParameterDeclaration -> annotateWithColor(
-                Span(
-                    typeExpression.span.source,
-                    typeExpression.span.offset,
-                    typeExpression.span.offset + typeExpression.name.length
-                ),
-                TethSyntaxHighlighter.TYPE
-            )
+        if (typeExpression!!.name == null)
+            return
+
+        val span = Span(
+            typeExpression.span.source,
+            typeExpression.span.offset,
+            typeExpression.span.offset + typeExpression.name.length
+        )
+
+        when (analyzer.resolvedReference(typeExpression)) {
+            is StructDeclaration -> annotateWithColor(span, TethSyntaxHighlighter.TYPE)
+            is GenericParameterDeclaration -> annotateWithColor(span, TethSyntaxHighlighter.TYPE_PARAMETER)
         }
     }
 
