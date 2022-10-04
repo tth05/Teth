@@ -169,10 +169,9 @@ public class Tokenizer {
             char c = this.stream.peek();
 
             if (c == '.') {
-                if (isDouble) {
-                    report(this.stream.createCurrentIndexSpan(), "Second decimal point in number literal");
+                // Second dot not allowed in number, stop here
+                if (isDouble)
                     break;
-                }
 
                 this.stream.consume();
                 isDouble = true;
