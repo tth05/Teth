@@ -14,7 +14,7 @@ class TethLanguageFileType : LanguageFileType(TethLanguage.INSTANCE) {
 
     override fun getDefaultExtension(): String = "teth"
 
-    override fun getIcon(): Icon? = null
+    override fun getIcon(): Icon = TethIcons.FILE
 
     companion object {
         val INSTANCE = TethLanguageFileType()
