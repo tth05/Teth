@@ -2,9 +2,10 @@ package com.github.tth05.teth.lang.diagnostics;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
-public class ProblemList {
+public class ProblemList implements Iterable<Problem> {
 
     private final List<Problem> problems = new ArrayList<>();
 
@@ -48,6 +49,11 @@ public class ProblemList {
         }
 
         return builder.toString();
+    }
+
+    @Override
+    public Iterator<Problem> iterator() {
+        return this.problems.iterator();
     }
 
     public static ProblemList of(Problem... problems) {
