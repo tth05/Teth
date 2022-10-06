@@ -9,6 +9,7 @@ import com.github.tth05.teth.lang.parser.ast.FunctionDeclaration.ParameterDeclar
 import com.github.tth05.teth.lang.parser.ast.StructDeclaration.FieldDeclaration
 import com.github.tth05.teth.lang.source.InMemorySource
 import com.github.tth05.teth.lang.span.Span
+import com.intellij.codeInspection.ProblemHighlightType
 import com.intellij.lang.annotation.AnnotationHolder
 import com.intellij.lang.annotation.Annotator
 import com.intellij.lang.annotation.HighlightSeverity
@@ -54,7 +55,7 @@ class TethAnnotator : Annotator {
             ) else return
         }
 
-        holder.newAnnotation(HighlightSeverity.ERROR, it.message).range(range).needsUpdateOnTyping()
+        holder.newAnnotation(HighlightSeverity.WEAK_WARNING, it.message).highlightType(ProblemHighlightType.GENERIC_ERROR).range(range)
             .create()
     }
 }
@@ -143,7 +144,7 @@ private class AnnotatingVisitor(val analyzer: Analyzer, val holder: AnnotationHo
     }
 
     private fun annotateWithColor(span: Span, color: TextAttributesKey) {
-        holder.newAnnotation(HighlightSeverity.TEXT_ATTRIBUTES, "").range(span.toTextRange())
+        holder.newSilentAnnotation(HighlightSeverity.TEXT_ATTRIBUTES).range(span.toTextRange())
             .textAttributes(color).needsUpdateOnTyping().create()
     }
 }
