@@ -10,7 +10,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 
-public class TypeExpression extends Expression implements IDeclarationReference {
+public class TypeExpression extends Statement implements IDeclarationReference {
 
     private final String name;
     private final List<TypeExpression> genericParameters;
