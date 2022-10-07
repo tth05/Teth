@@ -13,7 +13,6 @@ import com.intellij.codeInspection.ProblemHighlightType
 import com.intellij.lang.annotation.AnnotationHolder
 import com.intellij.lang.annotation.Annotator
 import com.intellij.lang.annotation.HighlightSeverity
-import com.intellij.openapi.editor.DefaultLanguageHighlighterColors
 import com.intellij.openapi.editor.colors.TextAttributesKey
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
@@ -30,17 +29,20 @@ class TethAnnotator : Annotator {
             annotateError(holder, validTextRange, it)
         }
 
+        var d = (System.nanoTime() - t) / 1_000_000.0
+        println("Annotating 1 took ${d}ms")
+
         val analyzer = Analyzer(mutableListOf(parserResult.unit))
         val analyzerResults = analyzer.analyze()
         analyzerResults.filter { it.moduleName == parserResult.unit.moduleName }.flatMap { it.problems }.forEach {
             annotateError(holder, validTextRange, it)
         }
 
-        val d = (System.nanoTime() - t) / 1_000_000.0
-        println("Annotating 1 took ${d}ms")
+        d = (System.nanoTime() - t) / 1_000_000.0
+        println("Annotating 2 took ${d}ms")
         AnnotatingVisitor(analyzer, holder).visit(parserResult.unit)
-        val d2 = (System.nanoTime() - t) / 1_000_000.0
-        println("Annotating took ${d2}ms")
+        d = (System.nanoTime() - t) / 1_000_000.0
+        println("Annotating took ${d}ms")
     }
 
     private fun annotateError(

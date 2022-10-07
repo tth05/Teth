@@ -27,7 +27,7 @@ public class Tokenizer {
             return true;
         });
 
-        return new TokenizerResult(this.stream.getSource(), this.tokenStream, this.problems);
+        return new TokenizerResult(this.tokenStream, this.problems);
     }
 
     private void emitUntil(CharPredicate breakPredicate) {

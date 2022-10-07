@@ -698,6 +698,10 @@ public class Parser {
         return new Parser(tokenStream).parse();
     }
 
+    public static ParserResult parse(TokenizerResult result) {
+        return new Parser(result).parse();
+    }
+
     public static List<ParserResult> parse(List<? extends ISource> sources) {
         return sources.stream().map(Parser::parse).toList();
     }

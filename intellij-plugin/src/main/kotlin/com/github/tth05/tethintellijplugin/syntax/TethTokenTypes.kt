@@ -6,8 +6,6 @@ import com.intellij.psi.tree.IElementType
 
 object TethTokenTypes {
 
-    val ROOT: IElementType = TethElementType("ROOT")
-
     val KEYWORD = TethTokenType("Keyword")
     val IDENTIFIER = TethTokenType("Identifier")
     val SEPARATOR = TethTokenType("Separator")

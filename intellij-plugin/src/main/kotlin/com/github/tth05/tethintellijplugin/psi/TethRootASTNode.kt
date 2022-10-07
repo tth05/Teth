@@ -1,4 +1,4 @@
-package com.github.tth05.tethintellijplugin.syntax.psi
+package com.github.tth05.tethintellijplugin.psi
 
 import com.intellij.psi.impl.source.tree.CompositeElement
 import com.intellij.psi.tree.IElementType

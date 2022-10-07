@@ -3,8 +3,8 @@ package com.github.tth05.tethintellijplugin.syntax
 import com.github.tth05.teth.lang.lexer.Token
 import com.github.tth05.teth.lang.lexer.TokenType
 import com.github.tth05.teth.lang.lexer.Tokenizer
+import com.github.tth05.teth.lang.lexer.TokenizerResult
 import com.github.tth05.teth.lang.stream.CharStream
-import com.github.tth05.tethintellijplugin.syntax.TethTokenTypes.of
 import com.intellij.lexer.LexerBase
 import com.intellij.psi.tree.IElementType
 
@@ -16,6 +16,9 @@ class TethLexer : LexerBase() {
     private var index = 0
     private var currentToken: Token? = null
 
+    var tokenizerResult: TokenizerResult? = null
+        private set
+
     override fun start(buffer: CharSequence, startOffset: Int, endOffset: Int, initialState: Int) {
         this.buffer = buffer
         this.bufferEnd = endOffset
@@ -24,8 +27,8 @@ class TethLexer : LexerBase() {
         if (endOffset - startOffset <= 0 || buffer.isEmpty()) return
 
         // This just tokenizes the whole file and discards any unwanted tokens. Not efficient, but fast enough
-        val result = Tokenizer.tokenize(CharStream.fromChars(buffer.toString().toCharArray()))
-        this.tokens = result.tokenStream.tokens
+        this.tokenizerResult = Tokenizer.tokenize(CharStream.fromChars(buffer.toString().toCharArray()))
+        this.tokens = tokenizerResult!!.tokenStream.tokens
             .filter { t: Token -> t.span().offset() >= startOffset && t.span().offsetEnd() <= endOffset }
             .toMutableList()
 
@@ -36,7 +39,8 @@ class TethLexer : LexerBase() {
 
     override fun getState(): Int = 0
 
-    override fun getTokenType(): IElementType? = if (currentToken == null) null else of(currentToken!!.type())
+    override fun getTokenType(): IElementType? =
+        if (currentToken == null) null else TethTokenTypes.of(currentToken!!.type())
 
     override fun getTokenStart(): Int = currentToken!!.span().offset()
 

@@ -1,4 +1,4 @@
-package com.github.tth05.tethintellijplugin.syntax.psi
+package com.github.tth05.tethintellijplugin.psi
 
 import com.github.tth05.tethintellijplugin.TethLanguage
 import com.github.tth05.tethintellijplugin.TethLanguageFileType

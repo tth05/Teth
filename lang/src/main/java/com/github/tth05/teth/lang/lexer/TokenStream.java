@@ -4,17 +4,21 @@ import com.github.tth05.teth.lang.source.ISource;
 import com.github.tth05.teth.lang.stream.EndOfStreamException;
 
 import java.util.ArrayDeque;
-import java.util.Deque;
 
 public class TokenStream {
 
     private static final Token EOF = new Token(null, "", TokenType.EOF);
 
-    private final ArrayDeque<Token> tokens = new ArrayDeque<>();
+    private final ArrayDeque<Token> tokens;
     private final ISource source;
 
     public TokenStream(ISource source) {
+        this(source, new ArrayDeque<>());
+    }
+
+    public TokenStream(ISource source, ArrayDeque<Token> tokens) {
         this.source = source;
+        this.tokens = tokens;
     }
 
     void push(Token token) {
@@ -50,7 +54,7 @@ public class TokenStream {
         return this.source;
     }
 
-    public Deque<Token> getTokens() {
+    public ArrayDeque<Token> getTokens() {
         return this.tokens;
     }
 

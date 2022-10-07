@@ -1,9 +1,11 @@
 package com.github.tth05.tethintellijplugin
 
+import com.github.tth05.tethintellijplugin.psi.TethElementTypes
 import com.github.tth05.tethintellijplugin.syntax.TethLexer
 import com.github.tth05.tethintellijplugin.syntax.TethParser
 import com.github.tth05.tethintellijplugin.syntax.TethTokenTypes
-import com.github.tth05.tethintellijplugin.syntax.psi.TethPsiFile
+import com.github.tth05.tethintellijplugin.psi.TethPsiFile
+import com.github.tth05.tethintellijplugin.psi.impl.*
 import com.intellij.extapi.psi.ASTWrapperPsiElement
 import com.intellij.lang.ASTNode
 import com.intellij.lang.ParserDefinition
@@ -19,8 +21,6 @@ import com.intellij.psi.tree.TokenSet
 
 class TethParserDefinition : ParserDefinition {
     // TODO: Migrate to better AST representation. Will allow reference and rename stuff
-    //  1. Replace this with empty lexer
-    //  2. Ignore lexer in parse and do full parse
     //  3. Convert teth AST to custom PSI tree
     //  4. Save source file unit (and problems) as key in file psi to allow annotator to use it
     override fun createLexer(project: Project?): Lexer = TethLexer()
@@ -33,9 +33,14 @@ class TethParserDefinition : ParserDefinition {
 
     override fun getStringLiteralElements(): TokenSet = STRING_LITERAL_TOKENS
 
-    override fun createElement(node: ASTNode?): PsiElement = when (val type = node?.elementType) {
+    override fun createElement(node: ASTNode?): PsiElement = when (val type = node!!.elementType) {
         TethTokenTypes.COMMENT -> PsiCommentImpl(type, node.text)
-        null -> throw AssertionError()
+        TethElementTypes.UNIT -> TethUnitImpl(node)
+        TethElementTypes.VARIABLE_DECLARATION -> TethVariableDeclarationImpl(node)
+        TethElementTypes.BINARY_EXPRESSION -> TethBinaryExpressionImpl(node)
+        TethElementTypes.TYPE_EXPRESSION -> TethTypeExpressionImpl(node)
+        TethElementTypes.LONG_LITERAL -> TethLongLiteralExpressionImpl(node)
+        TethElementTypes.IDENTIFIER_LITERAL -> TethIdentifierLiteralExpressionImpl(node)
         else -> ASTWrapperPsiElement(node)
     }
 

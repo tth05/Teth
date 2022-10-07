@@ -43,10 +43,10 @@ public abstract class ASTVisitor {
     }
 
     public void visit(VariableDeclaration declaration) {
+        declaration.getNameExpr().accept(this);
         var typeExpr = declaration.getTypeExpr();
         if (typeExpr != null)
             typeExpr.accept(this);
-        declaration.getNameExpr().accept(this);
         declaration.getInitializerExpr().accept(this);
     }
 
@@ -61,8 +61,8 @@ public abstract class ASTVisitor {
     }
 
     public void visit(FunctionDeclaration.ParameterDeclaration parameter) {
-        parameter.getTypeExpr().accept(this);
         parameter.getNameExpr().accept(this);
+        parameter.getTypeExpr().accept(this);
     }
 
     public void visit(StructDeclaration declaration) {
@@ -78,8 +78,8 @@ public abstract class ASTVisitor {
     }
 
     public void visit(StructDeclaration.FieldDeclaration declaration) {
-        declaration.getTypeExpr().accept(this);
         declaration.getNameExpr().accept(this);
+        declaration.getTypeExpr().accept(this);
     }
 
     public void visit(ObjectCreationExpression expression) {
@@ -107,10 +107,10 @@ public abstract class ASTVisitor {
         var condition = statement.getCondition();
         if (condition != null)
             condition.accept(this);
-        statement.getBody().accept(this);
         var advanceStatement = statement.getAdvanceStatement();
         if (advanceStatement != null)
             advanceStatement.accept(this);
+        statement.getBody().accept(this);
     }
 
     public void visit(ListLiteralExpression listLiteralExpression) {
