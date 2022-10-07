@@ -474,11 +474,13 @@ public class TypeAnalysis extends AnalysisASTVisitor {
             List<T> parameterDeclarations,
             ExpressionList parameters
     ) {
-        if (explicitGenericParameters.size() != genericParameterDeclarations.size()) {
-            var span = Span.of(explicitGenericParameters, invocation.getSpan());
-            report(span, "Wrong number of generic bounds. Expected " + genericParameterDeclarations.size() + ", got " + explicitGenericParameters.size());
-            ensureAllGenericParametersBound(span, genericParameterInfo, genericParameterDeclarations);
-            return genericParameterInfo;
+        if (!explicitGenericParameters.isEmpty()) {
+            if (explicitGenericParameters.size() != genericParameterDeclarations.size()) {
+                var span = Span.of(explicitGenericParameters, invocation.getSpan());
+                report(span, "Wrong number of generic bounds. Expected " + genericParameterDeclarations.size() + ", got " + explicitGenericParameters.size());
+                ensureAllGenericParametersBound(span, genericParameterInfo, genericParameterDeclarations);
+                return genericParameterInfo;
+            }
         }
 
         // Explicit generic parameters have priority over inferred generic parameters
