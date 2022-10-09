@@ -17,16 +17,18 @@ import com.intellij.openapi.editor.colors.TextAttributesKey
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
+import com.intellij.util.applyIf
 
 class TethAnnotator : Annotator {
     override fun annotate(element: PsiElement, holder: AnnotationHolder) {
         if (element !is PsiFile) return
 
         val t = System.nanoTime()
-        val parserResult = Parser.parse(InMemorySource("", element.text))
+        val fileText = element.text
+        val parserResult = Parser.parse(InMemorySource("", fileText))
         val validTextRange = element.textRange
         parserResult.problems.forEach {
-            annotateError(holder, validTextRange, it)
+            annotateError(holder, fileText, validTextRange, it)
         }
 
         var d = (System.nanoTime() - t) / 1_000_000.0
@@ -35,7 +37,7 @@ class TethAnnotator : Annotator {
         val analyzer = Analyzer(mutableListOf(parserResult.unit))
         val analyzerResults = analyzer.analyze()
         analyzerResults.filter { it.moduleName == parserResult.unit.moduleName }.flatMap { it.problems }.forEach {
-            annotateError(holder, validTextRange, it)
+            annotateError(holder, fileText, validTextRange, it)
         }
 
         d = (System.nanoTime() - t) / 1_000_000.0
@@ -46,18 +48,23 @@ class TethAnnotator : Annotator {
     }
 
     private fun annotateError(
-        holder: AnnotationHolder, validTextRange: TextRange, it: Problem
+        holder: AnnotationHolder, fileText: String, validTextRange: TextRange, it: Problem
     ) {
         var range = it.span.toTextRange()
         // Fixes errors at EOF
-        if (!validTextRange.contains(range)) {
+        if (range.startOffset >= validTextRange.endOffset) {
             range = if (validTextRange.endOffset - 1 >= 0) TextRange(
                 validTextRange.endOffset - 1,
                 validTextRange.endOffset
             ) else return
         }
 
-        holder.newAnnotation(HighlightSeverity.WEAK_WARNING, it.message).highlightType(ProblemHighlightType.GENERIC_ERROR).range(range)
+        holder.newAnnotation(HighlightSeverity.WEAK_WARNING, it.message)
+            .highlightType(ProblemHighlightType.GENERIC_ERROR)
+            .range(range)
+            .applyIf(fileText[range.startOffset] == '\n') {
+                afterEndOfLine()
+            }
             .create()
     }
 }
@@ -130,13 +137,13 @@ private class AnnotatingVisitor(val analyzer: Analyzer, val holder: AnnotationHo
     override fun visit(typeExpression: TypeExpression?) {
         super.visit(typeExpression)
 
-        if (typeExpression!!.name == null)
+        if (typeExpression!!.nameExpr.value == null)
             return
 
         val span = Span(
             typeExpression.span.source,
             typeExpression.span.offset,
-            typeExpression.span.offset + typeExpression.name.length
+            typeExpression.span.offset + typeExpression.nameExpr.value.length
         )
 
         when (analyzer.resolvedReference(typeExpression)) {
@@ -147,7 +154,7 @@ private class AnnotatingVisitor(val analyzer: Analyzer, val holder: AnnotationHo
 
     private fun annotateWithColor(span: Span, color: TextAttributesKey) {
         holder.newSilentAnnotation(HighlightSeverity.TEXT_ATTRIBUTES).range(span.toTextRange())
-            .textAttributes(color).needsUpdateOnTyping().create()
+            .textAttributes(color).create()
     }
 }
 
