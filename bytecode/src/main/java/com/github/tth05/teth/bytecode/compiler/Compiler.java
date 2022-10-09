@@ -143,10 +143,11 @@ public class Compiler {
                 this.currentFunctionInsn.add(new EXIT_Insn());
             } else {
                 for (Statement statement : unit.getStatements()) {
-                    switch (statement) {
-                        case FunctionDeclaration decl -> decl.accept(this);
-                        case StructDeclaration decl -> decl.accept(this);
-                        default -> {}
+                    // TODO: Switch preview disabled
+                    if (statement instanceof FunctionDeclaration decl) {
+                        decl.accept(this);
+                    } else if (statement instanceof StructDeclaration decl) {
+                        decl.accept(this);
                     }
                 }
             }
