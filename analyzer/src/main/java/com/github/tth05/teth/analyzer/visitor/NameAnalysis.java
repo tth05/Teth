@@ -254,16 +254,16 @@ public class NameAnalysis extends AnalysisASTVisitor {
     @Override
     public void visit(TypeExpression typeExpression) {
         var span = typeExpression.getSpan();
-        var type = typeExpression.getName();
+        var type = typeExpression.getNameExpr().getValue();
         var genericParameters = typeExpression.getGenericParameters();
         genericParameters.forEach(t -> t.accept(this));
 
-        if (typeExpression.getName() == null)
+        if (typeExpression.getNameExpr() == null)
             return;
 
         Statement decl;
-        if (Prelude.isBuiltInTypeName(typeExpression.getName()))
-            decl = Prelude.getStructForTypeName(typeExpression.getName());
+        if (Prelude.isBuiltInTypeName(type))
+            decl = Prelude.getStructForTypeName(type);
         else
             decl = this.declarationStack.resolveIdentifier(type);
 
@@ -285,6 +285,7 @@ public class NameAnalysis extends AnalysisASTVisitor {
         if (decl instanceof GenericParameterDeclaration && !genericParameters.isEmpty())
             report(span, "Generic parameter cannot have generic parameters");
 
+        this.resolvedReferences.put(typeExpression.getNameExpr(), decl);
         this.resolvedReferences.put(typeExpression, decl);
     }
 
@@ -332,10 +333,10 @@ public class NameAnalysis extends AnalysisASTVisitor {
             var selfParameter = new FunctionDeclaration.ParameterDeclaration(
                     null,
                     new TypeExpression(null,
-                            currentStruct.getNameExpr().getValue(),
+                            currentStruct.getNameExpr(),
                             currentStruct.getGenericParameters().stream()
                                     .map(p -> {
-                                        var typeExpr = new TypeExpression(null, p.getNameExpr().getValue());
+                                        var typeExpr = new TypeExpression(null, new IdentifierExpression(null, p.getNameExpr().getValue()));
                                         this.resolvedReferences.put(typeExpr, p);
                                         return typeExpr;
                                     })

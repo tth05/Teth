@@ -100,50 +100,50 @@ public class ParserTest extends AbstractParserTest {
                 "main", StatementList.of(
                 new VariableDeclaration(
                         null,
-                        new TypeExpression(null, "long"),
+                        new TypeExpression(null, new IdentifierExpression(null, "long")),
                         new IdentifierExpression(null, "l"),
                         new LongLiteralExpression(null, 5)
                 ),
                 new VariableDeclaration(
                         null,
-                        new TypeExpression(null, "double"),
+                        new TypeExpression(null, new IdentifierExpression(null, "double")),
                         new IdentifierExpression(null, "l"),
                         new LongLiteralExpression(null, 5)
                 ),
                 new VariableDeclaration(
                         null,
-                        new TypeExpression(null, "string"),
+                        new TypeExpression(null, new IdentifierExpression(null, "string")),
                         new IdentifierExpression(null, "l"),
                         new LongLiteralExpression(null, 5)
                 ),
                 new VariableDeclaration(
                         null,
-                        new TypeExpression(null, "boolean"),
+                        new TypeExpression(null, new IdentifierExpression(null, "boolean")),
                         new IdentifierExpression(null, "l"),
                         new LongLiteralExpression(null, 5)
                 ),
                 new VariableDeclaration(
                         null,
-                        new TypeExpression(null, "any"),
+                        new TypeExpression(null, new IdentifierExpression(null, "any")),
                         new IdentifierExpression(null, "l"),
                         new LongLiteralExpression(null, 5)
                 ),
                 new VariableDeclaration(
                         null,
-                        new TypeExpression(null, "function"),
+                        new TypeExpression(null, new IdentifierExpression(null, "function")),
                         new IdentifierExpression(null, "l"),
                         new LongLiteralExpression(null, 5)
                 ),
                 new VariableDeclaration(
                         null,
                         new TypeExpression(null,
-                                "list",
+                                new IdentifierExpression(null, "list"),
                                 List.of(
                                         new TypeExpression(null,
-                                                "list",
+                                                new IdentifierExpression(null, "list"),
                                                 List.of(
-                                                        new TypeExpression(null, "long"),
-                                                        new TypeExpression(null, "double", List.of(new TypeExpression(null, "long")))
+                                                        new TypeExpression(null, new IdentifierExpression(null, "long")),
+                                                        new TypeExpression(null, new IdentifierExpression(null, "double"), List.of(new TypeExpression(null, new IdentifierExpression(null, "long"))))
                                                 )
                                         )
                                 )
@@ -540,7 +540,7 @@ public class ParserTest extends AbstractParserTest {
                         "main", StatementList.of(
                         new VariableDeclaration(
                                 null,
-                                new TypeExpression(null, "double"),
+                                new TypeExpression(null, new IdentifierExpression(null, "double")),
                                 new IdentifierExpression(null, "d"),
                                 new LongLiteralExpression(null, 25)
                         )
@@ -625,8 +625,8 @@ public class ParserTest extends AbstractParserTest {
                                         new GenericParameterDeclaration(null, "Z")
                                 ),
                                 List.of(
-                                        new FunctionDeclaration.ParameterDeclaration(null, new TypeExpression(null, "type"), new IdentifierExpression(null, "self")),
-                                        new FunctionDeclaration.ParameterDeclaration(null, new TypeExpression(null, "long"), new IdentifierExpression(null, "b"))
+                                        new FunctionDeclaration.ParameterDeclaration(null, new TypeExpression(null, new IdentifierExpression(null, "type")), new IdentifierExpression(null, "self")),
+                                        new FunctionDeclaration.ParameterDeclaration(null, new TypeExpression(null, new IdentifierExpression(null, "long")), new IdentifierExpression(null, "b"))
                                 ), null,
                                 new BlockStatement(
                                         null,
@@ -634,7 +634,7 @@ public class ParserTest extends AbstractParserTest {
                                                 new FunctionDeclaration(
                                                         null,
                                                         new IdentifierExpression(null, "bar"),
-                                                        List.of(), List.of(), new TypeExpression(null, "string"),
+                                                        List.of(), List.of(), new TypeExpression(null, new IdentifierExpression(null, "string")),
                                                         new BlockStatement(
                                                                 null,
                                                                 StatementList.of(
@@ -690,8 +690,8 @@ public class ParserTest extends AbstractParserTest {
                                         null,
                                         new IdentifierExpression(null, "bar"),
                                         List.of(
-                                                new TypeExpression(null, "list", List.of(new TypeExpression(null, "long"))),
-                                                new TypeExpression(null, "long")
+                                                new TypeExpression(null, new IdentifierExpression(null, "list"), List.of(new TypeExpression(null, new IdentifierExpression(null, "long")))),
+                                                new TypeExpression(null, new IdentifierExpression(null, "long"))
                                         ),
                                         ExpressionList.of()
                                 ),
@@ -729,13 +729,13 @@ public class ParserTest extends AbstractParserTest {
                                 List.of(
                                         new StructDeclaration.FieldDeclaration(
                                                 null,
-                                                new TypeExpression(null, "long"),
+                                                new TypeExpression(null, new IdentifierExpression(null, "long")),
                                                 new IdentifierExpression(null, "a"),
                                                 0
                                         ),
                                         new StructDeclaration.FieldDeclaration(
                                                 null,
-                                                new TypeExpression(null, "double"),
+                                                new TypeExpression(null, new IdentifierExpression(null, "double")),
                                                 new IdentifierExpression(null, "c"),
                                                 1
                                         )
@@ -746,8 +746,8 @@ public class ParserTest extends AbstractParserTest {
                                                 new IdentifierExpression(null, "bar"),
                                                 List.of(),
                                                 List.of(
-                                                        new FunctionDeclaration.ParameterDeclaration(null, new TypeExpression(null, "string"), new IdentifierExpression(null, "b"))
-                                                ), new TypeExpression(null, "string"),
+                                                        new FunctionDeclaration.ParameterDeclaration(null, new TypeExpression(null, new IdentifierExpression(null, "string")), new IdentifierExpression(null, "b"))
+                                                ), new TypeExpression(null, new IdentifierExpression(null, "string")),
                                                 new BlockStatement(
                                                         null,
                                                         StatementList.of(

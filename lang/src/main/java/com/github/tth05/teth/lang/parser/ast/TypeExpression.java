@@ -12,21 +12,21 @@ import java.util.stream.Collectors;
 
 public class TypeExpression extends Statement implements IDeclarationReference {
 
-    private final String name;
+    private final IdentifierExpression nameExpr;
     private final List<TypeExpression> genericParameters;
 
-    public TypeExpression(Span span, String name) {
-        this(span, name, Collections.emptyList());
+    public TypeExpression(Span span, IdentifierExpression nameExpr) {
+        this(span, nameExpr, Collections.emptyList());
     }
 
-    public TypeExpression(Span span, String name, List<TypeExpression> genericParameters) {
+    public TypeExpression(Span span, IdentifierExpression nameExpr, List<TypeExpression> genericParameters) {
         super(span);
-        this.name = name;
+        this.nameExpr = nameExpr;
         this.genericParameters = Collections.unmodifiableList(Objects.requireNonNull(genericParameters));
     }
 
-    public String getName() {
-        return this.name;
+    public IdentifierExpression getNameExpr() {
+        return this.nameExpr;
     }
 
     public List<TypeExpression> getGenericParameters() {
@@ -47,24 +47,24 @@ public class TypeExpression extends Statement implements IDeclarationReference {
 
         TypeExpression that = (TypeExpression) o;
 
-        if (!this.name.equals(that.name))
+        if (!this.nameExpr.equals(that.nameExpr))
             return false;
         return this.genericParameters.equals(that.genericParameters);
     }
 
     @Override
     public int hashCode() {
-        int result = this.name.hashCode();
+        int result = this.nameExpr.hashCode();
         result = 31 * result + this.genericParameters.hashCode();
         return result;
     }
 
     @Override
     public void dump(ASTDumpBuilder builder) {
-        if (this.name == null)
+        if (this.nameExpr == null)
             builder.append("???");
         else
-            builder.append(this.name + (this.genericParameters.isEmpty() ? "" : "<" + this.genericParameters.stream().map(TypeExpression::toString).collect(Collectors.joining(", ")) + ">"));
+            builder.append(this.nameExpr + (this.genericParameters.isEmpty() ? "" : "<" + this.genericParameters.stream().map(TypeExpression::toString).collect(Collectors.joining(", ")) + ">"));
     }
 
     @Override

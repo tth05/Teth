@@ -132,8 +132,8 @@ public class Prelude {
 
     private static TypeExpression type(String name, TypeExpression... params) {
         if (params.length == 0)
-            return new TypeExpression(null, name);
-        return new TypeExpression(null, name, Arrays.asList(params));
+            return new TypeExpression(null, new IdentifierExpression(null, name));
+        return new TypeExpression(null, new IdentifierExpression(null, name), Arrays.asList(params));
     }
 
     private static FunctionDeclaration createFakeFunctionDeclaration(String name, boolean instanceFunction, TypeExpression returnType, TypeExpression... parameters) {

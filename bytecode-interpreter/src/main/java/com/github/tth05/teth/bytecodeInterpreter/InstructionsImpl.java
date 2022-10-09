@@ -301,36 +301,34 @@ public class InstructionsImpl {
     }
 
     private static String intrinsicToString(Interpreter interpreter, Object o) {
-        return switch (o) {
-            case List<?> l -> {
-                var sb = new StringBuilder();
-                sb.append("[");
-                for (var i = 0; i < l.size(); i++) {
-                    if (i > 0)
-                        sb.append(", ");
-                    sb.append(intrinsicToString(interpreter, l.get(i)));
-                }
-                sb.append("]");
-                yield sb.toString();
+        if (o instanceof List<?> l) {
+            var sb = new StringBuilder();
+            sb.append("[");
+            for (var i = 0; i < l.size(); i++) {
+                if (i > 0)
+                    sb.append(", ");
+                sb.append(intrinsicToString(interpreter, l.get(i)));
             }
-            case ObjectValue v -> {
-                var structData = interpreter.getStructData(v.getStructId());
-                var str = new StringBuilder(structData.name());
-                str.append('(');
-                for (int i = 0; i < structData.fieldNames().length; i++) {
-                    if (i > 0)
-                        str.append(", ");
+            sb.append("]");
+            return sb.toString();
+        } else if (o instanceof ObjectValue v) {
+            var structData = interpreter.getStructData(v.getStructId());
+            var str = new StringBuilder(structData.name());
+            str.append('(');
+            for (int i = 0; i < structData.fieldNames().length; i++) {
+                if (i > 0)
+                    str.append(", ");
 
-                    var fieldName = structData.fieldNames()[i];
-                    str
-                            .append(fieldName)
-                            .append(": ")
-                            .append(intrinsicToString(interpreter, v.getField(i)));
-                }
-                str.append(')');
-                yield str.toString();
+                var fieldName = structData.fieldNames()[i];
+                str
+                        .append(fieldName)
+                        .append(": ")
+                        .append(intrinsicToString(interpreter, v.getField(i)));
             }
-            default -> o.toString();
-        };
+            str.append(')');
+            return str.toString();
+        } else {
+            return o.toString();
+        }
     }
 }

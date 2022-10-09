@@ -627,7 +627,7 @@ public class Parser {
         var firstSpan = this.stream.peek().span();
         var current = expectIdentifier(anchorSet, () -> "Expected a type name");
         if (current.isInvalid())
-            return new TypeExpression(zeroWidthSpan(firstSpan), null);
+            return new TypeExpression(zeroWidthSpan(firstSpan), new IdentifierExpression(null, null));
 
         firstSpan = current.span();
         var secondSpan = firstSpan;
@@ -648,7 +648,7 @@ public class Parser {
             genericParameters = Collections.emptyList();
         }
 
-        return new TypeExpression(Span.of(firstSpan, secondSpan), current.value(), genericParameters);
+        return new TypeExpression(Span.of(firstSpan, secondSpan), new IdentifierExpression(current.span(), current.value()), genericParameters);
     }
 
     private Token expectIdentifier(AnchorUnion anchorSet, Supplier<String> messageSupplier) {

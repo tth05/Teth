@@ -230,12 +230,18 @@ public class TypeAnalysis extends AnalysisASTVisitor {
 
         // TODO: Switch preview disabled
         SemanticType resolvedType;
-        if (member instanceof FunctionDeclaration)
+        if (member instanceof FunctionDeclaration) {
             resolvedType = this.typeCache.voidType(); // Not implemented
-        else if (member instanceof StructDeclaration.FieldDeclaration field)
-            resolvedType = asType(field.getTypeExpr());
-        else
+        } else if (member instanceof StructDeclaration.FieldDeclaration field) {
+            var reference = this.resolvedReferences.get(field.getTypeExpr());
+            // Infer field type if it is generic
+            if (reference instanceof GenericParameterDeclaration)
+                resolvedType = type.getGenericBounds().get(structDeclaration.getGenericParameters().indexOf(reference));
+            else
+                resolvedType = asType(field.getTypeExpr());
+        } else {
             throw new IllegalStateException();
+        }
 
         this.resolvedExpressionTypes.put(expression, resolvedType);
         // Can only be done after type resolution, therefore not contained in NameAnalysis
@@ -422,12 +428,12 @@ public class TypeAnalysis extends AnalysisASTVisitor {
     private SemanticType asTypeGeneric(GenericParameterInfo genericParameterInfo, TypeExpression typeExpr, SemanticType fallbackType) {
         SemanticType paramType;
         if (referencesGenericParameter(typeExpr)) {
-            var actualType = genericParameterInfo.getBoundGenericParameter(typeExpr.getName());
+            var actualType = genericParameterInfo.getBoundGenericParameter(typeExpr.getNameExpr().getValue());
             if (actualType == null) {
                 if (fallbackType == null)
                     return null;
 
-                genericParameterInfo.bindGenericParameter(typeExpr.getName(), actualType = fallbackType);
+                genericParameterInfo.bindGenericParameter(typeExpr.getNameExpr().getValue(), actualType = fallbackType);
             }
             paramType = actualType;
         } else {

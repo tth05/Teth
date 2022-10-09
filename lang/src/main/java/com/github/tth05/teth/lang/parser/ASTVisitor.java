@@ -151,6 +151,7 @@ public abstract class ASTVisitor {
     }
 
     public void visit(TypeExpression typeExpression) {
+        typeExpression.getNameExpr().accept(this);
         typeExpression.getGenericParameters().forEach(p -> p.accept(this));
     }
 
