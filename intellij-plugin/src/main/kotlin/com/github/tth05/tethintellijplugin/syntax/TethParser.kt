@@ -13,6 +13,7 @@ import com.intellij.lang.PsiBuilder
 import com.intellij.lang.PsiParser
 import com.intellij.lang.impl.PsiBuilderImpl
 import com.intellij.psi.tree.IElementType
+import java.util.function.Consumer
 
 /**
  * Simple parser which turns the given tokens into a flat AST
@@ -51,7 +52,12 @@ private class PsiConstructorVisitor(val builder: PsiBuilder) : ASTVisitor() {
 
     override fun visit(declaration: StructDeclaration) {
         marked(declaration, TethElementTypes.STRUCT_DECLARATION) {
-            super.visit(declaration)
+            declaration.nameExpr.accept(this)
+            declaration.genericParameters.forEach { it.accept(this) }
+
+            (declaration.fields.asSequence() + declaration.functions.asSequence())
+                .sortedBy { it.span.offset }
+                .forEach { it.accept(this) }
         }
     }
 
@@ -202,7 +208,7 @@ private class PsiConstructorVisitor(val builder: PsiBuilder) : ASTVisitor() {
     }
 
     private fun advanceFloatingTokens(offset: Int) {
-        while (builder.currentOffset < offset) {
+        while (builder.currentOffset < offset && builder.tokenType != null) {
             val tokenMarker = builder.mark()
             val tokenType = builder.tokenType!!
             builder.advanceLexer()

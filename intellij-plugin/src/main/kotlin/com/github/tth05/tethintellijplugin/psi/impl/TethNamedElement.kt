@@ -1,11 +1,9 @@
 package com.github.tth05.tethintellijplugin.psi.impl
 
-import com.github.tth05.tethintellijplugin.TethLanguage
 import com.github.tth05.tethintellijplugin.psi.TethElementTypes
 import com.github.tth05.tethintellijplugin.psi.api.TethNameIdentifierOwner
 import com.intellij.extapi.psi.ASTWrapperPsiElement
 import com.intellij.lang.ASTNode
-import com.intellij.lang.LanguageParserDefinitions
 import com.intellij.psi.PsiElement
 
 abstract class TethNamedElement(node: ASTNode) : ASTWrapperPsiElement(node), TethNameIdentifierOwner {
