@@ -36,11 +36,33 @@ class TethParserDefinition : ParserDefinition {
     override fun createElement(node: ASTNode?): PsiElement = when (val type = node!!.elementType) {
         TethTokenTypes.COMMENT -> PsiCommentImpl(type, node.text)
         TethElementTypes.UNIT -> TethUnitImpl(node)
+        TethElementTypes.STRUCT_DECLARATION -> TethStructDeclarationImpl(node)
+        TethElementTypes.FIELD_DECLARATION -> TethFieldDeclarationImpl(node)
+        TethElementTypes.FUNCTION_DECLARATION -> TethFunctionDeclarationImpl(node)
+        TethElementTypes.FUNCTION_PARAMETER_DECLARATION -> TethFunctionParameterDeclarationImpl(node)
+        TethElementTypes.GENERIC_PARAMETER_DECLARATION -> TethGenericParameterDeclarationImpl(node)
         TethElementTypes.VARIABLE_DECLARATION -> TethVariableDeclarationImpl(node)
+
+        TethElementTypes.BLOCK -> TethBlockStatementImpl(node)
+        TethElementTypes.IF_STATEMENT -> TethIfStatementImpl(node)
+        TethElementTypes.LOOP_STATEMENT -> TethLoopStatementImpl(node)
+        TethElementTypes.RETURN_STATEMENT -> TethReturnStatementImpl(node)
+        TethElementTypes.USE_STATEMENT -> TethUseStatementImpl(node)
+
+        TethElementTypes.FUNCTION_INVOCATION -> TethFunctionInvocationExpressionImpl(node)
         TethElementTypes.BINARY_EXPRESSION -> TethBinaryExpressionImpl(node)
-        TethElementTypes.TYPE_EXPRESSION -> TethTypeExpressionImpl(node)
+        TethElementTypes.UNARY_EXPRESSION -> TethUnaryExpressionImpl(node)
+        TethElementTypes.GARBAGE_EXPRESSION -> TethGarbageExpressionImpl(node)
+        TethElementTypes.OBJECT_CREATION_EXPRESSION -> TethObjectCreationExpressionImpl(node)
+        TethElementTypes.MEMBER_ACCESS_EXPRESSION -> TethMemberAccessExpressionImpl(node)
+        TethElementTypes.LIST_LITERAL_EXPRESSION -> TethListLiteralExpressionImpl(node)
         TethElementTypes.LONG_LITERAL -> TethLongLiteralExpressionImpl(node)
+        TethElementTypes.DOUBLE_LITERAL -> TethDoubleLiteralExpressionImpl(node)
+        TethElementTypes.STRING_LITERAL -> TethStringLiteralExpressionImpl(node)
+        TethElementTypes.BOOLEAN_LITERAL -> TethBooleanLiteralExpressionImpl(node)
         TethElementTypes.IDENTIFIER_LITERAL -> TethIdentifierLiteralExpressionImpl(node)
+
+        TethElementTypes.TYPE -> TethTypeExpressionImpl(node)
         else -> ASTWrapperPsiElement(node)
     }
 

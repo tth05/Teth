@@ -49,9 +49,75 @@ private class PsiConstructorVisitor(val builder: PsiBuilder) : ASTVisitor() {
         marker.done(TethElementTypes.UNIT)
     }
 
+    override fun visit(declaration: StructDeclaration) {
+        marked(declaration, TethElementTypes.STRUCT_DECLARATION) {
+            super.visit(declaration)
+        }
+    }
+
+    override fun visit(declaration: StructDeclaration.FieldDeclaration) {
+        marked(declaration, TethElementTypes.FIELD_DECLARATION) {
+            super.visit(declaration)
+        }
+    }
+
+    override fun visit(declaration: FunctionDeclaration) {
+        marked(declaration, TethElementTypes.FUNCTION_DECLARATION) {
+            super.visit(declaration)
+        }
+    }
+
+    override fun visit(declaration: FunctionDeclaration.ParameterDeclaration) {
+        marked(declaration, TethElementTypes.FUNCTION_PARAMETER_DECLARATION) {
+            super.visit(declaration)
+        }
+    }
+
+    override fun visit(declaration: GenericParameterDeclaration) {
+        marked(declaration, TethElementTypes.GENERIC_PARAMETER_DECLARATION) {
+            super.visit(declaration)
+        }
+    }
+
     override fun visit(declaration: VariableDeclaration) {
         marked(declaration, TethElementTypes.VARIABLE_DECLARATION) {
             super.visit(declaration)
+        }
+    }
+
+    override fun visit(statement: BlockStatement) {
+        marked(statement, TethElementTypes.BLOCK) {
+            super.visit(statement)
+        }
+    }
+
+    override fun visit(statement: IfStatement) {
+        marked(statement, TethElementTypes.IF_STATEMENT) {
+            super.visit(statement)
+        }
+    }
+
+    override fun visit(statement: LoopStatement) {
+        marked(statement, TethElementTypes.LOOP_STATEMENT) {
+            super.visit(statement)
+        }
+    }
+
+    override fun visit(returnStatement: ReturnStatement) {
+        marked(returnStatement, TethElementTypes.RETURN_STATEMENT) {
+            super.visit(returnStatement)
+        }
+    }
+
+    override fun visit(useStatement: UseStatement) {
+        marked(useStatement, TethElementTypes.USE_STATEMENT) {
+            super.visit(useStatement)
+        }
+    }
+
+    override fun visit(invocation: FunctionInvocationExpression) {
+        marked(invocation, TethElementTypes.FUNCTION_INVOCATION) {
+            super.visit(invocation)
         }
     }
 
@@ -61,9 +127,15 @@ private class PsiConstructorVisitor(val builder: PsiBuilder) : ASTVisitor() {
         }
     }
 
-    override fun visit(typeExpression: TypeExpression) {
-        marked(typeExpression, TethElementTypes.TYPE_EXPRESSION) {
-            super.visit(typeExpression)
+    override fun visit(expression: UnaryExpression) {
+        marked(expression, TethElementTypes.UNARY_EXPRESSION) {
+            super.visit(expression)
+        }
+    }
+
+    override fun visit(garbageExpression: GarbageExpression) {
+        marked(garbageExpression, TethElementTypes.GARBAGE_EXPRESSION) {
+            super.visit(garbageExpression)
         }
     }
 
@@ -73,17 +145,59 @@ private class PsiConstructorVisitor(val builder: PsiBuilder) : ASTVisitor() {
         }
     }
 
+    override fun visit(expression: ObjectCreationExpression) {
+        marked(expression, TethElementTypes.OBJECT_CREATION_EXPRESSION) {
+            super.visit(expression)
+        }
+    }
+
+    override fun visit(expression: MemberAccessExpression) {
+        marked(expression, TethElementTypes.MEMBER_ACCESS_EXPRESSION) {
+            super.visit(expression)
+        }
+    }
+
+    override fun visit(listLiteralExpression: ListLiteralExpression) {
+        marked(listLiteralExpression, TethElementTypes.LIST_LITERAL_EXPRESSION) {
+            super.visit(listLiteralExpression)
+        }
+    }
+
     override fun visit(longLiteralExpression: LongLiteralExpression) {
         marked(longLiteralExpression, TethElementTypes.LONG_LITERAL) {
             super.visit(longLiteralExpression)
         }
     }
 
+    override fun visit(doubleLiteralExpression: DoubleLiteralExpression) {
+        marked(doubleLiteralExpression, TethElementTypes.DOUBLE_LITERAL) {
+            super.visit(doubleLiteralExpression)
+        }
+    }
+
+    override fun visit(stringLiteralExpression: StringLiteralExpression) {
+        marked(stringLiteralExpression, TethElementTypes.STRING_LITERAL) {
+            super.visit(stringLiteralExpression)
+        }
+    }
+
+    override fun visit(booleanLiteralExpression: BooleanLiteralExpression) {
+        marked(booleanLiteralExpression, TethElementTypes.BOOLEAN_LITERAL) {
+            super.visit(booleanLiteralExpression)
+        }
+    }
+
+    override fun visit(typeExpression: TypeExpression) {
+        marked(typeExpression, TethElementTypes.TYPE) {
+            super.visit(typeExpression)
+        }
+    }
+
     fun marked(statement: Statement, type: IElementType, block: () -> Unit) {
-        advanceFloatingTokens(statement.span.offset)
+        advanceFloatingTokens(statement.span?.offset ?: -1)
         val marker = builder.mark()
         block()
-        advanceFloatingTokens(statement.span.offsetEnd)
+        advanceFloatingTokens(statement.span?.offsetEnd ?: -1)
         marker.done(type)
     }
 

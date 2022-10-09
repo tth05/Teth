@@ -2,7 +2,7 @@ package com.github.tth05.tethintellijplugin.psi.api
 
 import com.intellij.psi.PsiNameIdentifierOwner
 
-interface TethFunctionDeclaration : TethStatement, PsiNameIdentifierOwner {
+interface TethFunctionDeclaration : TethStatement, TethNameIdentifierOwner {
 
     val genericParameters: List<TethGenericParameterDeclaration>
     val parameters: List<TethFunctionParameterDeclaration>

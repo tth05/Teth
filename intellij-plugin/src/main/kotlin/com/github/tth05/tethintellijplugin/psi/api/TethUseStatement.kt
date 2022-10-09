@@ -4,6 +4,6 @@ import com.intellij.psi.PsiNameIdentifierOwner
 
 interface TethUseStatement : TethStatement {
 
-    val moduleName: String?
-    val imports: List<String?>
+    val moduleName: TethIdentifierLiteralExpression
+    val imports: List<TethIdentifierLiteralExpression>
 }
