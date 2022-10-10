@@ -29,5 +29,7 @@
         <annotator language="Teth"
                    implementationClass="com.github.tth05.tethintellijplugin.syntax.highlighting.TethAnnotator"/>
         <colorSettingsPage implementation="com.github.tth05.tethintellijplugin.TethColorSettingsPage"/>
+
+        <projectService serviceImplementation="com.github.tth05.tethintellijplugin.psi.caching.TethPsiCache"/>
     </extensions>
 </idea-plugin>

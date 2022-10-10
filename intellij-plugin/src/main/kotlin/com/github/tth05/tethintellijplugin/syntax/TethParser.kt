@@ -4,38 +4,47 @@ import com.github.tth05.teth.lang.lexer.TokenStream
 import com.github.tth05.teth.lang.lexer.TokenizerResult
 import com.github.tth05.teth.lang.parser.ASTVisitor
 import com.github.tth05.teth.lang.parser.Parser
+import com.github.tth05.teth.lang.parser.ParserResult
 import com.github.tth05.teth.lang.parser.SourceFileUnit
 import com.github.tth05.teth.lang.parser.ast.*
 import com.github.tth05.teth.lang.source.InMemorySource
 import com.github.tth05.tethintellijplugin.psi.TethElementTypes
+import com.github.tth05.tethintellijplugin.psi.api.TethUnit
 import com.intellij.lang.ASTNode
 import com.intellij.lang.PsiBuilder
 import com.intellij.lang.PsiParser
 import com.intellij.lang.impl.PsiBuilderImpl
+import com.intellij.openapi.util.Key
+import com.intellij.psi.impl.source.resolve.FileContextUtil
 import com.intellij.psi.tree.IElementType
-import java.util.function.Consumer
+import com.intellij.util.alsoIfNull
 
-/**
- * Simple parser which turns the given tokens into a flat AST
- */
 class TethParser : PsiParser {
     override fun parse(root: IElementType, builder: PsiBuilder): ASTNode {
         if (builder !is PsiBuilderImpl)
             throw IllegalArgumentException("PsiBuilder must be an instance of PsiBuilderImpl")
 
-        val tokenizerResult = (builder.lexer as TethLexer).tokenizerResult!!
+        val tokenizerResult = (builder.lexer as? TethLexer)?.tokenizerResult
+        if (tokenizerResult == null) {
+            val rootMarker = builder.mark()
+            rootMarker.done(root)
+            return builder.treeBuilt
+        }
+
+        val file =
+            builder.getUserData(FileContextUtil.CONTAINING_FILE_KEY)?.originalFile
+                ?: throw IllegalStateException("No file available")
+
         val parserResult = Parser.parse(
             // We create another result here because the lexer had no module name information
             TokenizerResult(
-                TokenStream(InMemorySource("test", ""), tokenizerResult.tokenStream.tokens),
+                TokenStream(InMemorySource(file.name.removeSuffix(".teth"), ""), tokenizerResult.tokenStream.tokens),
                 tokenizerResult.problems
             )
         )
 
         val rootMarker = builder.mark()
-
         PsiConstructorVisitor(builder).visit(parserResult.unit)
-
         rootMarker.done(root)
 
         return builder.treeBuilt

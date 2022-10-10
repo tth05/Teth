@@ -90,7 +90,7 @@ public class StringLiteralExpression extends Expression implements IDeclarationR
 
     public enum PartType {
         STRING,
-        EXPRESSION;
+        EXPRESSION
     }
 
     public static final class Part {

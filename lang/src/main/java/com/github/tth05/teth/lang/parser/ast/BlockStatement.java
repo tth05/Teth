@@ -34,10 +34,8 @@ public class BlockStatement extends Statement {
     public boolean equals(Object o) {
         if (this == o)
             return true;
-        if (!(o instanceof BlockStatement))
+        if (!(o instanceof BlockStatement that))
             return false;
-
-        BlockStatement that = (BlockStatement) o;
 
         return this.statements.equals(that.statements);
     }

@@ -1,20 +1,18 @@
 package com.github.tth05.tethintellijplugin.psi.impl
 
-import com.github.tth05.teth.analyzer.Analyzer
 import com.github.tth05.teth.lang.parser.ASTVisitor
-import com.github.tth05.teth.lang.parser.Parser
 import com.github.tth05.teth.lang.parser.ast.IdentifierExpression
 import com.github.tth05.teth.lang.parser.ast.Statement
-import com.github.tth05.teth.lang.source.InMemorySource
-import com.github.tth05.tethintellijplugin.psi.TethPsiFile
 import com.github.tth05.tethintellijplugin.psi.api.*
+import com.github.tth05.tethintellijplugin.psi.caching.AnalyzerUnitPair
+import com.github.tth05.tethintellijplugin.psi.caching.tethCache
+import com.github.tth05.tethintellijplugin.psi.reference.TethReference
 import com.github.tth05.tethintellijplugin.psi.reference.resolvedRefTo
 import com.intellij.extapi.psi.ASTWrapperPsiElement
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiNameIdentifierOwner
 import com.intellij.psi.PsiReference
-import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.childrenOfType
 import com.intellij.psi.util.findParentOfType
 import com.intellij.refactoring.suggested.startOffset
@@ -32,30 +30,29 @@ class TethIdentifierLiteralExpressionImpl(node: ASTNode) : ASTWrapperPsiElement(
         get() = text.emptyToNull()
 
     override fun getReference(): PsiReference? {
-        // Analyze file
-        //TODO: Obtain analyzer and parser from cache
-        val parserResult = Parser.parse(InMemorySource("", findParentOfType<TethPsiFile>()!!.text))
-        val analyzer = Analyzer(listOf(parserResult.unit))
-        analyzer.analyze()
+        // Get analyzed file
+        val file = containingFile ?: return null
+        val (analyzer, unit) = file.tethCache().getValue<AnalyzerUnitPair>(file) ?: return null
 
-        // Convert psi element to teth ast node and get reference
-        var target: Statement? = null
-        object : ASTVisitor() {
-            override fun visit(identifierExpression: IdentifierExpression) {
-                if ((identifierExpression.span?.offset ?: -1) == startOffset)
-                    target = analyzer.resolvedReference(identifierExpression)
-            }
-        }.visit(parserResult.unit)
+        return tethCache().resolveWithCaching(this) {
+            // Convert psi element to teth ast node and get reference
+            var target: Statement? = null
+            object : ASTVisitor() {
+                override fun visit(identifierExpression: IdentifierExpression) {
+                    if ((identifierExpression.span?.offset ?: -1) == startOffset) target =
+                        analyzer.resolvedReference(identifierExpression)
+                }
+            }.visit(unit)
 
-        if (target == null || target!!.span == null /* Intrinsic decls */)
-            return null
+            if (target == null || target!!.span == null /* Intrinsic decls */) return@resolveWithCaching TethReference.UNRESOLVED
 
-        // Convert teth ast node to psi element
-        val psiTarget: PsiElement = findDeclarationAt(target!!.span.offset) ?: return null
+            // Convert teth ast node to psi element
+            val psiTarget: PsiElement =
+                findDeclarationAt(target!!.span.offset) ?: return@resolveWithCaching TethReference.UNRESOLVED
 
-        // TODO: Cache reference
-        // Create reference
-        return resolvedRefTo(psiTarget)
+            // Create reference
+            return@resolveWithCaching resolvedRefTo(psiTarget)
+        }.takeIf { it != TethReference.UNRESOLVED }
     }
 }
 
@@ -76,12 +73,10 @@ private fun String.emptyToNull() = ifEmpty { null }
 private fun PsiElement.findDeclarationAt(offset: Int): PsiElement? {
     fun isMatch(current: PsiElement?, offset: Int) = current is PsiNameIdentifierOwner && current.startOffset == offset
     fun checkChildren(current: PsiElement, offset: Int): PsiElement? {
-        if (current.startOffset > offset)
-            return null
+        if (current.startOffset > offset) return null
 
         for (child in current.children) {
-            if (isMatch(child, offset))
-                return child
+            if (isMatch(child, offset)) return child
 
             checkChildren(child, offset)?.let { return it }
         }
