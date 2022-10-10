@@ -22,7 +22,9 @@ class TethSyntaxHighlighter : SyntaxHighlighterBase() {
         TethTokenTypes.KEYWORD -> KEYWORD_KEYS
         TethTokenTypes.STRING_LITERAL -> STRING_VALUE_KEYS
         TethTokenTypes.DOUBLE, TethTokenTypes.LONG -> NUMBER_VALUE_KEYS
-        TethTokenTypes.SEPARATOR -> SEPARATOR_KEYS
+        TethTokenTypes.SEPARATOR, TethTokenTypes.L_CURLY_PAREN, TethTokenTypes.R_CURLY_PAREN, TethTokenTypes.L_PAREN,
+        TethTokenTypes.R_PAREN, TethTokenTypes.L_SQUARE_BRACKET, TethTokenTypes.R_SQUARE_BRACKET -> SEPARATOR_KEYS
+
         TethTokenTypes.OPERATOR -> OPERATOR_KEYS
         TokenType.BAD_CHARACTER -> BAD_CHARACTER_KEYS
         else -> TextAttributesKey.EMPTY_ARRAY
@@ -30,7 +32,7 @@ class TethSyntaxHighlighter : SyntaxHighlighterBase() {
 
     companion object {
         val SEPARATOR: TextAttributesKey =
-            createTextAttributesKey("TETH_SEPARATOR", DefaultLanguageHighlighterColors.SEMICOLON)
+            createTextAttributesKey("TETH_SEPARATOR", DefaultLanguageHighlighterColors.BRACKETS)
         val OPERATOR: TextAttributesKey =
             createTextAttributesKey("TETH_OPERATOR", DefaultLanguageHighlighterColors.OPERATION_SIGN)
         val IDENTIFIER: TextAttributesKey =
@@ -48,7 +50,7 @@ class TethSyntaxHighlighter : SyntaxHighlighterBase() {
         val FUNCTION_CALL: TextAttributesKey =
             createTextAttributesKey("TETH_FUNCTION_CALL", DefaultLanguageHighlighterColors.FUNCTION_CALL)
         val TYPE: TextAttributesKey =
-            createTextAttributesKey("TETH_TYPE", DefaultLanguageHighlighterColors.CLASS_REFERENCE)
+            createTextAttributesKey("TETH_TYPE", DefaultLanguageHighlighterColors.CLASS_NAME)
         val TYPE_PARAMETER: TextAttributesKey =
             createTextAttributesKey("TETH_TYPE_PARAMETER", DefaultLanguageHighlighterColors.PARAMETER)
         val FIELD: TextAttributesKey =

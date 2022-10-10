@@ -20,9 +20,6 @@ import com.intellij.psi.tree.IFileElementType
 import com.intellij.psi.tree.TokenSet
 
 class TethParserDefinition : ParserDefinition {
-    // TODO: Migrate to better AST representation. Will allow reference and rename stuff
-    //  3. Convert teth AST to custom PSI tree
-    //  4. Save source file unit (and problems) as key in file psi to allow annotator to use it
     override fun createLexer(project: Project?): Lexer = TethLexer()
 
     override fun createParser(project: Project?): PsiParser = TethParser()
@@ -34,7 +31,6 @@ class TethParserDefinition : ParserDefinition {
     override fun getStringLiteralElements(): TokenSet = STRING_LITERAL_TOKENS
 
     override fun createElement(node: ASTNode?): PsiElement = when (val type = node!!.elementType) {
-        TethTokenTypes.COMMENT -> PsiCommentImpl(type, node.text)
         TethElementTypes.UNIT -> TethUnitImpl(node)
         TethElementTypes.STRUCT_DECLARATION -> TethStructDeclarationImpl(node)
         TethElementTypes.FIELD_DECLARATION -> TethFieldDeclarationImpl(node)

@@ -10,6 +10,12 @@ object TethTokenTypes {
     val IDENTIFIER = TethTokenType("Identifier")
     val SEPARATOR = TethTokenType("Separator")
     val OPERATOR = TethTokenType("Operator")
+    val L_CURLY_PAREN = TethTokenType("L_CURLY")
+    val R_CURLY_PAREN = TethTokenType("R_CURLY")
+    val L_PAREN = TethTokenType("L_PAREN")
+    val R_PAREN = TethTokenType("R_PAREN")
+    val L_SQUARE_BRACKET = TethTokenType("L_SQUARE_BRACKET")
+    val R_SQUARE_BRACKET = TethTokenType("R_SQUARE_BRACKET")
     val STRING_LITERAL = TethTokenType("String literal")
     val DOUBLE = TethTokenType("Double literal")
     val LONG = TethTokenType("Long literal")
@@ -26,10 +32,15 @@ object TethTokenTypes {
             TokenType.KEYWORD_LOOP, TokenType.KEYWORD_STRUCT, TokenType.KEYWORD_NEW, TokenType.KEYWORD_RETURN,
             TokenType.KEYWORD_USE -> KEYWORD
 
-            TokenType.COLON, TokenType.COMMA, TokenType.L_CURLY_PAREN, TokenType.R_CURLY_PAREN, TokenType.L_PAREN,
-            TokenType.R_PAREN, TokenType.DOT, TokenType.LESS_PIPE, TokenType.L_SQUARE_BRACKET,
-            TokenType.R_SQUARE_BRACKET, TokenType.STRING_LITERAL_CODE_END,
+            TokenType.COLON, TokenType.COMMA, TokenType.DOT, TokenType.LESS_PIPE, TokenType.STRING_LITERAL_CODE_END,
             TokenType.STRING_LITERAL_CODE_START -> SEPARATOR
+
+            TokenType.L_CURLY_PAREN -> L_CURLY_PAREN
+            TokenType.R_CURLY_PAREN -> R_CURLY_PAREN
+            TokenType.L_PAREN -> L_PAREN
+            TokenType.R_PAREN -> R_PAREN
+            TokenType.L_SQUARE_BRACKET -> L_SQUARE_BRACKET
+            TokenType.R_SQUARE_BRACKET -> R_SQUARE_BRACKET
 
             TokenType.AMPERSAND_AMPERSAND, TokenType.EQUAL, TokenType.GREATER_EQUAL, TokenType.GREATER, TokenType.LESS,
             TokenType.LESS_EQUAL, TokenType.EQUAL_EQUAL, TokenType.PIPE_PIPE, TokenType.NOT_EQUAL, TokenType.MINUS,

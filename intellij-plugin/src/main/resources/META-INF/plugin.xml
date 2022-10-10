@@ -19,13 +19,15 @@
                                implementationClass="com.github.tth05.tethintellijplugin.TethParserDefinition"/>
         <lang.syntaxHighlighter language="Teth"
                                 implementationClass="com.github.tth05.tethintellijplugin.syntax.highlighting.TethSyntaxHighlighter"/>
+        <lang.braceMatcher language="Teth"
+
+                           implementationClass="com.github.tth05.tethintellijplugin.TethBraceMatcher"/>
+        <lang.commenter language="Teth"
+                        implementationClass="com.github.tth05.tethintellijplugin.syntax.TethCommenter"/>
         <completion.contributor language="Teth"
                                 implementationClass="com.github.tth05.tethintellijplugin.completion.TethCompletionContributor"/>
         <annotator language="Teth"
                    implementationClass="com.github.tth05.tethintellijplugin.syntax.highlighting.TethAnnotator"/>
-        <lang.commenter language="Teth"
-                        implementationClass="com.github.tth05.tethintellijplugin.syntax.TethCommenter"/>
-
         <colorSettingsPage implementation="com.github.tth05.tethintellijplugin.TethColorSettingsPage"/>
     </extensions>
 </idea-plugin>
