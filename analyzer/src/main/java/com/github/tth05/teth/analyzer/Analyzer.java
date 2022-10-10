@@ -1,6 +1,7 @@
 package com.github.tth05.teth.analyzer;
 
 import com.github.tth05.teth.analyzer.prelude.Prelude;
+import com.github.tth05.teth.analyzer.type.TypeCache;
 import com.github.tth05.teth.analyzer.visitor.NameAnalysis;
 import com.github.tth05.teth.analyzer.visitor.ReturnStatementVerifier;
 import com.github.tth05.teth.analyzer.visitor.TypeAnalysis;
@@ -36,6 +37,8 @@ public class Analyzer {
             nameAnalysisStates.add(nameAnalysis);
         });
 
+        var typeCache = new TypeCache();
+
         var i = 0;
         for (var entry : this.unitIndexMap.entrySet()) {
             var index = entry.getValue();
@@ -46,7 +49,7 @@ public class Analyzer {
             nameAnalysis.visit(unit);
             var problems = nameAnalysis.getProblems();
 
-            var typeAnalysis = new TypeAnalysis(this.resolvedReferences);
+            var typeAnalysis = new TypeAnalysis(typeCache, this.resolvedReferences);
             typeAnalysis.visit(unit);
             problems.merge(typeAnalysis.getProblems());
 

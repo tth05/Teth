@@ -42,9 +42,18 @@ import static com.github.tth05.teth.analyzer.prelude.Prelude.*;
 
 public class TypeAnalysis extends AnalysisASTVisitor {
 
-    private final TypeCache typeCache = new TypeCache();
     private final Map<Integer, BinaryExpression.Operator[]> binaryOperatorsAllowedTypes = new HashMap<>();
-    {
+
+    private final Deque<FunctionDeclaration> currentFunctionStack = new ArrayDeque<>(5);
+    private final Map<Expression, SemanticType> resolvedExpressionTypes = new IdentityHashMap<>();
+
+    private final Map<IDeclarationReference, Statement> resolvedReferences;
+    private final TypeCache typeCache;
+
+    public TypeAnalysis(TypeCache typeCache, Map<IDeclarationReference, Statement> resolvedReferences) {
+        this.typeCache = typeCache;
+        this.resolvedReferences = resolvedReferences;
+
         var all = BinaryExpression.Operator.values();
         this.binaryOperatorsAllowedTypes.put(this.typeCache.internalizeType(LONG_STRUCT_DECLARATION), all);
         this.binaryOperatorsAllowedTypes.put(this.typeCache.internalizeType(DOUBLE_STRUCT_DECLARATION), all);
@@ -52,15 +61,6 @@ public class TypeAnalysis extends AnalysisASTVisitor {
                 BinaryExpression.Operator.OP_EQUAL, BinaryExpression.Operator.OP_NOT_EQUAL,
                 BinaryExpression.Operator.OP_AND, BinaryExpression.Operator.OP_OR
         });
-    }
-
-    private final Deque<FunctionDeclaration> currentFunctionStack = new ArrayDeque<>(5);
-    private final Map<Expression, SemanticType> resolvedExpressionTypes = new IdentityHashMap<>();
-
-    private final Map<IDeclarationReference, Statement> resolvedReferences;
-
-    public TypeAnalysis(Map<IDeclarationReference, Statement> resolvedReferences) {
-        this.resolvedReferences = resolvedReferences;
     }
 
     @Override
