@@ -1,9 +1,11 @@
 package com.github.tth05.teth.bytecodeInterpreter;
 
-import com.github.tth05.teth.bytecode.op.*;
+import com.github.tth05.teth.bytecode.op.IInstrunction;
 import com.github.tth05.teth.bytecode.program.StructData;
 import com.github.tth05.teth.bytecode.program.TethProgram;
 
+import java.io.DataOutputStream;
+import java.io.OutputStream;
 import java.util.Arrays;
 
 public class Interpreter {
@@ -20,21 +22,48 @@ public class Interpreter {
     private int returnAddressesPointer = 0;
 
     private int programCounter = 0;
+    private boolean killed;
+
+    private OutputStream systemOutStream;
+    private OutputStream systemErrStream;
 
     public Interpreter(TethProgram program) {
         this.program = program;
     }
 
+    public void setSystemOutStream(OutputStream systemOutStream) {
+        this.systemOutStream = systemOutStream;
+    }
+
+    public void setSystemErrStream(OutputStream systemErrStream) {
+        this.systemErrStream = systemErrStream;
+    }
+
     public void execute() {
+        initStreams();
+
         // These locals exist for micro-optimization
         var cachedOpCodes = Arrays.stream(this.program.getInstructions()).mapToInt(IInstrunction::getOpCode).toArray();
         var instructions = this.program.getInstructions();
 
         var pc = 0;
-        while ((pc = this.programCounter) != -1) {
+        while ((pc = this.programCounter) != -1 && !this.killed) {
             InstructionsImpl.run(this, cachedOpCodes[pc], instructions[pc]);
             this.programCounter++;
         }
+
+        this.killed = true;
+    }
+
+    public void kill() {
+        if (this.killed)
+            return;
+
+        this.killed = true;
+    }
+
+    public boolean isRunning() {
+        return !this.killed;
     }
 
     public Object pop() {
@@ -162,5 +191,20 @@ public class Interpreter {
 
     public StructData getStructData(int structId) {
         return this.program.getStructData()[structId];
+    }
+
+    public OutputStream getOutStream() {
+        return this.systemOutStream;
+    }
+
+    public OutputStream getErrStream() {
+        return this.systemErrStream;
+    }
+
+    private void initStreams() {
+        if (this.systemOutStream == null)
+            this.systemOutStream = new DataOutputStream(System.out);
+        if (this.systemErrStream == null)
+            this.systemErrStream = new DataOutputStream(System.err);
     }
 }

@@ -1,30 +1,32 @@
 package com.github.tth05.teth.bytecodeInterpreter;
 
 import com.github.tth05.teth.analyzer.prelude.Prelude;
-import com.github.tth05.teth.bytecode.op.OpCodes;
 import com.github.tth05.teth.bytecode.op.*;
 import com.github.tth05.teth.lang.parser.ast.FunctionDeclaration;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.BiConsumer;
 
 public class InstructionsImpl {
 
+    private static final byte[] NEW_LINE_BYTES = System.lineSeparator().getBytes(StandardCharsets.UTF_8);
+
     private static final Object[] ARGS_ARRAY = new Object[32];
-    private static final Map<FunctionDeclaration, BiConsumer<Interpreter, Object[]>> INTRINSICS = new HashMap<>();
+    private static final Map<FunctionDeclaration, UncheckedBiConsumer<Interpreter, Object[]>> INTRINSICS = new HashMap<>();
     static {
         INTRINSICS.put(Prelude.getGlobalFunction("print"), (interpreter, args) -> {
             var list = (List<Object>) args[0];
             var first = true;
             for (Object o : list) {
-                System.out.print((first ? "" : " ") + o);
+                interpreter.getOutStream().write(((first ? "" : " ") + o).getBytes(StandardCharsets.UTF_8));
                 first = false;
             }
 
-            System.out.println();
+            interpreter.getOutStream().write(NEW_LINE_BYTES);
         });
         INTRINSICS.put(Prelude.getGlobalFunction("stringify"), (interpreter, args) -> {
             interpreter.push(intrinsicToString(interpreter, args[0]));
@@ -276,8 +278,12 @@ public class InstructionsImpl {
                 case OpCodes.EXIT -> interpreter.exit();
                 default -> throw new IllegalArgumentException("Unsupported opcode: " + code);
             }
-        } catch (Exception e) {
-            System.err.printf("Error while execution instruction %s at address %d%n", insn.getDebugString(), interpreter.getProgramCounter());
+        } catch (Throwable e) {
+            try {
+                interpreter.getErrStream().write("Error while execution instruction %s at address %d%n".formatted(insn.getDebugString(), interpreter.getProgramCounter()).getBytes(StandardCharsets.UTF_8));
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
             throw e;
         }
     }
