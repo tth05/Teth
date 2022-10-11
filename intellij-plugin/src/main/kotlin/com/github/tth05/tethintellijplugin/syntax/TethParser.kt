@@ -4,20 +4,17 @@ import com.github.tth05.teth.lang.lexer.TokenStream
 import com.github.tth05.teth.lang.lexer.TokenizerResult
 import com.github.tth05.teth.lang.parser.ASTVisitor
 import com.github.tth05.teth.lang.parser.Parser
-import com.github.tth05.teth.lang.parser.ParserResult
 import com.github.tth05.teth.lang.parser.SourceFileUnit
 import com.github.tth05.teth.lang.parser.ast.*
 import com.github.tth05.teth.lang.source.InMemorySource
+import com.github.tth05.teth.lang.span.Span
 import com.github.tth05.tethintellijplugin.psi.TethElementTypes
-import com.github.tth05.tethintellijplugin.psi.api.TethUnit
 import com.intellij.lang.ASTNode
 import com.intellij.lang.PsiBuilder
 import com.intellij.lang.PsiParser
 import com.intellij.lang.impl.PsiBuilderImpl
-import com.intellij.openapi.util.Key
 import com.intellij.psi.impl.source.resolve.FileContextUtil
 import com.intellij.psi.tree.IElementType
-import com.intellij.util.alsoIfNull
 
 class TethParser : PsiParser {
     override fun parse(root: IElementType, builder: PsiBuilder): ASTNode {
@@ -54,9 +51,9 @@ class TethParser : PsiParser {
 private class PsiConstructorVisitor(val builder: PsiBuilder) : ASTVisitor() {
 
     override fun visit(unit: SourceFileUnit?) {
-        val marker = builder.mark()
-        super.visit(unit)
-        marker.done(TethElementTypes.UNIT)
+        marked(Span(null, 0, builder.originalText.length), TethElementTypes.UNIT) {
+            super.visit(unit)
+        }
     }
 
     override fun visit(declaration: StructDeclaration) {
@@ -208,11 +205,13 @@ private class PsiConstructorVisitor(val builder: PsiBuilder) : ASTVisitor() {
         }
     }
 
-    fun marked(statement: Statement, type: IElementType, block: () -> Unit) {
-        advanceFloatingTokens(statement.span?.offset ?: -1)
+    fun marked(statement: Statement, type: IElementType, block: () -> Unit) = marked(statement.span, type, block)
+
+    fun marked(span: Span?, type: IElementType, block: () -> Unit) {
+        advanceFloatingTokens(span?.offset ?: -1)
         val marker = builder.mark()
         block()
-        advanceFloatingTokens(statement.span?.offsetEnd ?: -1)
+        advanceFloatingTokens(span?.offsetEnd ?: -1)
         marker.done(type)
     }
 

@@ -148,6 +148,11 @@ public class Tokenizer {
                 emit(this.stream.createCurrentIndexSpan(), "{", TokenType.STRING_LITERAL_CODE_START);
                 this.stream.consume();
                 emitUntil(new BracketMatchingBreakPredicate());
+                if (this.stream.peek() != '}') {
+                    report(this.stream.createCurrentIndexSpan(), "Unclosed string literal code block");
+                    return;
+                }
+
                 emit(this.stream.createCurrentIndexSpan(), "}", TokenType.STRING_LITERAL_CODE_END);
                 this.stream.consume();
 
@@ -407,7 +412,7 @@ public class Tokenizer {
                 this.balance++;
             else if (c == '}')
                 this.balance--;
-            return this.balance == 0;
+            return c == 0 || this.balance == 0;
         }
     }
 }

@@ -66,7 +66,7 @@ public class Compiler {
         return new CompilationResult(toProgram(analyzer));
     }
 
-    public TethProgram toProgram(Analyzer analyzer) {
+    private TethProgram toProgram(Analyzer analyzer) {
         var i = 1;
         var insns = new IInstrunction[this.functionInsnMap.values().stream().mapToInt(List::size).sum() + 1];
         var functionOffsets = new IdentityHashMap<FunctionDeclaration, Integer>();
@@ -302,6 +302,11 @@ public class Compiler {
 
         @Override
         public void visit(BinaryExpression expression) {
+            if (expression.getOperator() == BinaryExpression.Operator.OP_ASSIGN) {
+                visitAssignmentExpression(expression);
+                return;
+            }
+
             super.visit(expression);
 
             switch (expression.getOperator()) {
@@ -320,7 +325,6 @@ public class Compiler {
                 }
                 case OP_AND -> this.currentFunctionInsn.add(new B_AND_Insn());
                 case OP_OR -> this.currentFunctionInsn.add(new B_OR_Insn());
-                case OP_ASSIGN -> visitAssignmentExpression(expression);
                 default -> throw new UnsupportedOperationException("Unsupported operator: " + expression.getOperator());
             }
         }
@@ -329,7 +333,8 @@ public class Compiler {
             {
                 expression.getRight().accept(this);
             }
-            this.currentFunctionInsn.add(new DUP_Insn());
+            // TODO: Fully remove this? Currently overflows the stack when result is unused
+//            this.currentFunctionInsn.add(new DUP_Insn());
 
             if (expression.getLeft() instanceof IdentifierExpression identifierExpression) {
                 var idx = getLocalIndex(identifierExpression);

@@ -327,6 +327,9 @@ public class TypeAnalysis extends AnalysisASTVisitor {
     }
 
     public void visitAssignmentExpression(BinaryExpression expression) {
+        if (!(expression.getLeft() instanceof IDeclarationReference))
+            return;
+
         // Can only be done after type resolution, therefore not contained in NameAnalysis
         if (!(this.resolvedReferences.get((IDeclarationReference) expression.getLeft()) instanceof IVariableDeclaration varDecl)) {
             report(expression.getSpan(), "Invalid assignment target");

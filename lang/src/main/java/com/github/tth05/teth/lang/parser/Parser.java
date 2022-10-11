@@ -582,8 +582,7 @@ public class Parser {
             case LONG_LITERAL -> new LongLiteralExpression(span, Long.parseLong(consume(false).value()));
             case DOUBLE_LITERAL -> new DoubleLiteralExpression(span, Double.parseDouble(consume(false).value()));
             case STRING_LITERAL -> parseStringLiteralExpression();
-            case BOOLEAN_LITERAL ->
-                    new BooleanLiteralExpression(span, Boolean.parseBoolean(consume(false).value()));
+            case BOOLEAN_LITERAL -> new BooleanLiteralExpression(span, Boolean.parseBoolean(consume(false).value()));
             case IDENTIFIER -> new IdentifierExpression(span, consume(false).value());
             case L_SQUARE_BRACKET -> {
                 consume(false);
@@ -615,7 +614,9 @@ public class Parser {
             if (this.stream.peek().is(TokenType.STRING_LITERAL_CODE_START)) {
                 consume(false);
                 parts.add(StringLiteralExpression.expressionPart(parseExpression(AnchorSets.END_SET_STRING_CODE_LITERAL)));
-                //STRING_LITERAL_CODE_END
+                if (!this.stream.peek().is(TokenType.STRING_LITERAL_CODE_END))
+                    break;
+
                 consume(false);
             }
         }
