@@ -4,6 +4,8 @@ import com.github.tth05.teth.bytecode.compiler.Compiler
 import com.github.tth05.teth.bytecodeInterpreter.Interpreter
 import com.github.tth05.teth.lang.parser.Parser
 import com.github.tth05.teth.lang.source.InMemorySource
+import com.github.tth05.tethintellijplugin.util.ReceivingInputStream
+import com.github.tth05.tethintellijplugin.util.RedirectedOutputStream
 import com.intellij.execution.DefaultExecutionResult
 import com.intellij.execution.ExecutionException
 import com.intellij.execution.Executor
@@ -22,16 +24,12 @@ import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.psi.PsiManager
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.util.concurrency.AppExecutorUtil
-import com.intellij.util.io.BaseDataReader.SleepingPolicy
-import com.intellij.util.io.BaseOutputReader
+import com.intellij.util.io.toByteArray
 import com.jetbrains.rd.util.string.printToString
-import java.io.InputStream
 import java.io.OutputStream
-import java.io.PipedInputStream
-import java.io.PipedOutputStream
+import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
 import java.nio.file.Paths
-import java.util.concurrent.Future
 import javax.swing.JComponent
 
 class TethRunConfiguration(
@@ -49,7 +47,8 @@ class TethRunConfiguration(
                     "File not found"
                 )
 
-            val psiFile = PsiManager.getInstance(project).findFile(file) ?: throw ExecutionException("File not found")
+            val psiFile =
+                PsiManager.getInstance(project).findFile(file) ?: throw ExecutionException("PsiFile not found")
             val parserResult = Parser.parse(InMemorySource("", psiFile.text))
             if (parserResult.hasProblems()) throw ExecutionException("File has problems")
 
@@ -85,38 +84,30 @@ class TethRunConfiguration(
 
 private class MyProcessHandler(val interpreter: Interpreter) : ProcessHandler(), ColoredTextAcceptor {
     private val decoder = AnsiEscapeDecoder()
-
-    private val stdOutPipe: OutputStream
-    private val errOutPipe: OutputStream
-    private val stdInPipe: InputStream
-    private val errInPipe: InputStream
-
-    private var hasStarted = false
+    private var stopped = false
 
     init {
-        stdOutPipe = PipedOutputStream()
-        errOutPipe = PipedOutputStream()
-        stdInPipe = PipedInputStream(stdOutPipe, 16384)
-        errInPipe = PipedInputStream(errOutPipe, 16384)
+        val stdPipe = RedirectedOutputStream(ProcessHandlerForwardingInputStream(this, ProcessOutputType.STDOUT))
+        val errPipe = RedirectedOutputStream(ProcessHandlerForwardingInputStream(this, ProcessOutputType.STDERR))
 
-        interpreter.setSystemOutStream(stdOutPipe)
-        interpreter.setSystemErrStream(errOutPipe)
+        interpreter.setSystemOutStream(stdPipe)
+        interpreter.setSystemErrStream(errPipe)
 
         addProcessListener(object : ProcessAdapter() {
-            var stdReader: BaseOutputReader? = null
-            var errReader: BaseOutputReader? = null
-
             override fun startNotified(event: ProcessEvent) {
-                stdReader = MyOutputReader(stdInPipe, stdOutPipe, ProcessOutputTypes.STDOUT, this@MyProcessHandler)
-                errReader = MyOutputReader(errInPipe, errOutPipe, ProcessOutputTypes.STDERR, this@MyProcessHandler)
+                // If the output doesn't flush itself by overflowing, we do it here periodically
+                AppExecutorUtil.getAppExecutorService().submit {
+                    while (!stopped) {
+                        stdPipe.flush()
+                        errPipe.flush()
+                        Thread.sleep(20)
+                    }
+                }
             }
 
             override fun processTerminated(event: ProcessEvent) {
-                while (!hasStarted) Thread.onSpinWait()
-                stdReader?.stop()
-                errReader?.stop()
-                stdReader?.waitFor()
-                errReader?.waitFor()
+                stdPipe.flush()
+                errPipe.flush()
                 removeProcessListener(this)
             }
         })
@@ -126,15 +117,15 @@ private class MyProcessHandler(val interpreter: Interpreter) : ProcessHandler(),
         notifyTextAvailable("Running!\n\n", ProcessOutputTypes.SYSTEM)
 
         super.startNotify()
-        hasStarted = true
 
         // Start the execution
         AppExecutorUtil.getAppExecutorService().submit {
             try {
                 interpreter.execute()
             } catch (e: Throwable) {
-                errOutPipe.write(e.printToString().toByteArray())
+                notifyTextAvailable(e.printToString(), ProcessOutputType.STDERR)
             } finally {
+                stopped = true
                 destroyProcess()
             }
         }
@@ -149,8 +140,12 @@ private class MyProcessHandler(val interpreter: Interpreter) : ProcessHandler(),
     }
 
     override fun destroyProcessImpl() {
-        if (interpreter.isRunning) interpreter.kill()
-        notifyProcessTerminated(0)
+        if (interpreter.isRunning) {
+            interpreter.kill()
+            notifyProcessTerminated(-1)
+        } else {
+            notifyProcessTerminated(0)
+        }
     }
 
     override fun detachProcessImpl() = throw NotImplementedError()
@@ -160,34 +155,44 @@ private class MyProcessHandler(val interpreter: Interpreter) : ProcessHandler(),
     override fun getProcessInput(): OutputStream? = null
 }
 
-private class MyOutputReader(
-    inputStream: InputStream,
-    val outputStream: OutputStream,
-    val outputType: Key<*>,
-    val processHandler: ProcessHandler
-) :
-    BaseOutputReader(inputStream, StandardCharsets.UTF_8, object : Options() {
-        override fun sendIncompleteLines(): Boolean = false
-        override fun policy(): SleepingPolicy =
-            SleepingPolicy {
-                if (it) {
-                    SleepingPolicy.sleepTimeWhenWasActive
-                } else {
-                    // Flush when we have to sleep
-                    outputStream.flush()
-                    SleepingPolicy.sleepTimeWhenIdle
-                }
+class ProcessHandlerForwardingInputStream(private val processHandler: ProcessHandler, private val outputType: Key<*>) :
+    ReceivingInputStream() {
+
+    private val buffer = ByteBuffer.allocate(32768)
+
+    override fun receive(data: Int) {
+        receive(byteArrayOf(data.toByte()))
+    }
+
+    override fun receive(data: ByteArray) {
+        receive(data, 0, data.size)
+    }
+
+    override fun receive(data: ByteArray, off: Int, len: Int) {
+        synchronized(buffer) {
+            if (len > buffer.capacity()) {
+                sendText(data)
+                return
             }
-    }) {
-    init {
-        start("Teth output reader")
+
+            if (len > buffer.remaining())
+                flush()
+            buffer.put(data, off, len)
+        }
     }
 
-    override fun executeOnPooledThread(runnable: Runnable): Future<*> {
-        return AppExecutorUtil.getAppExecutorService().submit(runnable)
+    override fun flush() {
+        synchronized(buffer) {
+            if (buffer.position() <= 0) return
+
+            buffer.flip()
+            val data = buffer.toByteArray()
+            sendText(data)
+            buffer.clear()
+        }
     }
 
-    override fun onTextAvailable(text: String) {
-        processHandler.notifyTextAvailable(text, outputType)
+    private fun sendText(data: ByteArray) {
+        processHandler.notifyTextAvailable(String(data, StandardCharsets.UTF_8), outputType)
     }
 }
