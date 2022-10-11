@@ -4,33 +4,11 @@ import com.github.tth05.teth.analyzer.Analyzer;
 import com.github.tth05.teth.analyzer.DeclarationStack;
 import com.github.tth05.teth.analyzer.prelude.Prelude;
 import com.github.tth05.teth.lang.parser.SourceFileUnit;
-import com.github.tth05.teth.lang.parser.ast.BlockStatement;
-import com.github.tth05.teth.lang.parser.ast.FunctionDeclaration;
-import com.github.tth05.teth.lang.parser.ast.FunctionInvocationExpression;
-import com.github.tth05.teth.lang.parser.ast.GenericParameterDeclaration;
-import com.github.tth05.teth.lang.parser.ast.IDeclarationReference;
-import com.github.tth05.teth.lang.parser.ast.IHasName;
-import com.github.tth05.teth.lang.parser.ast.ITopLevelDeclaration;
-import com.github.tth05.teth.lang.parser.ast.IdentifierExpression;
-import com.github.tth05.teth.lang.parser.ast.MemberAccessExpression;
-import com.github.tth05.teth.lang.parser.ast.ObjectCreationExpression;
-import com.github.tth05.teth.lang.parser.ast.ReturnStatement;
-import com.github.tth05.teth.lang.parser.ast.Statement;
-import com.github.tth05.teth.lang.parser.ast.StructDeclaration;
-import com.github.tth05.teth.lang.parser.ast.TypeExpression;
-import com.github.tth05.teth.lang.parser.ast.UseStatement;
-import com.github.tth05.teth.lang.parser.ast.VariableDeclaration;
+import com.github.tth05.teth.lang.parser.ast.*;
 import com.github.tth05.teth.lang.span.Span;
 import com.github.tth05.teth.lang.util.BiIterator;
 
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Deque;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class NameAnalysis extends AnalysisASTVisitor {
@@ -62,25 +40,31 @@ public class NameAnalysis extends AnalysisASTVisitor {
         beginFunctionDeclaration(GLOBAL_FUNCTION);
 
         List<? extends Statement> topLevelDeclarations = unit.getStatements().stream()
-                .filter(s -> s instanceof ITopLevelDeclaration && s instanceof IHasName)
-                .sorted(Comparator.comparingInt(s -> {
-                    // TODO: Switch preview disabled
-                    if (s instanceof StructDeclaration)
-                        return 0;
-                    else if (s instanceof FunctionDeclaration)
-                        return 1;
-                    return 2;
-                }))
+                .filter(s -> s instanceof ITopLevelDeclaration && s instanceof IHasName || s instanceof UseStatement)
+                .sorted(new TopLevelDeclComparator())
                 .collect(Collectors.toCollection(() -> new ArrayList<>(unit.getStatements().size())));
 
         // Pre-process 1: Collect all declarations
         for (var decl : topLevelDeclarations) {
+            if (decl instanceof UseStatement)
+                continue;
+
             addDeclaration(decl);
         }
 
         // Pre-process 2: Analyze headers of top level functions and structs and check for duplicates
-        //noinspection unchecked
-        validateNoDuplicates((List<? extends IHasName>) (Object) topLevelDeclarations, "Duplicate top level declaration");
+        {
+            DUPLICATION_SET.clear();
+
+            for (var decl : topLevelDeclarations) {
+                if (decl instanceof UseStatement)
+                    continue;
+
+                var name = ((IHasName) decl).getNameExpr();
+                if (!DUPLICATION_SET.add(name.getValue()))
+                    report(name.getSpan(), "Duplicate top level declaration");
+            }
+        }
 
         for (var decl : topLevelDeclarations) {
             if (decl instanceof StructDeclaration structDeclaration) {
@@ -93,6 +77,8 @@ public class NameAnalysis extends AnalysisASTVisitor {
                 this.declarationStack.beginScope(false);
                 visitFunctionDeclarationHeader(functionDeclaration);
                 this.declarationStack.endScope();
+            } else if (decl instanceof UseStatement) {
+                decl.accept(this);
             } else {
                 throw new IllegalStateException();
             }
@@ -109,7 +95,7 @@ public class NameAnalysis extends AnalysisASTVisitor {
 
     @Override
     public void visit(UseStatement useStatement) {
-        var moduleName = useStatement.getPath().stream().map(IdentifierExpression::getValue).collect(Collectors.joining("/"));
+        var moduleName = useStatement.getPathString();
         if (!this.analyzer.hasModule(moduleName)) {
             report(Span.of(useStatement.getPath(), useStatement.getSpan()), "Module '" + moduleName + "' does not exist");
             return;
@@ -246,7 +232,7 @@ public class NameAnalysis extends AnalysisASTVisitor {
 
     @Override
     public void visit(GenericParameterDeclaration declaration) {
-        validateNotAReservedName(declaration.getSpan(), declaration.getNameExpr().getValue());
+        validateNotAReservedName(declaration.getNameExpr());
 
         addDeclaration(declaration);
     }
@@ -369,12 +355,9 @@ public class NameAnalysis extends AnalysisASTVisitor {
     }
 
     private void validateNotAReservedName(IdentifierExpression expression) {
-        validateNotAReservedName(expression.getSpan(), expression.getValue());
-    }
-
-    private void validateNotAReservedName(Span span, String name) {
+        var name = expression.getValue();
         if (Prelude.isBuiltInTypeName(name))
-            report(span, "Reserved name '" + name + "'");
+            report(expression.getSpan(), "Reserved name '" + name + "'");
     }
 
     private void addDeclaration(Statement declaration) {
@@ -396,5 +379,31 @@ public class NameAnalysis extends AnalysisASTVisitor {
 
     private boolean isInNestedFunction() {
         return this.currentFunctionStack.size() > 2;
+    }
+
+    private static class TopLevelDeclComparator implements Comparator<Statement> {
+
+        @Override
+        public int compare(Statement a, Statement b) {
+            var aIsUse = a instanceof UseStatement;
+            var bIsUse = b instanceof UseStatement;
+            if (aIsUse && bIsUse)
+                return 0;
+            if (!aIsUse && !bIsUse)
+                return Integer.compare(getPriority(a), getPriority(b));
+            if (a.getSpan() == null)
+                return -1;
+            if (b.getSpan() == null)
+                return 1;
+            return Integer.compare(a.getSpan().offset(), b.getSpan().offset());
+        }
+
+        private int getPriority(Statement statement) {
+            if (statement instanceof StructDeclaration)
+                return 0;
+            if (statement instanceof FunctionDeclaration)
+                return 1;
+            return 2;
+        }
     }
 }

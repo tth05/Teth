@@ -2,6 +2,7 @@ package com.github.tth05.teth.bytecode.compiler;
 
 import com.github.tth05.teth.analyzer.Analyzer;
 import com.github.tth05.teth.analyzer.AnalyzerResult;
+import com.github.tth05.teth.analyzer.module.IModuleLoader;
 import com.github.tth05.teth.analyzer.prelude.Prelude;
 import com.github.tth05.teth.analyzer.visitor.NameAnalysis;
 import com.github.tth05.teth.bytecode.op.*;
@@ -19,51 +20,50 @@ public class Compiler {
     private final Map<FunctionDeclaration, List<IInstrunction>> functionInsnMap = new IdentityHashMap<>();
 
     private final List<SourceFileUnit> units = new ArrayList<>();
-    private SourceFileUnit mainUnit;
+
+    private Analyzer analyzer;
 
     private boolean compiled;
-
-    public void addSourceFileUnit(SourceFileUnit unit) {
-        if (this.compiled)
-            throw new IllegalStateException("Cannot add source file units after compilation");
-
-        this.units.add(unit);
-    }
-
-    public void addSourceFileUnits(List<SourceFileUnit> units) {
-        if (this.compiled)
-            throw new IllegalStateException("Cannot add source file units after compilation");
-
-        this.units.addAll(units);
-    }
 
     public void setEntryPoint(SourceFileUnit unit) {
         if (this.compiled)
             throw new IllegalStateException("Cannot set entry point after compilation");
 
-        this.mainUnit = unit;
+        this.units.add(unit);
+        this.analyzer = new Analyzer(unit);
+    }
+
+    public void setModuleLoader(IModuleLoader loader) {
+        if (this.compiled)
+            throw new IllegalStateException("Cannot set module loader after compilation");
+        if (this.analyzer == null)
+            throw new IllegalStateException("Cannot set module loader before setting entry point");
+
+        this.analyzer.setModuleLoader((name) -> {
+            var unit = loader.loadModule(name);
+            this.units.add(unit);
+            return unit;
+        });
     }
 
     public CompilationResult compile() {
         if (this.compiled)
             throw new IllegalStateException("Cannot compile twice");
-        if (this.mainUnit == null)
-            throw new IllegalStateException("No main unit set");
-        if (this.units.stream().noneMatch(u -> u == this.mainUnit))
-            throw new IllegalStateException("Main unit not in list of units");
+        if (this.units.isEmpty())
+            throw new IllegalStateException("No entry point set");
 
         this.compiled = true;
 
-        var analyzer = new Analyzer(this.units);
-        var analyzerResults = analyzer.analyze();
+        var analyzerResults = this.analyzer.analyze();
         if (analyzerResults.stream().anyMatch(AnalyzerResult::hasProblems))
             return new CompilationResult(analyzerResults);
 
-        for (var unit : this.units) {
-            var generator = new BytecodeGeneratorVisitor(analyzer, unit != this.mainUnit);
-            generator.visit(unit);
+        for (int i = 0; i < this.units.size(); i++) {
+            var generator = new BytecodeGeneratorVisitor(this.analyzer, i != 0);
+            generator.visit(this.units.get(i));
         }
-        return new CompilationResult(toProgram(analyzer));
+
+        return new CompilationResult(toProgram(this.analyzer));
     }
 
     private TethProgram toProgram(Analyzer analyzer) {

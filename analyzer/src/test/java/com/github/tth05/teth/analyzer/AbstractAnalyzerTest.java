@@ -29,7 +29,8 @@ public abstract class AbstractAnalyzerTest {
         createASTs(main, others);
         assertStreamsEmpty();
 
-        this.analyzer = new Analyzer(this.asts.stream().map(AST::unit).toList());
+        this.analyzer = new Analyzer(this.asts.stream().filter(u -> u.unit.getModuleName().equals("main")).findFirst().get().unit);
+        this.analyzer.setModuleLoader((name) -> this.asts.stream().filter(u -> u.unit.getModuleName().equals(name)).findFirst().map(v -> v.unit).orElse(null));
         return this.analyzer.analyze();
     }
 

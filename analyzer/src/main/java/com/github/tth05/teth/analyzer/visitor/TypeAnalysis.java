@@ -1,6 +1,5 @@
 package com.github.tth05.teth.analyzer.visitor;
 
-import com.github.tth05.teth.analyzer.GenericParameterInfo;
 import com.github.tth05.teth.analyzer.type.SemanticType;
 import com.github.tth05.teth.analyzer.type.TypeCache;
 import com.github.tth05.teth.lang.parser.ExpressionList;
@@ -558,6 +557,29 @@ public class TypeAnalysis extends AnalysisASTVisitor {
             if (!(declaration instanceof VariableDeclaration varDecl))
                 throw new IllegalStateException();
             return this.resolvedExpressionTypes.get(varDecl.getInitializerExpr());
+        }
+    }
+
+    private static class GenericParameterInfo {
+
+        private Map<String, SemanticType> boundGenericParameters;
+
+        public boolean isGenericParameterBound(String name) {
+            return this.boundGenericParameters != null && this.boundGenericParameters.containsKey(name);
+        }
+
+        public void bindGenericParameter(String name, SemanticType type) {
+            if (this.boundGenericParameters == null)
+                this.boundGenericParameters = new HashMap<>(3);
+
+            this.boundGenericParameters.put(name, type);
+        }
+
+        public SemanticType getBoundGenericParameter(String name) {
+            if (this.boundGenericParameters == null)
+                return null;
+
+            return this.boundGenericParameters.get(name);
         }
     }
 }

@@ -7,6 +7,7 @@ import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 public class UseStatement extends Statement implements ITopLevelDeclaration {
@@ -18,6 +19,13 @@ public class UseStatement extends Statement implements ITopLevelDeclaration {
         super(span);
         this.path = Collections.unmodifiableList(Objects.requireNonNull(path));
         this.imports = Collections.unmodifiableList(Objects.requireNonNull(imports));
+    }
+
+    public String getPathString() {
+        var joiner = new StringJoiner("/");
+        for (var identifierExpression : this.path)
+            joiner.add(identifierExpression.getValue());
+        return joiner.toString();
     }
 
     public List<IdentifierExpression> getPath() {

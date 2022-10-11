@@ -36,11 +36,12 @@ class TethAnnotator : Annotator {
             annotateError(holder, fileText, fileTextRange, it)
         }
 
-        val analyzer = Analyzer(mutableListOf(parserResult.unit))
+        val analyzer = Analyzer(parserResult.unit)
+        analyzer.setAnalyzeEntryPointOnly(true)
         element.tethCache().putValue(element, AnalyzerUnitPair(analyzer, parserResult.unit))
 
         val analyzerResults = analyzer.analyze()
-        analyzerResults.filter { it.moduleName == parserResult.unit.moduleName }.flatMap { it.problems }.forEach {
+        analyzerResults.first()!!.problems.forEach {
             annotateError(holder, fileText, fileTextRange, it)
         }
 

@@ -516,7 +516,7 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
         var problems = analyze("""
                         use other {two}
                         use other2 {three}
-                        
+                                                
                         fn one() long {
                             let a: double = two()
                             let b: long = three()
@@ -526,7 +526,7 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
                 new Source("other", """
                         use main {one}
                         use other2 {three}
-                        
+                                                
                         fn two() double {
                             let a: long = one()
                             let b = three()
@@ -536,7 +536,7 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
                 new Source("other2", """
                         use main {one}
                         use other {two}
-                        
+                                                
                         fn three() long {
                             let a = one()
                             let b: double = two()
@@ -561,8 +561,19 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
                         """)
         );
 
-        assertEquals(2, problems.size());
+        // 1, because the other module never got loaded
+        assertEquals(1, problems.size());
         assertTrue(problems.get(0).hasProblems());
-        assertTrue(problems.get(1).hasProblems());
+    }
+
+    @Test
+    public void afhg() {
+        analyze("""
+                use other {test}
+                fn a(b: test) {}
+                                
+                a(5)""", new Source("other", """
+                struct test {}
+                """));
     }
 }

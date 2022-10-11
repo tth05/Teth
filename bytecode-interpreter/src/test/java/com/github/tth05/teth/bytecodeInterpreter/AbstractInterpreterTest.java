@@ -45,7 +45,6 @@ public abstract class AbstractInterpreterTest {
     protected TethProgram compile(String code) {
         createAST(code);
         var c = new Compiler();
-        c.addSourceFileUnit(this.unit);
         c.setEntryPoint(this.unit);
         var result = c.compile();
         if (result.hasProblems()) {

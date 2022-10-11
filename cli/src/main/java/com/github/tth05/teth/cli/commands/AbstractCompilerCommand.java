@@ -4,13 +4,14 @@ import com.github.tth05.teth.bytecode.compiler.Compiler;
 import com.github.tth05.teth.bytecode.program.TethProgram;
 import com.github.tth05.teth.cli.commands.converters.String2ExistingFileConverter;
 import com.github.tth05.teth.lang.parser.Parser;
+import com.github.tth05.teth.lang.parser.SourceFileUnit;
 import com.github.tth05.teth.lang.source.FileSource;
+import com.github.tth05.teth.lang.source.ISource;
 import picocli.CommandLine;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.stream.Stream;
 
 public abstract class AbstractCompilerCommand implements Runnable {
 
@@ -31,10 +32,10 @@ public abstract class AbstractCompilerCommand implements Runnable {
     protected boolean verbose;
 
     @CommandLine.Option(
-            names = {"-s", "--single-file"},
-            description = "Only target the given single file"
+            names = {"-m", "--disable-modules"},
+            description = "Disables module loading"
     )
-    protected boolean singleFile;
+    protected boolean disableModuleLoading;
 
     @CommandLine.Option(
             names = {"-b", "--basedir"},
@@ -55,42 +56,24 @@ public abstract class AbstractCompilerCommand implements Runnable {
             throw new CommandLine.ParameterException(this.spec.commandLine(), "File is not child of base directory");
 
         var startTime = System.nanoTime();
-        try (var sourcesStream = this.singleFile ? Stream.of(this.filePath) : Files.walk(this.baseDir)) {
-            // HACK: This is a hack to get the correct module name
-            var entryPointModuleName = new String[1];
-            var sources = sourcesStream
-                    .parallel()
-                    .filter(path -> path.getFileName().toString().endsWith(".teth") && !Files.isDirectory(path))
-                    .map(path -> path.toAbsolutePath().normalize())
-                    .map(path -> {
-                        try {
-                            var fileSource = new FileSource(this.baseDir, path);
-                            if (path.equals(this.filePath))
-                                entryPointModuleName[0] = fileSource.getModuleName();
-                            return fileSource;
-                        } catch (IOException e) {
-                            throw new RuntimeException("Unable to read file %s".formatted(path), e);
-                        }
-                    })
-                    .toList();
+        try {
+            var entryPointSource = new FileSource(this.baseDir, this.filePath);
+            var entryPointUnit = parseSource(entryPointSource);
 
             var compiler = new Compiler();
-            if (entryPointModuleName[0] == null)
-                throw new IllegalStateException("Unable to find entry point module");
-
-            var parserResults = Parser.parse(sources);
-            for (var parserResult : parserResults) {
-                // Always log problems, compiler will be called even with invalid input to get analyzer results
-                parserResult.logProblems(System.out, true);
-
-                compiler.addSourceFileUnit(parserResult.getUnit());
+            compiler.setEntryPoint(entryPointUnit);
+            if (!this.disableModuleLoading) {
+                compiler.setModuleLoader((name) -> {
+                    try {
+                        var path = this.baseDir.resolve(name + ".teth");
+                        if (Files.exists(path))
+                            return parseSource(new FileSource(this.baseDir, path));
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                    return null;
+                });
             }
-
-            compiler.setEntryPoint(parserResults.stream()
-                    .filter(result -> result.getUnit().getModuleName().equals(entryPointModuleName[0]))
-                    .findFirst()
-                    .orElseThrow(() -> new IllegalStateException("Unable to find entry point unit"))
-                    .getUnit());
 
             var compilationResult = compiler.compile();
 
@@ -103,6 +86,13 @@ public abstract class AbstractCompilerCommand implements Runnable {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private static SourceFileUnit parseSource(ISource entryPointSource) {
+        var result = Parser.parse(entryPointSource);
+        // Always log problems, compiler will be called even with invalid input to get analyzer results
+        result.logProblems(System.out, true);
+        return result.getUnit();
     }
 
     protected abstract void run(TethProgram program);
