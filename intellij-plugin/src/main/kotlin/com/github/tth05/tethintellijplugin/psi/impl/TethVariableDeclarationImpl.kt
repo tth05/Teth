@@ -7,8 +7,9 @@ import com.intellij.lang.ASTNode
 import com.intellij.psi.util.PsiTreeUtil
 
 class TethVariableDeclarationImpl(node: ASTNode) : TethNamedElement(node), TethVariableDeclaration {
-    override val type: TethTypeExpression
-        get() = findNotNullChildByClass(TethTypeExpression::class.java)
+    override val type: TethTypeExpression?
+        get() = findChildByClass(TethTypeExpression::class.java)
     override val initializer: TethExpression
-        get() = PsiTreeUtil.getNextSiblingOfType(type, TethExpression::class.java)!!
+        get() = type?.let { PsiTreeUtil.getNextSiblingOfType(it, TethExpression::class.java)!! }
+            ?: findNotNullChildByClass(TethExpression::class.java)
 }

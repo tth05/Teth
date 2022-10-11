@@ -14,6 +14,8 @@ repositories {
 dependencies {
     implementation(project(":lang"))
     implementation(project(":analyzer"))
+    implementation(project(":bytecode"))
+    implementation(project(":bytecode-interpreter"))
 }
 
 // Configure Gradle IntelliJ Plugin

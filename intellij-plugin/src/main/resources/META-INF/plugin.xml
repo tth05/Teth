@@ -20,10 +20,16 @@
         <lang.syntaxHighlighter language="Teth"
                                 implementationClass="com.github.tth05.tethintellijplugin.syntax.highlighting.TethSyntaxHighlighter"/>
         <lang.braceMatcher language="Teth"
-
                            implementationClass="com.github.tth05.tethintellijplugin.TethBraceMatcher"/>
         <lang.commenter language="Teth"
                         implementationClass="com.github.tth05.tethintellijplugin.syntax.TethCommenter"/>
+
+        <configurationType implementation="com.github.tth05.tethintellijplugin.run.TethConfigurationType"/>
+        <runLineMarkerContributor language="Teth"
+                                  implementationClass="com.github.tth05.tethintellijplugin.run.TethRunLineMarkerContributor"/>
+        <runConfigurationProducer
+                implementation="com.github.tth05.tethintellijplugin.run.TethRunConfigurationProducer"/>
+
         <completion.contributor language="Teth"
                                 implementationClass="com.github.tth05.tethintellijplugin.completion.TethCompletionContributor"/>
         <annotator language="Teth"
