@@ -16,6 +16,6 @@ class TethConfigurationType : ConfigurationTypeBase(
     }
 
     companion object {
-        fun getInstance() =  ConfigurationTypeUtil.findConfigurationType(TethConfigurationType::class.java)
+        fun getInstance() = ConfigurationTypeUtil.findConfigurationType(TethConfigurationType::class.java)
     }
 }

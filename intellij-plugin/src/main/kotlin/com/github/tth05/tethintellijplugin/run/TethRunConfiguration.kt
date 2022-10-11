@@ -13,6 +13,8 @@ import com.intellij.execution.configurations.LocatableConfigurationBase
 import com.intellij.execution.configurations.RunConfiguration
 import com.intellij.execution.configurations.RunConfigurationOptions
 import com.intellij.execution.configurations.RunProfileState
+import com.intellij.execution.configurations.RuntimeConfigurationError
+import com.intellij.execution.configurations.RuntimeConfigurationWarning
 import com.intellij.execution.filters.TextConsoleBuilderFactory
 import com.intellij.execution.process.*
 import com.intellij.execution.process.AnsiEscapeDecoder.ColoredTextAcceptor
@@ -25,7 +27,9 @@ import com.intellij.psi.PsiManager
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.util.concurrency.AppExecutorUtil
 import com.intellij.util.io.toByteArray
+import com.intellij.util.text.nullize
 import com.jetbrains.rd.util.string.printToString
+import org.jdom.Element
 import java.io.OutputStream
 import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
@@ -39,12 +43,12 @@ class TethRunConfiguration(
     var filePath: String? = null
 
     override fun getState(executor: Executor, environment: ExecutionEnvironment): RunProfileState {
-        return RunProfileState { ex, runner ->
-            if (filePath == null) throw ExecutionException("No file configured")
+        return RunProfileState { _, _ ->
+            if (filePath == null) throw ExecutionException("File path is not set")
 
             val file =
-                LocalFileSystem.getInstance().findFileByNioFile(Paths.get(filePath!!)) ?: throw ExecutionException(
-                    "File not found"
+                LocalFileSystem.getInstance().findFileByPath(filePath!!) ?: throw ExecutionException(
+                    "File does not exist"
                 )
 
             val psiFile =
@@ -58,9 +62,7 @@ class TethRunConfiguration(
             val compilationResult = compiler.compile()
             if (compilationResult.hasProblems()) throw ExecutionException("Compilation failed")
 
-            val interpreter = Interpreter(compilationResult.program)
-
-            val processHandler = MyProcessHandler(interpreter)
+            val processHandler = MyProcessHandler(Interpreter(compilationResult.program))
             ProcessTerminatedListener.attach(processHandler)
 
             val console = TextConsoleBuilderFactory.getInstance().createBuilder(project).console
@@ -69,16 +71,28 @@ class TethRunConfiguration(
         }
     }
 
+    override fun writeExternal(element: Element) {
+        super.writeExternal(element)
+        element.setAttribute("filePath", filePath.orEmpty())
+    }
+
+    override fun readExternal(element: Element) {
+        super.readExternal(element)
+        filePath = element.getAttributeValue("filePath").nullize()
+    }
+
+    override fun checkConfiguration() {
+        if (filePath == null)
+            throw RuntimeConfigurationError("File path is not set")
+        val file = LocalFileSystem.getInstance().findFileByPath(filePath!!)
+        if (file == null || !file.isValid)
+            throw RuntimeConfigurationWarning("File does not exist")
+        if (!file.name.endsWith(".teth"))
+            throw RuntimeConfigurationWarning("File is not a teth file")
+    }
+
     override fun getConfigurationEditor(): SettingsEditor<out RunConfiguration> {
-        return object : SettingsEditor<TethRunConfiguration>() {
-            override fun resetEditorFrom(s: TethRunConfiguration) {
-            }
-
-            override fun applyEditorTo(s: TethRunConfiguration) {
-            }
-
-            override fun createEditor(): JComponent = panel { }
-        }
+        return TethConfigurationEditor(project)
     }
 }
 
