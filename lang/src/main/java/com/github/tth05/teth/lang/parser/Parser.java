@@ -618,6 +618,8 @@ public class Parser {
                     break;
 
                 consume(false);
+            } else {
+                break;
             }
         }
 

@@ -49,6 +49,21 @@ public class ParserTest extends AbstractParserTest {
                 ))
         )
         ), this.unit);
+
+        createAST("""
+                "a""b""c"
+                """);
+        assertEquals(
+                new SourceFileUnit(
+                        "main",
+                        StatementList.of(
+                                new StringLiteralExpression(null, List.of(StringLiteralExpression.stringPart(null, "a"))),
+                                new StringLiteralExpression(null, List.of(StringLiteralExpression.stringPart(null, "b"))),
+                                new StringLiteralExpression(null, List.of(StringLiteralExpression.stringPart(null, "c")))
+                        )
+                ),
+                this.unit
+        );
     }
 
     @Test
