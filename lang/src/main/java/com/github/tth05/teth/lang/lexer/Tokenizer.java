@@ -330,7 +330,7 @@ public class Tokenizer {
         this.problems.add(new Problem(span, message));
     }
 
-    private static boolean isKeyword(String value) {
+    public static boolean isKeyword(String value) {
         return value.equals("if") || value.equals("else") || value.equals("fn") ||
                value.equals("return") || value.equals("let") || value.equals("loop") ||
                value.equals("new") || value.equals("struct") || value.equals("use");

@@ -20,7 +20,6 @@ class TethCompletionContributor : CompletionContributor() {
                     val actualText = ElementManipulators.getValueText(originalElement)
                     if (actualText.isBlank()) return
 
-                    // TODO: Hook this up
                     result.addElement(LookupElementBuilder.create(actualText + Math.random()))
                     result.addElement(LookupElementBuilder.create(actualText + Math.random()))
                     result.addElement(LookupElementBuilder.create(actualText + Math.random()))

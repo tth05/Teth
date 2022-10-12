@@ -8,9 +8,8 @@ import com.intellij.psi.PsiElement
 
 abstract class TethNamedElement(node: ASTNode) : ASTWrapperPsiElement(node), TethNameIdentifierOwner {
 
-    override fun setName(name: String): PsiElement {
-//        nameIdentifier?.replace()
-        TODO()
+    override fun setName(name: String): PsiElement = apply {
+        nameIdentifier?.replace(FakeElementFactory(project).createIdentifierLiteralExpression(name))
     }
 
     override fun getTextOffset(): Int = nameIdentifier?.textOffset ?: super.getTextOffset()

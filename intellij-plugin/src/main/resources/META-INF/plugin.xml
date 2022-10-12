@@ -23,6 +23,10 @@
                            implementationClass="com.github.tth05.tethintellijplugin.TethBraceMatcher"/>
         <lang.commenter language="Teth"
                         implementationClass="com.github.tth05.tethintellijplugin.syntax.TethCommenter"/>
+        <lang.namesValidator language="Teth"
+                             implementationClass="com.github.tth05.tethintellijplugin.refactoring.TethNamesValidator"/>
+        <lang.refactoringSupport language="Teth"
+                                 implementationClass="com.github.tth05.tethintellijplugin.refactoring.TethRefactoringSupportProvider"/>
 
         <configurationType implementation="com.github.tth05.tethintellijplugin.run.TethConfigurationType"/>
         <runLineMarkerContributor language="Teth"

@@ -4,10 +4,10 @@ import com.github.tth05.teth.lang.parser.ASTVisitor
 import com.github.tth05.teth.lang.parser.ast.IdentifierExpression
 import com.github.tth05.teth.lang.parser.ast.Statement
 import com.github.tth05.tethintellijplugin.psi.api.*
-import com.github.tth05.tethintellijplugin.psi.caching.AnalyzerUnitPair
 import com.github.tth05.tethintellijplugin.psi.caching.tethCache
 import com.github.tth05.tethintellijplugin.psi.reference.TethReference
 import com.github.tth05.tethintellijplugin.psi.reference.resolvedRefTo
+import com.github.tth05.tethintellijplugin.syntax.analyzeAndParseFile
 import com.intellij.extapi.psi.ASTWrapperPsiElement
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
@@ -32,7 +32,9 @@ class TethIdentifierLiteralExpressionImpl(node: ASTNode) : ASTWrapperPsiElement(
     override fun getReference(): PsiReference? {
         // Get analyzed file
         val file = containingFile ?: return null
-        val (analyzer, unit) = file.tethCache().getValue<AnalyzerUnitPair>(file) ?: return null
+        val (analyzer, _, result) = file.tethCache().resolveWithCaching(file) {
+            analyzeAndParseFile(file)
+        }
 
         return tethCache().resolveWithCaching(this) {
             // Convert psi element to teth ast node and get reference
@@ -42,7 +44,7 @@ class TethIdentifierLiteralExpressionImpl(node: ASTNode) : ASTWrapperPsiElement(
                     if ((identifierExpression.span?.offset ?: -1) == startOffset) target =
                         analyzer.resolvedReference(identifierExpression)
                 }
-            }.visit(unit)
+            }.visit(result.unit)
 
             if (target == null || target!!.span == null /* Intrinsic decls */) return@resolveWithCaching TethReference.UNRESOLVED
 

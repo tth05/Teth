@@ -1,6 +1,8 @@
 package com.github.tth05.tethintellijplugin.psi.caching
 
 import com.github.tth05.teth.analyzer.Analyzer
+import com.github.tth05.teth.analyzer.AnalyzerResult
+import com.github.tth05.teth.lang.parser.ParserResult
 import com.github.tth05.teth.lang.parser.SourceFileUnit
 import com.github.tth05.tethintellijplugin.psi.TethPsiFile
 import com.intellij.openapi.Disposable
@@ -42,8 +44,6 @@ class TethPsiCache(project: Project) : Disposable {
         return globalCache.get().getOrPut(key) { resolver(key) } as V
     }
 }
-
-data class AnalyzerUnitPair(val analyzer: Analyzer, val unit: SourceFileUnit)
 
 fun PsiElement.tethCache() = project.service<TethPsiCache>()
 
