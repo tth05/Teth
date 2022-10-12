@@ -27,6 +27,8 @@
                              implementationClass="com.github.tth05.tethintellijplugin.refactoring.TethNamesValidator"/>
         <lang.refactoringSupport language="Teth"
                                  implementationClass="com.github.tth05.tethintellijplugin.refactoring.TethRefactoringSupportProvider"/>
+        <lang.quoteHandler language="Teth"
+                           implementationClass="com.github.tth05.tethintellijplugin.syntax.TethQuoteHandler"/>
 
         <configurationType implementation="com.github.tth05.tethintellijplugin.run.TethConfigurationType"/>
         <runLineMarkerContributor language="Teth"
