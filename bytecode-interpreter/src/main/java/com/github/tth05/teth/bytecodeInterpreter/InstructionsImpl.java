@@ -170,9 +170,8 @@ public class InstructionsImpl {
                     //noinspection rawtypes
                     interpreter.push(new ArrayList());
                 }
-                case OpCodes.DUP -> {
-                    interpreter.push(interpreter.peek());
-                }
+                case OpCodes.DUP -> interpreter.push(interpreter.peek());
+                case OpCodes.POP -> interpreter.pop();
                 case OpCodes.JUMP -> {
                     var relativeJumpOffset = ((JUMP_Insn) insn).getRelativeJumpOffset();
                     interpreter.setProgramCounter(interpreter.getProgramCounter() + relativeJumpOffset);

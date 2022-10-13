@@ -280,4 +280,5 @@ public interface OpCodes {
     byte STORE_MEMBER = 29;
     byte EXIT = 25;
     byte DUP = 26;
+    byte POP = 30;
 }
