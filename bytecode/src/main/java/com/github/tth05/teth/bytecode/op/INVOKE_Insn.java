@@ -5,12 +5,14 @@ public class INVOKE_Insn implements IInstrunction {
     private final boolean instanceFunction;
     private final int paramCount;
     private final int localsCount;
+    private final boolean returnsValue;
     private final int absoluteJumpAddress;
 
-    public INVOKE_Insn(boolean instanceMethod, int paramCount, int localsCount, int absoluteJumpAddress) {
-        this.instanceFunction = instanceMethod;
+    public INVOKE_Insn(boolean instanceFunction, int paramCount, int localsCount, boolean returnsValue, int absoluteJumpAddress) {
+        this.instanceFunction = instanceFunction;
         this.paramCount = paramCount;
         this.localsCount = localsCount;
+        this.returnsValue = returnsValue;
         this.absoluteJumpAddress = absoluteJumpAddress;
     }
 
@@ -24,6 +26,10 @@ public class INVOKE_Insn implements IInstrunction {
 
     public int getLocalsCount() {
         return this.localsCount;
+    }
+
+    public boolean returnsValue() {
+        return this.returnsValue;
     }
 
     public int getAbsoluteJumpAddress() {

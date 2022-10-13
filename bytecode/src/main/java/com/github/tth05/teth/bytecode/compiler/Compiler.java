@@ -5,6 +5,9 @@ import com.github.tth05.teth.analyzer.AnalyzerResult;
 import com.github.tth05.teth.analyzer.module.IModuleLoader;
 import com.github.tth05.teth.analyzer.prelude.Prelude;
 import com.github.tth05.teth.analyzer.visitor.NameAnalysis;
+import com.github.tth05.teth.bytecode.compiler.internal.PlaceholderInvokeInsn;
+import com.github.tth05.teth.bytecode.compiler.optimization.IOptimizer;
+import com.github.tth05.teth.bytecode.compiler.optimization.StackCleaningOptimizer;
 import com.github.tth05.teth.bytecode.op.*;
 import com.github.tth05.teth.bytecode.program.StructData;
 import com.github.tth05.teth.bytecode.program.TethProgram;
@@ -13,6 +16,7 @@ import com.github.tth05.teth.lang.parser.SourceFileUnit;
 import com.github.tth05.teth.lang.parser.ast.*;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Compiler {
 
@@ -20,6 +24,10 @@ public class Compiler {
     private final Map<FunctionDeclaration, List<IInstrunction>> functionInsnMap = new IdentityHashMap<>();
 
     private final List<SourceFileUnit> units = new ArrayList<>();
+    private final List<IOptimizer> optimizers = new ArrayList<>();
+    {
+        this.optimizers.add(new StackCleaningOptimizer());
+    }
 
     private Analyzer analyzer;
 
@@ -46,6 +54,10 @@ public class Compiler {
         });
     }
 
+    public void addOptimizer(IOptimizer optimizer) {
+        this.optimizers.add(optimizer);
+    }
+
     public CompilationResult compile() {
         if (this.compiled)
             throw new IllegalStateException("Cannot compile twice");
@@ -68,17 +80,35 @@ public class Compiler {
 
     private TethProgram toProgram(Analyzer analyzer) {
         var i = 1;
-        var insns = new IInstrunction[this.functionInsnMap.values().stream().mapToInt(List::size).sum() + 1];
         var functionOffsets = new IdentityHashMap<FunctionDeclaration, Integer>();
+
+        record FunctionInsnPair(FunctionDeclaration function, List<IInstrunction> insnList) {}
 
         // Ensure global function comes first
         var sortedFunctions = this.functionInsnMap.entrySet().stream()
-                .sorted(Comparator.comparing(e -> e.getKey() != NameAnalysis.GLOBAL_FUNCTION)).toList();
+                .map(entry -> new FunctionInsnPair(entry.getKey(), entry.getValue()))
+                .sorted(Comparator.comparing(e -> e.function() != NameAnalysis.GLOBAL_FUNCTION))
+                .collect(Collectors.toCollection(ArrayList::new));
+        // Optimize methods
+        var totalInsnCount = 0;
         for (var entry : sortedFunctions) {
-            var function = entry.getKey();
-            var insnList = entry.getValue();
+            var insnList = entry.insnList();
 
+            for (var optimizer : this.optimizers)
+                optimizer.method(insnList);
+
+            totalInsnCount += insnList.size();
+        }
+
+        var insns = new IInstrunction[totalInsnCount + 1];
+
+        // Compute function offsets
+        for (var entry : sortedFunctions) {
+            var function = entry.function();
             functionOffsets.put(function, i);
+
+            // Copy insns to array
+            var insnList = entry.insnList();
             for (var insn : insnList)
                 insns[i++] = insn;
         }
@@ -89,21 +119,22 @@ public class Compiler {
             if (!(insn instanceof PlaceholderInvokeInsn placeholder))
                 continue;
 
-            var function = placeholder.target;
+            var function = placeholder.target();
             var offset = functionOffsets.get(function);
             if (offset == null)
                 throw new IllegalStateException("Function '%s' is referenced but not compiled".formatted(function.getNameExpr().getValue()));
 
             insns[j] = new INVOKE_Insn(
-                    function.isInstanceFunction(),
-                    function.getParameters().size() + (function.isInstanceFunction() ? 1 : 0),
+                    placeholder.isInstanceFunction(),
+                    placeholder.getParamCount(),
                     analyzer.functionLocalsCount(function),
+                    placeholder.returnsValue(),
                     offset - 1
             );
         }
 
         // "Invoke" global function
-        insns[0] = new INVOKE_Insn(false, 0, analyzer.functionLocalsCount(NameAnalysis.GLOBAL_FUNCTION), 0);
+        insns[0] = new INVOKE_Insn(false, 0, analyzer.functionLocalsCount(NameAnalysis.GLOBAL_FUNCTION), false, 0);
 
         return new TethProgram(insns, generateStructData());
     }
@@ -206,7 +237,7 @@ public class Compiler {
             }
 
             var structDeclaration = (StructDeclaration) this.analyzer.resolvedReference(expression.getTargetNameExpr());
-            this.currentFunctionInsn.add(new CREATE_OBJECT_Insn(getStructId(structDeclaration)));
+            this.currentFunctionInsn.add(new CREATE_OBJECT_Insn(getStructId(structDeclaration), structDeclaration.getFields().size()));
         }
 
         @Override
@@ -333,8 +364,7 @@ public class Compiler {
             {
                 expression.getRight().accept(this);
             }
-            // TODO: Fully remove this? Currently overflows the stack when result is unused
-//            this.currentFunctionInsn.add(new DUP_Insn());
+            this.currentFunctionInsn.add(new DUP_Insn());
 
             if (expression.getLeft() instanceof IdentifierExpression identifierExpression) {
                 var idx = getLocalIndex(identifierExpression);
@@ -410,7 +440,7 @@ public class Compiler {
 
         private Integer getLocalIndex(IdentifierExpression identifierExpression) {
             // This only returns null for a reference to 'self' inside an instance function, because the instance of
-            // the self parameter declaration will be different from SELF_PLACEHOLDER. Therefore, the default is 0,
+            // the self parameter function will be different from SELF_PLACEHOLDER. Therefore, the default is 0,
             // which is the index if the 'self' parameter. All of this obviously assumes that the analyzer ran
             // successfully.
             return this.currentFunctionLocals.getOrDefault((IVariableDeclaration) this.analyzer.resolvedReference(identifierExpression), 0);
@@ -418,19 +448,6 @@ public class Compiler {
 
         private int getStructId(StructDeclaration declaration) {
             return structIds.computeIfAbsent(declaration, k -> structIds.size());
-        }
-    }
-
-    private record PlaceholderInvokeInsn(FunctionDeclaration target) implements IInstrunction {
-
-        @Override
-        public byte getOpCode() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public String getDebugParametersString() {
-            throw new UnsupportedOperationException();
         }
     }
 }

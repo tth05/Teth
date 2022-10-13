@@ -1,6 +1,6 @@
 package com.github.tth05.teth.bytecode.op;
 
-public class JUMP_IF_FALSE_Insn implements IInstrunction {
+public class JUMP_IF_FALSE_Insn implements IJumpInstruction {
 
     private final int relativeJumpOffset;
 
@@ -8,6 +8,7 @@ public class JUMP_IF_FALSE_Insn implements IInstrunction {
         this.relativeJumpOffset = relativeJumpOffset;
     }
 
+    @Override
     public int getRelativeJumpOffset() {
         return this.relativeJumpOffset;
     }
