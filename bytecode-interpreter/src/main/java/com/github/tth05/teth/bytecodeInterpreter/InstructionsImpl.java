@@ -31,6 +31,9 @@ public class InstructionsImpl {
         INTRINSICS.put(Prelude.getGlobalFunction("stringify"), (interpreter, args) -> {
             interpreter.push(intrinsicToString(interpreter, args[0]));
         });
+        INTRINSICS.put(Prelude.getGlobalFunction("nanoTime"), (interpreter, args) -> {
+            interpreter.push(System.nanoTime());
+        });
         INTRINSICS.put(prelude("string", "concat"), (interpreter, args) -> {
             var left = ((String) args[0]);
             var right = ((String) args[1]);

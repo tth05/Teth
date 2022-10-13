@@ -88,11 +88,17 @@ public class Prelude {
             type("string"),
             type("any")
     );
+    private static final FunctionDeclaration NANO_TIME_FUNCTION = createFakeFunctionDeclaration(
+            "nanoTime",
+            false,
+            type("long")
+    );
 
     public static FunctionDeclaration getGlobalFunction(String name) {
         return switch (name) {
             case "print" -> PRINT_FUNCTION;
             case "stringify" -> STRINGIFY_FUNCTION;
+            case "nanoTime" -> NANO_TIME_FUNCTION;
             default -> null;
         };
     }
@@ -128,6 +134,7 @@ public class Prelude {
         statements.add(0, ANY_STRUCT_DECLARATION);
         statements.add(0, PRINT_FUNCTION);
         statements.add(0, STRINGIFY_FUNCTION);
+        statements.add(0, NANO_TIME_FUNCTION);
     }
 
     private static TypeExpression type(String name, TypeExpression... params) {
