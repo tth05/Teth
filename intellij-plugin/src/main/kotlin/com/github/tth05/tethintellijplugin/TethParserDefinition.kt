@@ -35,7 +35,7 @@ class TethParserDefinition : ParserDefinition {
 
     override fun getStringLiteralElements(): TokenSet = STRING_LITERAL_TOKENS
 
-    override fun createElement(node: ASTNode?): PsiElement = when (val type = node!!.elementType) {
+    override fun createElement(node: ASTNode?): PsiElement = when (node!!.elementType) {
         TethElementTypes.UNIT -> TethUnitImpl(node)
         TethElementTypes.STRUCT_DECLARATION -> TethStructDeclarationImpl(node)
         TethElementTypes.FIELD_DECLARATION -> TethFieldDeclarationImpl(node)

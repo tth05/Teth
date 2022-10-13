@@ -15,7 +15,7 @@ class TethRunLineMarkerContributor : RunLineMarkerContributor() {
 
         return Info(
             AllIcons.RunConfigurations.TestState.Run,
-            { el -> "Run file" },
+            { "Run file" },
             *ExecutorAction.getActions(0)
         )
     }

@@ -13,47 +13,6 @@ import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
 
 class InterpreterProcessHandler(private val interpreter: Interpreter) : ProcessHandler(), AnsiEscapeDecoder.ColoredTextAcceptor {
-    class ProcessHandlerForwardingInputStream(private val processHandler: ProcessHandler, private val outputType: Key<*>) :
-        ReceivingInputStream() {
-
-        private val buffer = ByteBuffer.allocate(32768)
-
-        override fun receive(data: Int) {
-            receive(byteArrayOf(data.toByte()))
-        }
-
-        override fun receive(data: ByteArray) {
-            receive(data, 0, data.size)
-        }
-
-        override fun receive(data: ByteArray, off: Int, len: Int) {
-            synchronized(buffer) {
-                if (len > buffer.capacity()) {
-                    sendText(data)
-                    return
-                }
-
-                if (len > buffer.remaining())
-                    flush()
-                buffer.put(data, off, len)
-            }
-        }
-
-        override fun flush() {
-            synchronized(buffer) {
-                if (buffer.position() <= 0) return
-
-                buffer.flip()
-                val data = buffer.toByteArray()
-                sendText(data)
-                buffer.clear()
-            }
-        }
-
-        private fun sendText(data: ByteArray) {
-            processHandler.notifyTextAvailable(String(data, StandardCharsets.UTF_8), outputType)
-        }
-    }
     private val decoder = AnsiEscapeDecoder()
     private var stopped = false
 
@@ -124,4 +83,46 @@ class InterpreterProcessHandler(private val interpreter: Interpreter) : ProcessH
     override fun detachIsDefault(): Boolean = false
 
     override fun getProcessInput(): OutputStream? = null
+}
+
+private class ProcessHandlerForwardingInputStream(private val processHandler: ProcessHandler, private val outputType: Key<*>) :
+    ReceivingInputStream() {
+
+    private val buffer = ByteBuffer.allocate(32768)
+
+    override fun receive(data: Int) {
+        receive(byteArrayOf(data.toByte()))
+    }
+
+    override fun receive(data: ByteArray) {
+        receive(data, 0, data.size)
+    }
+
+    override fun receive(data: ByteArray, off: Int, len: Int) {
+        synchronized(buffer) {
+            if (len > buffer.capacity()) {
+                sendText(data)
+                return
+            }
+
+            if (len > buffer.remaining())
+                flush()
+            buffer.put(data, off, len)
+        }
+    }
+
+    override fun flush() {
+        synchronized(buffer) {
+            if (buffer.position() <= 0) return
+
+            buffer.flip()
+            val data = buffer.toByteArray()
+            sendText(data)
+            buffer.clear()
+        }
+    }
+
+    private fun sendText(data: ByteArray) {
+        processHandler.notifyTextAvailable(String(data, StandardCharsets.UTF_8), outputType)
+    }
 }

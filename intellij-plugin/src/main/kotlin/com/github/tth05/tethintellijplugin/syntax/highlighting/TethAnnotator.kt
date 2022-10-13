@@ -10,13 +10,17 @@ import com.github.tth05.teth.lang.span.Span
 import com.github.tth05.tethintellijplugin.psi.caching.tethCache
 import com.github.tth05.tethintellijplugin.syntax.analyzeAndParseFile
 import com.intellij.codeInspection.ProblemHighlightType
+import com.intellij.lang.LanguageParserDefinitions
 import com.intellij.lang.annotation.AnnotationHolder
 import com.intellij.lang.annotation.Annotator
 import com.intellij.lang.annotation.HighlightSeverity
 import com.intellij.openapi.editor.colors.TextAttributesKey
+import com.intellij.openapi.fileTypes.LanguageFileType
 import com.intellij.openapi.util.TextRange
+import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
+import com.intellij.psi.PsiManager
 import com.intellij.util.applyIf
 
 class TethAnnotator : Annotator {
@@ -29,13 +33,8 @@ class TethAnnotator : Annotator {
         }
 
         val fileTextRange = element.textRange
-        parserResult.problems.forEach {
-            annotateError(holder, element, fileTextRange, it)
-        }
-
-        analyzerResults.first().problems.forEach {
-            annotateError(holder, element, fileTextRange, it)
-        }
+        parserResult.problems.forEach { annotateError(holder, element, fileTextRange, it) }
+        analyzerResults.first().problems.forEach { annotateError(holder, element, fileTextRange, it) }
 
         AnnotatingVisitor(analyzer, holder).visit(parserResult.unit)
     }
