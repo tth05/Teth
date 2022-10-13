@@ -105,8 +105,8 @@ public class InstructionsImpl {
                     var left = interpreter.pop();
                     var right = interpreter.pop();
                     boolean useDouble = validateLongDoubleOperands(left, right);
-                    var leftNum = (Number) left;
-                    var rightNum = (Number) right;
+                    var leftNum = (Number) right;
+                    var rightNum = (Number) left;
 
                     if (useDouble)
                         interpreter.push(leftNum.doubleValue() + rightNum.doubleValue());
@@ -129,8 +129,8 @@ public class InstructionsImpl {
                     var left = interpreter.pop();
                     var right = interpreter.pop();
                     boolean useDouble = validateLongDoubleOperands(left, right);
-                    var leftNum = (Number) left;
-                    var rightNum = (Number) right;
+                    var leftNum = (Number) right;
+                    var rightNum = (Number) left;
 
                     if (useDouble)
                         interpreter.push(leftNum.doubleValue() * rightNum.doubleValue());
@@ -141,8 +141,8 @@ public class InstructionsImpl {
                     var left = interpreter.pop();
                     var right = interpreter.pop();
                     boolean useDouble = validateLongDoubleOperands(left, right);
-                    var leftNum = (Number) left;
-                    var rightNum = (Number) right;
+                    var leftNum = (Number) right;
+                    var rightNum = (Number) left;
 
                     if (useDouble)
                         interpreter.push(leftNum.doubleValue() / rightNum.doubleValue());
