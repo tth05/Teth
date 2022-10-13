@@ -3,29 +3,7 @@ package com.github.tth05.teth.analyzer.visitor;
 import com.github.tth05.teth.analyzer.type.SemanticType;
 import com.github.tth05.teth.analyzer.type.TypeCache;
 import com.github.tth05.teth.lang.parser.ExpressionList;
-import com.github.tth05.teth.lang.parser.ast.BinaryExpression;
-import com.github.tth05.teth.lang.parser.ast.BooleanLiteralExpression;
-import com.github.tth05.teth.lang.parser.ast.DoubleLiteralExpression;
-import com.github.tth05.teth.lang.parser.ast.Expression;
-import com.github.tth05.teth.lang.parser.ast.FunctionDeclaration;
-import com.github.tth05.teth.lang.parser.ast.FunctionInvocationExpression;
-import com.github.tth05.teth.lang.parser.ast.GenericParameterDeclaration;
-import com.github.tth05.teth.lang.parser.ast.IDeclarationReference;
-import com.github.tth05.teth.lang.parser.ast.IVariableDeclaration;
-import com.github.tth05.teth.lang.parser.ast.IdentifierExpression;
-import com.github.tth05.teth.lang.parser.ast.IfStatement;
-import com.github.tth05.teth.lang.parser.ast.ListLiteralExpression;
-import com.github.tth05.teth.lang.parser.ast.LongLiteralExpression;
-import com.github.tth05.teth.lang.parser.ast.LoopStatement;
-import com.github.tth05.teth.lang.parser.ast.MemberAccessExpression;
-import com.github.tth05.teth.lang.parser.ast.ObjectCreationExpression;
-import com.github.tth05.teth.lang.parser.ast.ReturnStatement;
-import com.github.tth05.teth.lang.parser.ast.Statement;
-import com.github.tth05.teth.lang.parser.ast.StringLiteralExpression;
-import com.github.tth05.teth.lang.parser.ast.StructDeclaration;
-import com.github.tth05.teth.lang.parser.ast.TypeExpression;
-import com.github.tth05.teth.lang.parser.ast.UnaryExpression;
-import com.github.tth05.teth.lang.parser.ast.VariableDeclaration;
+import com.github.tth05.teth.lang.parser.ast.*;
 import com.github.tth05.teth.lang.span.Span;
 
 import java.util.ArrayDeque;
@@ -262,6 +240,17 @@ public class TypeAnalysis extends AnalysisASTVisitor {
 
         if (statement.getCondition() != null && !this.typeCache.getType(BOOLEAN_STRUCT_DECLARATION).equals(this.resolvedExpressionTypes.get(statement.getCondition())))
             report(statement.getCondition().getSpan(), "Condition of loop statement must be a bool");
+    }
+
+    @Override
+    public void visit(ParenthesisedExpression expression) {
+        super.visit(expression);
+
+        var type = this.resolvedExpressionTypes.get(expression.getExpression());
+        if (type == null)
+            return;
+
+        this.resolvedExpressionTypes.put(expression, type);
     }
 
     @Override

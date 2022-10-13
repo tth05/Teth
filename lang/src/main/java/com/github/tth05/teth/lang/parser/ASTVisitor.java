@@ -33,6 +33,10 @@ public abstract class ASTVisitor {
         }
     }
 
+    public void visit(ParenthesisedExpression expression) {
+        expression.getExpression().accept(this);
+    }
+
     public void visit(BinaryExpression expression) {
         expression.getLeft().accept(this);
         expression.getRight().accept(this);

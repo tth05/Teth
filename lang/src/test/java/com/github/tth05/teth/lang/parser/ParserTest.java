@@ -179,19 +179,21 @@ public class ParserTest extends AbstractParserTest {
                         null,
                         new UnaryExpression(
                                 null,
-                                new BinaryExpression(
-                                        null,
-                                        new UnaryExpression(
+                                new ParenthesisedExpression(null,
+                                        new BinaryExpression(
                                                 null,
-                                                new LongLiteralExpression(null, 1),
-                                                UnaryExpression.Operator.OP_NEGATIVE
-                                        ),
-                                        new UnaryExpression(
-                                                null,
-                                                new LongLiteralExpression(null, 2),
-                                                UnaryExpression.Operator.OP_NEGATIVE
-                                        ),
-                                        BinaryExpression.Operator.OP_ADD
+                                                new UnaryExpression(
+                                                        null,
+                                                        new LongLiteralExpression(null, 1),
+                                                        UnaryExpression.Operator.OP_NEGATIVE
+                                                ),
+                                                new UnaryExpression(
+                                                        null,
+                                                        new LongLiteralExpression(null, 2),
+                                                        UnaryExpression.Operator.OP_NEGATIVE
+                                                ),
+                                                BinaryExpression.Operator.OP_ADD
+                                        )
                                 ),
                                 UnaryExpression.Operator.OP_NEGATIVE
                         ),
@@ -258,11 +260,14 @@ public class ParserTest extends AbstractParserTest {
                                         new BinaryExpression(
                                                 null,
                                                 new LongLiteralExpression(null, 1),
-                                                new BinaryExpression(
+                                                new ParenthesisedExpression(
                                                         null,
-                                                        new IdentifierExpression(null, "a"),
-                                                        new LongLiteralExpression(null, 1),
-                                                        BinaryExpression.Operator.OP_ASSIGN
+                                                        new BinaryExpression(
+                                                                null,
+                                                                new IdentifierExpression(null, "a"),
+                                                                new LongLiteralExpression(null, 1),
+                                                                BinaryExpression.Operator.OP_ASSIGN
+                                                        )
                                                 ),
                                                 BinaryExpression.Operator.OP_POW
                                         ),
@@ -314,37 +319,43 @@ public class ParserTest extends AbstractParserTest {
                                 ),
                                 new BinaryExpression(
                                         null,
-                                        new BinaryExpression(
+                                        new ParenthesisedExpression(
                                                 null,
                                                 new BinaryExpression(
                                                         null,
                                                         new BinaryExpression(
                                                                 null,
-                                                                new LongLiteralExpression(null, 5),
-                                                                new LongLiteralExpression(null, 6),
+                                                                new BinaryExpression(
+                                                                        null,
+                                                                        new LongLiteralExpression(null, 5),
+                                                                        new LongLiteralExpression(null, 6),
+                                                                        BinaryExpression.Operator.OP_MULTIPLY
+                                                                ),
+                                                                new LongLiteralExpression(null, 1),
+                                                                BinaryExpression.Operator.OP_ADD
+                                                        ),
+                                                        new BinaryExpression(
+                                                                null,
+                                                                new LongLiteralExpression(null, 3),
+                                                                new BinaryExpression(
+                                                                        null,
+                                                                        new LongLiteralExpression(null, 2),
+                                                                        new LongLiteralExpression(null, 2),
+                                                                        BinaryExpression.Operator.OP_POW
+                                                                ),
                                                                 BinaryExpression.Operator.OP_MULTIPLY
                                                         ),
-                                                        new LongLiteralExpression(null, 1),
                                                         BinaryExpression.Operator.OP_ADD
-                                                ),
+                                                )
+                                        ),
+                                        new ParenthesisedExpression(
+                                                null,
                                                 new BinaryExpression(
                                                         null,
-                                                        new LongLiteralExpression(null, 3),
-                                                        new BinaryExpression(
-                                                                null,
-                                                                new LongLiteralExpression(null, 2),
-                                                                new LongLiteralExpression(null, 2),
-                                                                BinaryExpression.Operator.OP_POW
-                                                        ),
-                                                        BinaryExpression.Operator.OP_MULTIPLY
-                                                ),
-                                                BinaryExpression.Operator.OP_ADD
-                                        ),
-                                        new BinaryExpression(
-                                                null,
-                                                new LongLiteralExpression(null, 100),
-                                                new LongLiteralExpression(null, 1),
-                                                BinaryExpression.Operator.OP_ADD
+                                                        new LongLiteralExpression(null, 100),
+                                                        new LongLiteralExpression(null, 1),
+                                                        BinaryExpression.Operator.OP_ADD
+                                                )
                                         ),
                                         BinaryExpression.Operator.OP_POW
                                 ), BinaryExpression.Operator.OP_ADD
@@ -683,13 +694,16 @@ public class ParserTest extends AbstractParserTest {
                                 new LongLiteralExpression(null, 1),
                                 new FunctionInvocationExpression(
                                         null,
-                                        new FunctionInvocationExpression(
+                                        new ParenthesisedExpression(
                                                 null,
-                                                new IdentifierExpression(null, "foo"),
-                                                List.of(),
-                                                ExpressionList.of(
-                                                        new LongLiteralExpression(null, 1),
-                                                        new LongLiteralExpression(null, 2)
+                                                new FunctionInvocationExpression(
+                                                        null,
+                                                        new IdentifierExpression(null, "foo"),
+                                                        List.of(),
+                                                        ExpressionList.of(
+                                                                new LongLiteralExpression(null, 1),
+                                                                new LongLiteralExpression(null, 2)
+                                                        )
                                                 )
                                         ),
                                         List.of(),

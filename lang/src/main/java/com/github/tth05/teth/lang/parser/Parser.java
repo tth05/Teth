@@ -140,7 +140,7 @@ public class Parser {
 
     private IfStatement parseIfStatement(AnchorUnion anchorSet) {
         var firstSpan = consume(false).span();
-        var condition = parseParenthesisedExpression(AnchorSets.FIRST_SET_ELSE_STATEMENT.union(AnchorSets.FIRST_SET_STATEMENT));
+        var condition = parseParenthesisedExpression(AnchorSets.FIRST_SET_ELSE_STATEMENT.union(AnchorSets.FIRST_SET_STATEMENT)).getExpression();
         var body = parseBlock(AnchorSets.FIRST_SET_ELSE_STATEMENT.union(anchorSet));
         var next = this.stream.peek();
         if (next.is(TokenType.KEYWORD_ELSE)) {
@@ -565,13 +565,16 @@ public class Parser {
         return parameters;
     }
 
-    private Expression parseParenthesisedExpression(AnchorUnion anchorSet) {
+    private ParenthesisedExpression parseParenthesisedExpression(AnchorUnion anchorSet) {
         consumeLineBreaks();
-        expectToken(TokenType.L_PAREN, anchorSet.union(AnchorSets.FIRST_SET_EXPRESSION), () -> "Expected opening '('");
+        var firstToken = expectToken(TokenType.L_PAREN, anchorSet.union(AnchorSets.FIRST_SET_EXPRESSION), () -> "Expected opening '('");
         var parenExpr = parseExpression(anchorSet.union(AnchorSets.END_SET_PARENTHESISED_EXPRESSION));
-        expectToken(TokenType.R_PAREN, anchorSet, () -> "Expected closing ')'");
+        var secondToken = expectToken(TokenType.R_PAREN, anchorSet, () -> "Expected closing ')'");
         consumeLineBreaks();
-        return parenExpr;
+
+        var firstSpan = firstToken.isInvalid() ? parenExpr.getSpan() : firstToken.span();
+        var lastSpan = secondToken.isInvalid() ? parenExpr.getSpan() : secondToken.span();
+        return new ParenthesisedExpression(Span.of(firstSpan, lastSpan), parenExpr);
     }
 
     private Expression parseLiteralExpression(AnchorUnion anchorSet) {
