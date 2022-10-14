@@ -4,7 +4,9 @@ import com.github.tth05.tethintellijplugin.psi.api.TethFieldDeclaration
 import com.github.tth05.tethintellijplugin.psi.api.TethFunctionDeclaration
 import com.github.tth05.tethintellijplugin.psi.api.TethGenericParameterDeclaration
 import com.github.tth05.tethintellijplugin.psi.api.TethStructDeclaration
+import com.intellij.ide.projectView.PresentationData
 import com.intellij.lang.ASTNode
+import com.intellij.navigation.ItemPresentation
 import com.intellij.psi.util.childrenOfType
 
 class TethStructDeclarationImpl(node: ASTNode) : TethNamedElement(node), TethStructDeclaration {
