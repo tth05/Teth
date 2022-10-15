@@ -53,15 +53,13 @@ public class Parser {
         var lastSpan = firstSpan;
         consumeLineBreaks();
 
-        var path = new ArrayList<IdentifierExpression>(2);
-        while (true) {
-            var part = expectIdentifier(anchorSet.union(AnchorSets.FIRST_SET_USE_STATEMENT), () -> "Expected use statement path part");
-            if (!part.isInvalid())
-                path.add(new IdentifierExpression((lastSpan = part.span()), part.value()));
-
-            if (!this.stream.peek().is(TokenType.SLASH))
-                break;
-            lastSpan = consume(false).span();
+        var path = parseStringLiteralExpression();
+        if (path == null) {
+            reportAndRecover(anchorSet.union(AnchorSets.FIRST_SET_USE_STATEMENT), this.stream.peek().span(), "Expected string literal path");
+        } else {
+            if (!path.isSingleString())
+                this.problems.add(new Problem(path.getSpan(), "Expressions in string literals are not allowed here"));
+            lastSpan = path.getSpan();
         }
 
         consumeLineBreaks();
@@ -87,7 +85,12 @@ public class Parser {
             lastSpan = endToken.span();
 
         consumeLineBreaks();
-        return new UseStatement(Span.of(firstSpan, lastSpan), path, imports);
+        var firstPart = path == null ? null : path.getParts().get(0);
+        return new UseStatement(
+                Span.of(firstSpan, lastSpan),
+                new IdentifierExpression(firstPart == null ? null : firstPart.getSpan(), firstPart == null ? null : firstPart.asString()),
+                imports
+        );
     }
 
     private StatementList parseStatementList(AnchorUnion anchorSet, TokenType endToken) {
@@ -625,6 +628,10 @@ public class Parser {
                 break;
             }
         }
+
+        // Might happen when invoked from parseUseStatement
+        if (parts.isEmpty())
+            return null;
 
         return new StringLiteralExpression(parts);
     }

@@ -482,7 +482,7 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
     @Test
     public void testUseStatementFunction() {
         var problems = analyze("""
-                        use other {test}
+                        use "other" {test}
                         let a: long = test()
                         """,
                 new Source("other", """
@@ -498,7 +498,7 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
     @Test
     public void testUseStatementStruct() {
         var problems = analyze("""
-                        use other/test {Str}
+                        use "other/test" {Str}
                         let a: Str = new Str()
                         """,
                 new Source("other/test", """
@@ -514,8 +514,8 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
     @Test
     public void testUseStatementCircular() {
         var problems = analyze("""
-                        use other {two}
-                        use other2 {three}
+                        use "other" {two}
+                        use "other2" {three}
                                                 
                         fn one() long {
                             let a: double = two()
@@ -524,8 +524,8 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
                         }
                         """,
                 new Source("other", """
-                        use main {one}
-                        use other2 {three}
+                        use "main" {one}
+                        use "other2" {three}
                                                 
                         fn two() double {
                             let a: long = one()
@@ -534,8 +534,8 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
                         }
                         """),
                 new Source("other2", """
-                        use main {one}
-                        use other {two}
+                        use "main" {one}
+                        use "other" {two}
                                                 
                         fn three() long {
                             let a = one()
@@ -554,7 +554,7 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
     @Test
     public void testUseStatementMultipleErrors() {
         var problems = analyze("""
-                        use doesnotexist {two}
+                        use "doesnotexist" {two}
                         """,
                 new Source("other", """
                         let a = something()
@@ -564,16 +564,5 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
         // 1, because the other module never got loaded
         assertEquals(1, problems.size());
         assertTrue(problems.get(0).hasProblems());
-    }
-
-    @Test
-    public void afhg() {
-        analyze("""
-                use other {test}
-                fn a(b: test) {}
-                                
-                a(5)""", new Source("other", """
-                struct test {}
-                """));
     }
 }

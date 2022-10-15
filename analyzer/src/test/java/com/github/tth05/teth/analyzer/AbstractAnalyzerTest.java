@@ -1,5 +1,6 @@
 package com.github.tth05.teth.analyzer;
 
+import com.github.tth05.teth.analyzer.module.IModuleLoader;
 import com.github.tth05.teth.lang.diagnostics.ProblemList;
 import com.github.tth05.teth.lang.lexer.TokenStream;
 import com.github.tth05.teth.lang.lexer.Tokenizer;
@@ -29,8 +30,18 @@ public abstract class AbstractAnalyzerTest {
         createASTs(main, others);
         assertStreamsEmpty();
 
-        this.analyzer = new Analyzer(this.asts.stream().filter(u -> u.unit.getModuleName().equals("main")).findFirst().get().unit);
-        this.analyzer.setModuleLoader((name) -> this.asts.stream().filter(u -> u.unit.getModuleName().equals(name)).findFirst().map(v -> v.unit).orElse(null));
+        this.analyzer = new Analyzer(this.asts.stream().filter(u -> u.unit.getUniquePath().equals("main")).findFirst().get().unit);
+        this.analyzer.setModuleLoader(new IModuleLoader() {
+            @Override
+            public String toUniquePath(String relativeToUniquePath, String path) {
+                return path;
+            }
+
+            @Override
+            public SourceFileUnit loadModule(String uniquePath) {
+                return AbstractAnalyzerTest.this.asts.stream().filter(u -> u.unit.getUniquePath().equals(uniquePath)).findFirst().map(v -> v.unit).orElse(null);
+            }
+        });
         return this.analyzer.analyze();
     }
 

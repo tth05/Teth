@@ -2,6 +2,7 @@ package com.github.tth05.teth.bytecode.compiler;
 
 import com.github.tth05.teth.analyzer.Analyzer;
 import com.github.tth05.teth.analyzer.AnalyzerResult;
+import com.github.tth05.teth.analyzer.module.DelegateModuleLoader;
 import com.github.tth05.teth.analyzer.module.IModuleLoader;
 import com.github.tth05.teth.analyzer.prelude.Prelude;
 import com.github.tth05.teth.analyzer.visitor.NameAnalysis;
@@ -26,7 +27,7 @@ public class Compiler {
     private final List<SourceFileUnit> units = new ArrayList<>();
     private final List<IOptimizer> optimizers = new ArrayList<>();
     {
-        this.optimizers.add(new StackCleaningOptimizer());
+        addOptimizer(new StackCleaningOptimizer());
     }
 
     private Analyzer analyzer;
@@ -47,10 +48,13 @@ public class Compiler {
         if (this.analyzer == null)
             throw new IllegalStateException("Cannot set module loader before setting entry point");
 
-        this.analyzer.setModuleLoader((name) -> {
-            var unit = loader.loadModule(name);
-            this.units.add(unit);
-            return unit;
+        this.analyzer.setModuleLoader(new DelegateModuleLoader(loader) {
+            @Override
+            public SourceFileUnit loadModule(String uniquePath) {
+                var unit = loader.loadModule(uniquePath);
+                Compiler.this.units.add(unit);
+                return unit;
+            }
         });
     }
 

@@ -18,43 +18,51 @@ public class ModuleCache {
     }
 
     public void addModule(SourceFileUnit unit) {
-        this.unitIndexMap.put(unit.getModuleName(), new SourceFileUnitIndex(unit));
+        this.unitIndexMap.put(unit.getUniquePath(), new SourceFileUnitIndex(unit));
     }
 
-    public boolean hasModule(String name) {
-        loadModule(name);
-        return this.unitIndexMap.get(name) != null;
+    public boolean hasModule(String uniquePath) {
+        loadModule(uniquePath);
+        return this.unitIndexMap.get(uniquePath) != null;
     }
 
-    public Statement findExportedDeclaration(String moduleName, String name) {
-        loadModule(moduleName);
+    public Statement findExportedDeclaration(String uniquePath, String name) {
+        loadModule(uniquePath);
 
-        var index = this.unitIndexMap.get(moduleName);
+        var index = this.unitIndexMap.get(uniquePath);
         if (index == null)
             return null;
 
         return index.findExportedDeclaration(name);
     }
 
-    private void loadModule(String name) {
-        if (hasResolvedModule(name) || this.moduleLoader == null)
+    public String toUniquePath(String relativeToUniquePath, String moduleName) {
+        return this.moduleLoader == null ? moduleName : this.moduleLoader.toUniquePath(relativeToUniquePath, moduleName);
+    }
+
+    private void loadModule(String path) {
+        if (path == null || path.isBlank() || hasResolvedModule(path) || this.moduleLoader == null)
             return;
 
-        var module = this.moduleLoader.loadModule(name);
+        var module = this.moduleLoader.loadModule(path);
         if (module == null) {
-            this.unitIndexMap.put(name, null);
+            this.unitIndexMap.put(path, null);
             return;
         }
 
-        if (!name.equals(module.getModuleName()))
-            throw new IllegalStateException("Module loader returned a module with a different name than requested. Requested: '%s', got: '%s'".formatted(name, module.getModuleName()));
+        if (!path.equals(module.getUniquePath()))
+            throw new IllegalStateException("Module loader returned a module with a different path than requested. Requested: '%s', got: '%s'".formatted(path, module.getUniquePath()));
 
         addModule(module);
         this.moduleLoader.initializeModule(module);
     }
 
-    private boolean hasResolvedModule(String name) {
-        return this.unitIndexMap.containsKey(name);
+    private boolean hasResolvedModule(String path) {
+        return this.unitIndexMap.containsKey(path);
+    }
+
+    public static boolean isValidModulePath(String path) {
+        return path != null && !path.isBlank() && path.matches("^((\\.{2}|/|[^/.]+?)/)*?[^/.]+$");
     }
 
     private static class SourceFileUnitIndex {

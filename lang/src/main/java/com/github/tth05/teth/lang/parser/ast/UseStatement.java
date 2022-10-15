@@ -7,28 +7,20 @@ import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 public class UseStatement extends Statement implements ITopLevelDeclaration {
 
-    private final List<IdentifierExpression> path;
+    private final IdentifierExpression path;
     private final List<IdentifierExpression> imports;
 
-    public UseStatement(Span span, List<IdentifierExpression> path, List<IdentifierExpression> imports) {
+    public UseStatement(Span span, IdentifierExpression path, List<IdentifierExpression> imports) {
         super(span);
-        this.path = Collections.unmodifiableList(Objects.requireNonNull(path));
+        this.path = path;
         this.imports = Collections.unmodifiableList(Objects.requireNonNull(imports));
     }
 
-    public String getPathString() {
-        var joiner = new StringJoiner("/");
-        for (var identifierExpression : this.path)
-            joiner.add(identifierExpression.getValue());
-        return joiner.toString();
-    }
-
-    public List<IdentifierExpression> getPath() {
+    public IdentifierExpression getPathExpr() {
         return this.path;
     }
 
@@ -60,7 +52,7 @@ public class UseStatement extends Statement implements ITopLevelDeclaration {
     @Override
     public void dump(ASTDumpBuilder builder) {
         builder.append("UseStatement {").newLine().startBlock();
-        builder.appendAttribute("path", this.path.stream().map(IdentifierExpression::getValue).collect(Collectors.joining("/"))).newLine();
+        builder.appendAttribute("path", this.path.getValue()).newLine();
         builder.appendAttribute("imports", this.imports.stream().map(IdentifierExpression::getValue).collect(Collectors.joining(", "))).newLine();
         builder.endBlock().append("}");
     }

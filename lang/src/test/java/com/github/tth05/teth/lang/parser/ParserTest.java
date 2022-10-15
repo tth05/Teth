@@ -870,11 +870,11 @@ public class ParserTest extends AbstractParserTest {
     @Test
     public void testParseUseStatements() {
         createAST("""
-                use foo/bar { Test }
-                use test { thing, otherThing }
+                use "foo/bar" { Test }
+                use "test" { thing, otherThing }
                                 
                 if(true){
-                    use foo/bar { Test2 }
+                    use "../foo/../bar" { Test2 }
                 }
                 """);
 
@@ -883,12 +883,12 @@ public class ParserTest extends AbstractParserTest {
                         "main", StatementList.of(
                         new UseStatement(
                                 null,
-                                List.of(new IdentifierExpression(null, "foo"), new IdentifierExpression(null, "bar")),
+                                new IdentifierExpression(null, "foo/bar"),
                                 List.of(new IdentifierExpression(null, "Test"))
                         ),
                         new UseStatement(
                                 null,
-                                List.of(new IdentifierExpression(null, "test")),
+                                new IdentifierExpression(null, "test"),
                                 List.of(new IdentifierExpression(null, "thing"), new IdentifierExpression(null, "otherThing"))
                         ),
                         new IfStatement(
@@ -899,7 +899,7 @@ public class ParserTest extends AbstractParserTest {
                                         StatementList.of(
                                                 new UseStatement(
                                                         null,
-                                                        List.of(new IdentifierExpression(null, "foo"), new IdentifierExpression(null, "bar")),
+                                                        new IdentifierExpression(null, "foo/bar"),
                                                         List.of(new IdentifierExpression(null, "Test2"))
                                                 )
                                         )
@@ -914,8 +914,8 @@ public class ParserTest extends AbstractParserTest {
 
     @Test
     public void testParseInvalidUseStatement() {
-        assertThrows(RuntimeException.class, () -> createAST("use foo/ { Test }"));
-        assertThrows(RuntimeException.class, () -> createAST("use foo {  }"));
+        assertThrows(RuntimeException.class, () -> createAST("use foo { Test }"));
+        assertThrows(RuntimeException.class, () -> createAST("use \"foo\" {  }"));
         assertThrows(RuntimeException.class, () -> createAST("use {  }"));
         assertThrows(RuntimeException.class, () -> createAST("use ddd"));
     }
@@ -957,7 +957,7 @@ public class ParserTest extends AbstractParserTest {
     public void testAllowNewlines() {
         createAST("""
                 use
-                test/b
+                "test/b"
                 {
                 a
                 ,

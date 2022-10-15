@@ -14,7 +14,7 @@ public class SourceFileUnit implements IDumpable {
         this.statements = Objects.requireNonNull(statements);
     }
 
-    public String getModuleName() {
+    public String getUniquePath() {
         return this.moduleName;
     }
 

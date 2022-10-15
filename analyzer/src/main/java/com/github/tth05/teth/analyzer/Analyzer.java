@@ -1,5 +1,6 @@
 package com.github.tth05.teth.analyzer;
 
+import com.github.tth05.teth.analyzer.module.DelegateModuleLoader;
 import com.github.tth05.teth.analyzer.module.IModuleLoader;
 import com.github.tth05.teth.analyzer.module.ModuleCache;
 import com.github.tth05.teth.analyzer.prelude.Prelude;
@@ -34,10 +35,10 @@ public class Analyzer {
     }
 
     public void setModuleLoader(IModuleLoader loader) {
-        this.moduleCache.setModuleLoader(new IModuleLoader() {
+        this.moduleCache.setModuleLoader(new DelegateModuleLoader(loader) {
             @Override
-            public SourceFileUnit loadModule(String moduleName) {
-                var unit = loader.loadModule(moduleName);
+            public SourceFileUnit loadModule(String uniquePath) {
+                var unit = loader.loadModule(uniquePath);
                 if (unit == null)
                     return null;
 
@@ -49,7 +50,7 @@ public class Analyzer {
             public void initializeModule(SourceFileUnit unit) {
                 var state = preAnalyzeUnit(unit);
                 if (Analyzer.this.analyzeEntryPointOnly) {
-                    Analyzer.this.results.add(new AnalyzerResult(unit.getModuleName(), state.getProblems()));
+                    Analyzer.this.results.add(new AnalyzerResult(unit.getUniquePath(), state.getProblems()));
                     return;
                 }
 
@@ -70,7 +71,7 @@ public class Analyzer {
             this.additionalUnits = new ArrayDeque<>();
 
         this.results = new ArrayList<>();
-        this.results.add(analyzeUnit(this.entryPoint, preAnalyzeUnit(this.entryPoint)));
+        this.results.add(0, analyzeUnit(this.entryPoint, preAnalyzeUnit(this.entryPoint)));
 
         if (!this.analyzeEntryPointOnly) {
             while (!this.additionalUnits.isEmpty()) {
@@ -105,7 +106,7 @@ public class Analyzer {
         returnStatementVerifier.visit(unit);
         problems.merge(returnStatementVerifier.getProblems());
 
-        return new AnalyzerResult(unit.getModuleName(), problems);
+        return new AnalyzerResult(unit.getUniquePath(), problems);
     }
 
     public Statement resolvedReference(IDeclarationReference reference) {
@@ -120,15 +121,19 @@ public class Analyzer {
         return this.moduleCache.hasModule(name);
     }
 
-    public Statement findExportedDeclaration(String moduleName, String name) {
-        return this.moduleCache.findExportedDeclaration(moduleName, name);
+    public String toUniquePath(String relativeToUniquePath, String path) {
+        return this.moduleCache.toUniquePath(relativeToUniquePath, path);
+    }
+
+    public Statement findExportedDeclaration(String uniquePath, String name) {
+        return this.moduleCache.findExportedDeclaration(uniquePath, name);
     }
 
     private SourceFileUnit internalizeUnit(SourceFileUnit unit) {
         // Don't modify the original unit
         var newStatements = new StatementList(unit.getStatements());
         Prelude.injectStatements(newStatements);
-        return new SourceFileUnit(unit.getModuleName(), newStatements);
+        return new SourceFileUnit(unit.getUniquePath(), newStatements);
     }
 
     private record AnalysisState(SourceFileUnit unit, NameAnalysis state) {}

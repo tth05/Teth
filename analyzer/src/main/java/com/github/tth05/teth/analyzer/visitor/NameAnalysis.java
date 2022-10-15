@@ -2,6 +2,7 @@ package com.github.tth05.teth.analyzer.visitor;
 
 import com.github.tth05.teth.analyzer.Analyzer;
 import com.github.tth05.teth.analyzer.DeclarationStack;
+import com.github.tth05.teth.analyzer.module.ModuleCache;
 import com.github.tth05.teth.analyzer.prelude.Prelude;
 import com.github.tth05.teth.lang.parser.SourceFileUnit;
 import com.github.tth05.teth.lang.parser.ast.*;
@@ -24,7 +25,7 @@ public class NameAnalysis extends AnalysisASTVisitor {
     private final Map<IDeclarationReference, Statement> resolvedReferences;
     private final Map<FunctionDeclaration, Integer> functionLocalsCount;
 
-    private boolean preDeclVisit;
+    private SourceFileUnit unit;
 
     public NameAnalysis(Analyzer analyzer, Map<IDeclarationReference, Statement> resolvedReferences, Map<FunctionDeclaration, Integer> functionLocalsCount) {
         this.analyzer = analyzer;
@@ -33,9 +34,9 @@ public class NameAnalysis extends AnalysisASTVisitor {
     }
 
     public void preDeclVisit(SourceFileUnit unit) {
-        if (this.preDeclVisit)
+        if (this.unit != null)
             throw new IllegalStateException("preDeclVisit has already been called");
-        this.preDeclVisit = true;
+        this.unit = unit;
 
         beginFunctionDeclaration(GLOBAL_FUNCTION);
 
@@ -87,7 +88,7 @@ public class NameAnalysis extends AnalysisASTVisitor {
 
     @Override
     public void visit(SourceFileUnit unit) {
-        if (!this.preDeclVisit)
+        if (this.unit == null)
             throw new IllegalStateException("Pre declaration visit was not called");
 
         super.visit(unit);
@@ -95,16 +96,32 @@ public class NameAnalysis extends AnalysisASTVisitor {
 
     @Override
     public void visit(UseStatement useStatement) {
-        var moduleName = useStatement.getPathString();
-        if (!this.analyzer.hasModule(moduleName)) {
-            report(Span.of(useStatement.getPath(), useStatement.getSpan()), "Module '" + moduleName + "' does not exist");
+        var path = useStatement.getPathExpr().getValue();
+
+        if (!ModuleCache.isValidModulePath(path)) {
+            var span = useStatement.getPathExpr().getSpan();
+            if (span != null)
+                report(span, "Invalid module path");
+            return;
+        }
+
+        var uniquePath = this.analyzer.toUniquePath(this.unit.getUniquePath(), path);
+        if (uniquePath.equals(this.unit.getUniquePath())) {
+            report(useStatement.getPathExpr().getSpan(), "Cannot use 'this' module path");
+            return;
+        }
+
+        if (!this.analyzer.hasModule(uniquePath)) {
+            var span = useStatement.getPathExpr().getSpan();
+            if (span != null)
+                report(span, "Module '" + path + "' does not exist");
             return;
         }
 
         for (var importNameExpr : useStatement.getImports()) {
-            var decl = this.analyzer.findExportedDeclaration(moduleName, importNameExpr.getValue());
+            var decl = this.analyzer.findExportedDeclaration(uniquePath, importNameExpr.getValue());
             if (decl == null) {
-                report(importNameExpr.getSpan(), "Type or function '" + importNameExpr.getValue() + "' not found in module '" + moduleName + "'");
+                report(importNameExpr.getSpan(), "Type or function '" + importNameExpr.getValue() + "' not found in module '" + path + "'");
                 continue;
             }
 

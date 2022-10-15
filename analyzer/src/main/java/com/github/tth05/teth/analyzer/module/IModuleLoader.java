@@ -4,7 +4,9 @@ import com.github.tth05.teth.lang.parser.SourceFileUnit;
 
 public interface IModuleLoader {
 
-    SourceFileUnit loadModule(String moduleName);
+    String toUniquePath(String relativeToUniquePath, String path);
+
+    SourceFileUnit loadModule(String uniquePath);
 
     default void initializeModule(SourceFileUnit unit) {
     }
