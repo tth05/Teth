@@ -4,6 +4,8 @@ import com.github.tth05.teth.bytecode.compiler.Compiler
 import com.github.tth05.teth.bytecodeInterpreter.Interpreter
 import com.github.tth05.teth.lang.parser.Parser
 import com.github.tth05.teth.lang.source.InMemorySource
+import com.github.tth05.tethintellijplugin.syntax.IntellijModuleLoader
+import com.github.tth05.tethintellijplugin.syntax.parse
 import com.intellij.execution.DefaultExecutionResult
 import com.intellij.execution.ExecutionException
 import com.intellij.execution.Executor
@@ -40,11 +42,12 @@ class TethRunConfiguration(
 
             val psiFile =
                 PsiManager.getInstance(project).findFile(file) ?: throw ExecutionException("PsiFile not found")
-            val parserResult = Parser.parse(InMemorySource("", psiFile.text))
+            val parserResult = parse(psiFile)
             if (parserResult.hasProblems()) throw ExecutionException("File has problems")
 
             val compiler = Compiler()
             compiler.setEntryPoint(parserResult.unit)
+            compiler.setModuleLoader(IntellijModuleLoader(project))
             val compilationResult = compiler.compile()
             if (compilationResult.hasProblems()) throw ExecutionException("Compilation failed")
 
