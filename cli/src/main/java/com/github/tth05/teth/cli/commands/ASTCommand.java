@@ -82,7 +82,7 @@ public class ASTCommand implements Runnable {
             System.out.print(builder);
         }
 
-        var parserResult = Parser.parse(new FileSource(this.filePath.getParent(), this.filePath));
+        var parserResult = Parser.parse(new FileSource(this.filePath));
         var writer = new StringWriter();
         parserResult.logProblems(new PrintWriter(writer), true);
 

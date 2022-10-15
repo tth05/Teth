@@ -1,5 +1,6 @@
 package com.github.tth05.teth.cli.commands;
 
+import com.github.tth05.teth.analyzer.module.IModuleLoader;
 import com.github.tth05.teth.bytecode.compiler.Compiler;
 import com.github.tth05.teth.bytecode.program.TethProgram;
 import com.github.tth05.teth.cli.commands.converters.String2ExistingFileConverter;
@@ -10,13 +11,10 @@ import com.github.tth05.teth.lang.source.ISource;
 import picocli.CommandLine;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public abstract class AbstractCompilerCommand implements Runnable {
-
-    @CommandLine.Spec
-    private CommandLine.Model.CommandSpec spec;
 
     @CommandLine.Parameters(
             paramLabel = "<path>",
@@ -37,41 +35,37 @@ public abstract class AbstractCompilerCommand implements Runnable {
     )
     protected boolean disableModuleLoading;
 
-    @CommandLine.Option(
-            names = {"-b", "--basedir"},
-            description = "The base directory for module resolution",
-            converter = {String2ExistingFileConverter.class}
-    )
-    protected Path baseDir;
-
     @Override
     public void run() {
-        if (this.baseDir == null)
-            this.baseDir = this.filePath.getParent();
-        this.baseDir = this.baseDir.toAbsolutePath().normalize();
-
-        if (!Files.isDirectory(this.baseDir))
-            throw new CommandLine.ParameterException(this.spec.commandLine(), "Base directory is not a directory");
-        if (!this.filePath.startsWith(this.baseDir))
-            throw new CommandLine.ParameterException(this.spec.commandLine(), "File is not child of base directory");
-
         var startTime = System.nanoTime();
         try {
-            var entryPointSource = new FileSource(this.baseDir, this.filePath);
+            var entryPointSource = new FileSource(this.filePath);
             var entryPointUnit = parseSource(entryPointSource);
 
             var compiler = new Compiler();
             compiler.setEntryPoint(entryPointUnit);
             if (!this.disableModuleLoading) {
-                compiler.setModuleLoader((name) -> {
-                    try {
-                        var path = this.baseDir.resolve(name + ".teth");
-                        if (Files.exists(path))
-                            return parseSource(new FileSource(this.baseDir, path));
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
+                compiler.setModuleLoader(new IModuleLoader() {
+                    @Override
+                    public String toUniquePath(String relativeToUniquePath, String path) {
+                        try {
+                            var nioPath = Paths.get(relativeToUniquePath);
+                            return nioPath.getParent().resolve(path + ".teth").normalize().toAbsolutePath().toString().replace('\\', '/');
+                        } catch (Throwable e) {
+                            e.printStackTrace();
+                            return "";
+                        }
                     }
-                    return null;
+
+                    @Override
+                    public SourceFileUnit loadModule(String uniquePath) {
+                        try {
+                            return Parser.parse(new FileSource(Paths.get(uniquePath))).getUnit();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                            return null;
+                        }
+                    }
                 });
             }
 
