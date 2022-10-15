@@ -6,7 +6,7 @@ import com.github.tth05.teth.lang.span.Span;
 import com.github.tth05.teth.lang.span.Span;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
-public class BinaryExpression extends Expression {
+public final class BinaryExpression extends Expression {
 
     private Expression left;
     private Expression right;

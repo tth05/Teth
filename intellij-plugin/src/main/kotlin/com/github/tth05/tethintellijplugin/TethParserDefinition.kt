@@ -20,7 +20,7 @@ import com.intellij.psi.tree.IFileElementType
 import com.intellij.psi.tree.TokenSet
 
 //TODO:
-// - Find usages
+// - Find usages across files
 // - Inlay hints
 // - Parameter info
 // - Auto-completin

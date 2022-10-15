@@ -9,7 +9,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-public class FunctionInvocationExpression extends Expression {
+public final class FunctionInvocationExpression extends Expression {
 
     private final Expression target;
     private final List<TypeExpression> genericParameters;

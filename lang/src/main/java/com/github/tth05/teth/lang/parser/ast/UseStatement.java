@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-public class UseStatement extends Statement implements ITopLevelDeclaration {
+public final class UseStatement extends Statement implements ITopLevelDeclaration {
 
     private final IdentifierExpression path;
     private final List<IdentifierExpression> imports;

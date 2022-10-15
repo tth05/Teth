@@ -9,7 +9,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-public class StringLiteralExpression extends Expression implements IDeclarationReference {
+public final class StringLiteralExpression extends Expression implements IDeclarationReference {
 
     private final List<Part> parts;
 

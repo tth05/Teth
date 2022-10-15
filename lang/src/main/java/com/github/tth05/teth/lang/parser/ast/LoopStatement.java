@@ -7,7 +7,7 @@ import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 import java.util.List;
 import java.util.Objects;
 
-public class LoopStatement extends Statement {
+public final class LoopStatement extends Statement {
 
     private final List<VariableDeclaration> variableDeclarations;
     private final Expression condition;

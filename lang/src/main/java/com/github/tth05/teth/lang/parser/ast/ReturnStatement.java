@@ -6,7 +6,7 @@ import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
 import java.util.Objects;
 
-public class ReturnStatement extends Statement {
+public final class ReturnStatement extends Statement {
 
     private final Expression valueExpr;
 

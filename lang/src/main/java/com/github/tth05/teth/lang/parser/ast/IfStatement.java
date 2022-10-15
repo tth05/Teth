@@ -6,7 +6,7 @@ import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
 import java.util.Objects;
 
-public class IfStatement extends Statement {
+public final class IfStatement extends Statement {
 
     private final Expression condition;
     private final BlockStatement body;

@@ -7,7 +7,7 @@ import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 import java.util.Objects;
 
 
-public class GenericParameterDeclaration extends Statement implements IHasName {
+public final class GenericParameterDeclaration extends Statement implements IHasName {
 
     private final IdentifierExpression nameExpr;
 

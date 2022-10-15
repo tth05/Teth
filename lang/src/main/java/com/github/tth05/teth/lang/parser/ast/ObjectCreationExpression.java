@@ -9,7 +9,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-public class ObjectCreationExpression extends Expression implements IDeclarationReference {
+public final class ObjectCreationExpression extends Expression implements IDeclarationReference {
 
     private final IdentifierExpression targetNameExpr;
     private final List<TypeExpression> genericParameters;

@@ -5,7 +5,7 @@ import com.github.tth05.teth.lang.parser.StatementList;
 import com.github.tth05.teth.lang.span.Span;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
-public class BlockStatement extends Statement {
+public final class BlockStatement extends Statement {
 
     protected final StatementList statements;
 

@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Objects;
 
 // TODO: Migrate to list with span
-public class StructDeclaration extends Statement implements ITopLevelDeclaration, IHasName {
+public final class StructDeclaration extends Statement implements ITopLevelDeclaration, IHasName {
 
     private final IdentifierExpression nameExpr;
     private final List<GenericParameterDeclaration> genericParameters;
@@ -107,7 +107,7 @@ public class StructDeclaration extends Statement implements ITopLevelDeclaration
         return result;
     }
 
-    public static class FieldDeclaration extends Statement implements IVariableDeclaration {
+    public static final class FieldDeclaration extends Statement implements IVariableDeclaration {
 
         private final IdentifierExpression nameExpr;
         private final int index;

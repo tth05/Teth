@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Objects;
 
 // TODO: Migrate to list with span
-public class FunctionDeclaration extends Statement implements ITopLevelDeclaration, IHasName {
+public final class FunctionDeclaration extends Statement implements ITopLevelDeclaration, IHasName {
 
     private final IdentifierExpression nameExpr;
     private final TypeExpression returnTypeExpr;

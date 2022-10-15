@@ -4,7 +4,7 @@ import com.github.tth05.teth.lang.parser.ASTVisitor;
 import com.github.tth05.teth.lang.span.Span;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
-public class GarbageExpression extends Expression {
+public final class GarbageExpression extends Expression {
 
     public GarbageExpression(Span span) {
         super(span);

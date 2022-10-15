@@ -1,4 +1,4 @@
 package com.github.tth05.teth.lang.parser.ast;
 
-public interface ITopLevelDeclaration {
+public sealed interface ITopLevelDeclaration permits FunctionDeclaration, StructDeclaration, UseStatement {
 }
