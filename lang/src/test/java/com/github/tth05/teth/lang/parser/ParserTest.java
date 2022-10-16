@@ -883,12 +883,12 @@ public class ParserTest extends AbstractParserTest {
                         "main", StatementList.of(
                         new UseStatement(
                                 null,
-                                new IdentifierExpression(null, "foo/bar"),
+                                new StringLiteralExpression(null, List.of(StringLiteralExpression.stringPart(null, "foo/bar"))),
                                 List.of(new IdentifierExpression(null, "Test"))
                         ),
                         new UseStatement(
                                 null,
-                                new IdentifierExpression(null, "test"),
+                                new StringLiteralExpression(null, List.of(StringLiteralExpression.stringPart(null, "test"))),
                                 List.of(new IdentifierExpression(null, "thing"), new IdentifierExpression(null, "otherThing"))
                         ),
                         new IfStatement(
@@ -899,7 +899,7 @@ public class ParserTest extends AbstractParserTest {
                                         StatementList.of(
                                                 new UseStatement(
                                                         null,
-                                                        new IdentifierExpression(null, "../foo/../bar"),
+                                                        new StringLiteralExpression(null, List.of(StringLiteralExpression.stringPart(null, "../foo/../bar"))),
                                                         List.of(new IdentifierExpression(null, "Test2"))
                                                 )
                                         )

@@ -275,12 +275,16 @@ public class TypeAnalysis extends AnalysisASTVisitor {
         }
 
         var leftType = this.resolvedExpressionTypes.get(expression.getLeft());
-        if (leftType == null)
+        if (leftType == null) {
+            report(expression.getLeft().getSpan(), "Invalid type for binary expression");
             return;
+        }
 
         var rightType = this.resolvedExpressionTypes.get(expression.getRight());
-        if (rightType == null)
+        if (rightType == null) {
+            report(expression.getRight().getSpan(), "Invalid type for binary expression");
             return;
+        }
 
         var leftIsNumber = this.typeCache.isNumber(leftType);
         var rightIsNumber = this.typeCache.isNumber(rightType);
