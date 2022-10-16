@@ -1,6 +1,5 @@
 package com.github.tth05.tethintellijplugin.render
 
-import com.github.tth05.teth.lang.parser.ast.VariableDeclaration
 import com.github.tth05.tethintellijplugin.psi.TethPsiFile
 import com.github.tth05.tethintellijplugin.psi.api.*
 import com.github.tth05.tethintellijplugin.psi.impl.TethNamedElement
@@ -71,8 +70,10 @@ private fun renderElement(element: PsiElement, builder: RenderBuilder): String {
             renderCommaList(element.parameters, builder)
             builder.appendStyled(")", TethSyntaxHighlighter.SEPARATOR)
 
-            if (element.returnType != null)
+            if (element.returnType != null) {
+                builder.append(" ")
                 renderElement(element.returnType!!, builder)
+            }
         }
 
         is TethFunctionParameterDeclaration -> {

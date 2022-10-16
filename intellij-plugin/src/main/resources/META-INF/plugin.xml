@@ -33,6 +33,8 @@
                                  implementationClass="com.github.tth05.tethintellijplugin.psi.reference.TethFindUsagesProvider"/>
         <lang.documentationProvider language="Teth"
                                     implementationClass="com.github.tth05.tethintellijplugin.render.TethDocumentationProvider"/>
+        <codeInsight.inlayProvider language="Teth"
+                                   implementationClass="com.github.tth05.tethintellijplugin.codeInsight.TethInlayHintsProvider"/>
 
         <completion.contributor language="Teth"
                                 implementationClass="com.github.tth05.tethintellijplugin.completion.TethCompletionContributor"/>

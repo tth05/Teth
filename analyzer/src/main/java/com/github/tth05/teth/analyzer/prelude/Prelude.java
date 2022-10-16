@@ -95,6 +95,9 @@ public class Prelude {
     );
 
     public static FunctionDeclaration getGlobalFunction(String name) {
+        if (name == null)
+            return null;
+
         return switch (name) {
             case "print" -> PRINT_FUNCTION;
             case "stringify" -> STRINGIFY_FUNCTION;

@@ -6,14 +6,7 @@ import com.github.tth05.teth.lang.parser.ExpressionList;
 import com.github.tth05.teth.lang.parser.ast.*;
 import com.github.tth05.teth.lang.span.Span;
 
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Deque;
-import java.util.HashMap;
-import java.util.IdentityHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.github.tth05.teth.analyzer.prelude.Prelude.*;
 
@@ -22,14 +15,15 @@ public class TypeAnalysis extends AnalysisASTVisitor {
     private final Map<Integer, BinaryExpression.Operator[]> binaryOperatorsAllowedTypes = new HashMap<>();
 
     private final Deque<FunctionDeclaration> currentFunctionStack = new ArrayDeque<>(5);
-    private final Map<Expression, SemanticType> resolvedExpressionTypes = new IdentityHashMap<>();
 
     private final Map<IDeclarationReference, Statement> resolvedReferences;
+    private final Map<Expression, SemanticType> resolvedExpressionTypes;
     private final TypeCache typeCache;
 
-    public TypeAnalysis(TypeCache typeCache, Map<IDeclarationReference, Statement> resolvedReferences) {
+    public TypeAnalysis(TypeCache typeCache, Map<IDeclarationReference, Statement> resolvedReferences, Map<Expression, SemanticType> resolvedExpressionTypes) {
         this.typeCache = typeCache;
         this.resolvedReferences = resolvedReferences;
+        this.resolvedExpressionTypes = resolvedExpressionTypes;
 
         var all = BinaryExpression.Operator.values();
         this.binaryOperatorsAllowedTypes.put(this.typeCache.internalizeType(LONG_STRUCT_DECLARATION), all);

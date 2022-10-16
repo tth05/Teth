@@ -4,12 +4,14 @@ import com.github.tth05.teth.analyzer.module.DelegateModuleLoader;
 import com.github.tth05.teth.analyzer.module.IModuleLoader;
 import com.github.tth05.teth.analyzer.module.ModuleCache;
 import com.github.tth05.teth.analyzer.prelude.Prelude;
+import com.github.tth05.teth.analyzer.type.SemanticType;
 import com.github.tth05.teth.analyzer.type.TypeCache;
 import com.github.tth05.teth.analyzer.visitor.NameAnalysis;
 import com.github.tth05.teth.analyzer.visitor.ReturnStatementVerifier;
 import com.github.tth05.teth.analyzer.visitor.TypeAnalysis;
 import com.github.tth05.teth.lang.parser.SourceFileUnit;
 import com.github.tth05.teth.lang.parser.StatementList;
+import com.github.tth05.teth.lang.parser.ast.Expression;
 import com.github.tth05.teth.lang.parser.ast.FunctionDeclaration;
 import com.github.tth05.teth.lang.parser.ast.IDeclarationReference;
 import com.github.tth05.teth.lang.parser.ast.Statement;
@@ -19,6 +21,7 @@ import java.util.*;
 public class Analyzer {
 
     private final Map<IDeclarationReference, Statement> resolvedReferences = new IdentityHashMap<>();
+    private final Map<Expression, SemanticType> resolvedExpressionTypes = new IdentityHashMap<>();
     private final Map<FunctionDeclaration, Integer> functionLocalsCount = new IdentityHashMap<>();
 
     private final ModuleCache moduleCache = new ModuleCache();
@@ -98,7 +101,7 @@ public class Analyzer {
         nameAnalysis.visit(unit);
         var problems = nameAnalysis.getProblems();
 
-        var typeAnalysis = new TypeAnalysis(this.typeCache, this.resolvedReferences);
+        var typeAnalysis = new TypeAnalysis(this.typeCache, this.resolvedReferences, this.resolvedExpressionTypes);
         typeAnalysis.visit(unit);
         problems.merge(typeAnalysis.getProblems());
 
@@ -111,6 +114,10 @@ public class Analyzer {
 
     public Statement resolvedReference(IDeclarationReference reference) {
         return this.resolvedReferences.get(reference);
+    }
+
+    public SemanticType resolvedExpressionType(Expression expression) {
+        return this.resolvedExpressionTypes.get(expression);
     }
 
     public int functionLocalsCount(FunctionDeclaration function) {
@@ -127,6 +134,10 @@ public class Analyzer {
 
     public Statement findExportedDeclaration(String uniquePath, String name) {
         return this.moduleCache.findExportedDeclaration(uniquePath, name);
+    }
+
+    public TypeCache getTypeCache() {
+        return this.typeCache;
     }
 
     private SourceFileUnit internalizeUnit(SourceFileUnit unit) {
