@@ -2,6 +2,7 @@ package com.github.tth05.teth.lang.parser.ast;
 
 import com.github.tth05.teth.lang.parser.ASTVisitor;
 import com.github.tth05.teth.lang.parser.IDumpable;
+import com.github.tth05.teth.lang.parser.SourceFileUnit;
 import com.github.tth05.teth.lang.span.Span;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
@@ -12,6 +13,7 @@ import java.util.Objects;
 // TODO: Migrate to list with span
 public final class FunctionDeclaration extends Statement implements ITopLevelDeclaration, IHasName {
 
+    private final SourceFileUnit containingUnit;
     private final IdentifierExpression nameExpr;
     private final TypeExpression returnTypeExpr;
     private final List<ParameterDeclaration> parameters;
@@ -20,18 +22,21 @@ public final class FunctionDeclaration extends Statement implements ITopLevelDec
     private final boolean intrinsic;
     private final List<GenericParameterDeclaration> genericParameters;
 
-    public FunctionDeclaration(Span span, IdentifierExpression nameExpr,
+    public FunctionDeclaration(Span span, SourceFileUnit containingUnit,
+                               IdentifierExpression nameExpr,
                                List<GenericParameterDeclaration> genericParameters,
                                List<ParameterDeclaration> parameters, TypeExpression returnTypeExpr,
                                BlockStatement body, boolean instanceFunction) {
-        this(span, nameExpr, genericParameters, parameters, returnTypeExpr, body, instanceFunction, false);
+        this(span, containingUnit, nameExpr, genericParameters, parameters, returnTypeExpr, body, instanceFunction, false);
     }
 
-    public FunctionDeclaration(Span span, IdentifierExpression nameExpr,
+    public FunctionDeclaration(Span span, SourceFileUnit containingUnit,
+                               IdentifierExpression nameExpr,
                                List<GenericParameterDeclaration> genericParameters,
                                List<ParameterDeclaration> parameters, TypeExpression returnTypeExpr,
                                BlockStatement body, boolean instanceFunction, boolean intrinsic) {
         super(span);
+        this.containingUnit = containingUnit;
         this.nameExpr = nameExpr;
         this.genericParameters = Collections.unmodifiableList(Objects.requireNonNull(genericParameters));
         this.parameters = Collections.unmodifiableList(Objects.requireNonNull(parameters));
@@ -60,6 +65,11 @@ public final class FunctionDeclaration extends Statement implements ITopLevelDec
 
     public BlockStatement getBody() {
         return this.body;
+    }
+
+    @Override
+    public SourceFileUnit getContainingUnit() {
+        return this.containingUnit;
     }
 
     public boolean isInstanceFunction() {

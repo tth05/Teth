@@ -13,7 +13,7 @@ public class Prelude {
      */
 
     public static final StructDeclaration LONG_STRUCT_DECLARATION = new StructDeclaration(
-            null,
+            null, null,
             new IdentifierExpression(null, "long"),
             List.of(),
             List.of(),
@@ -24,7 +24,7 @@ public class Prelude {
     );
 
     public static final StructDeclaration DOUBLE_STRUCT_DECLARATION = new StructDeclaration(
-            null,
+            null, null,
             new IdentifierExpression(null, "double"),
             List.of(),
             List.of(),
@@ -32,7 +32,7 @@ public class Prelude {
             true
     );
     public static final StructDeclaration BOOLEAN_STRUCT_DECLARATION = new StructDeclaration(
-            null,
+            null, null,
             new IdentifierExpression(null, "bool"),
             List.of(),
             List.of(),
@@ -40,7 +40,7 @@ public class Prelude {
             true
     );
     public static final StructDeclaration STRING_STRUCT_DECLARATION = new StructDeclaration(
-            null,
+            null, null,
             new IdentifierExpression(null, "string"),
             List.of(),
             List.of(),
@@ -50,7 +50,7 @@ public class Prelude {
             true
     );
     public static final StructDeclaration LIST_STRUCT_DECLARATION = new StructDeclaration(
-            null,
+            null, null,
             new IdentifierExpression(null, "list"),
             List.of(new GenericParameterDeclaration(null, "T")),
             List.of(),
@@ -64,7 +64,7 @@ public class Prelude {
     );
 
     public static final StructDeclaration ANY_STRUCT_DECLARATION = new StructDeclaration(
-            null,
+            null, null,
             new IdentifierExpression(null, "any"),
             List.of(),
             List.of(),
@@ -145,7 +145,7 @@ public class Prelude {
 
     private static FunctionDeclaration createFakeFunctionDeclaration(String name, boolean instanceFunction, TypeExpression returnType, TypeExpression... parameters) {
         return new FunctionDeclaration(
-                null,
+                null, null,
                 new IdentifierExpression(null, name),
                 List.of(),
                 IntStream.range(0, parameters.length).mapToObj(i -> new FunctionDeclaration.ParameterDeclaration(

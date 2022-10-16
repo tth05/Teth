@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 
 public class NameAnalysis extends AnalysisASTVisitor {
 
-    public static final FunctionDeclaration GLOBAL_FUNCTION = new FunctionDeclaration(null, null, List.of(), List.of(), null, null, false);
+    public static final FunctionDeclaration GLOBAL_FUNCTION = new FunctionDeclaration(null, null, null, List.of(), List.of(), null, null, false);
 
     private static final HashSet<String> DUPLICATION_SET = new HashSet<>();
 

@@ -644,7 +644,7 @@ public class ParserTest extends AbstractParserTest {
                 new SourceFileUnit(
                         "main", StatementList.of(
                         new FunctionDeclaration(
-                                null,
+                                null, null,
                                 new IdentifierExpression(null, "foo"),
                                 List.of(
                                         new GenericParameterDeclaration(null, "T"),
@@ -658,7 +658,7 @@ public class ParserTest extends AbstractParserTest {
                                         null,
                                         StatementList.of(
                                                 new FunctionDeclaration(
-                                                        null,
+                                                        null, null,
                                                         new IdentifierExpression(null, "bar"),
                                                         List.of(), List.of(), new TypeExpression(null, new IdentifierExpression(null, "string")),
                                                         new BlockStatement(
@@ -748,7 +748,7 @@ public class ParserTest extends AbstractParserTest {
                 new SourceFileUnit(
                         "main", StatementList.of(
                         new StructDeclaration(
-                                null,
+                                null, null,
                                 new IdentifierExpression(null, "Foo"),
                                 List.of(
                                         new GenericParameterDeclaration(null, "T"),
@@ -771,7 +771,7 @@ public class ParserTest extends AbstractParserTest {
                                 ),
                                 List.of(
                                         new FunctionDeclaration(
-                                                null,
+                                                null, null,
                                                 new IdentifierExpression(null, "bar"),
                                                 List.of(),
                                                 List.of(
@@ -899,7 +899,7 @@ public class ParserTest extends AbstractParserTest {
                                         StatementList.of(
                                                 new UseStatement(
                                                         null,
-                                                        new IdentifierExpression(null, "foo/bar"),
+                                                        new IdentifierExpression(null, "../foo/../bar"),
                                                         List.of(new IdentifierExpression(null, "Test2"))
                                                 )
                                         )

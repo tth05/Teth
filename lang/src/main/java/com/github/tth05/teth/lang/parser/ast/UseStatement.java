@@ -1,6 +1,7 @@
 package com.github.tth05.teth.lang.parser.ast;
 
 import com.github.tth05.teth.lang.parser.ASTVisitor;
+import com.github.tth05.teth.lang.parser.SourceFileUnit;
 import com.github.tth05.teth.lang.span.Span;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
@@ -26,6 +27,11 @@ public final class UseStatement extends Statement implements ITopLevelDeclaratio
 
     public List<IdentifierExpression> getImports() {
         return this.imports;
+    }
+
+    @Override
+    public SourceFileUnit getContainingUnit() {
+        throw new UnsupportedOperationException();
     }
 
     @Override

@@ -23,6 +23,8 @@ public class Parser {
     private final ProblemList problems;
     private final TokenStream stream;
 
+    private SourceFileUnit currentUnit;
+
     private boolean suppressErrors;
 
     private Parser(TokenizerResult tokenizerResult) {
@@ -39,13 +41,14 @@ public class Parser {
     }
 
     public ParserResult parse() {
-        var unit = new SourceFileUnit(this.stream.getSource().getModuleName(), parseStatementList(AnchorSets.FIRST_SET_STATEMENT, TokenType.EOF));
+        this.currentUnit = new SourceFileUnit(this.stream.getSource().getModuleName());
+        this.currentUnit.setStatements(parseStatementList(AnchorSets.FIRST_SET_STATEMENT, TokenType.EOF));
         expectToken(TokenType.EOF, AnchorSets.EMPTY, () -> "Expected end of file");
 
         if (this.problems.isEmpty())
-            return new ParserResult(this.stream.getSource(), unit);
+            return new ParserResult(this.stream.getSource(), this.currentUnit);
         else
-            return new ParserResult(this.stream.getSource(), unit, this.problems);
+            return new ParserResult(this.stream.getSource(), this.currentUnit, this.problems);
     }
 
     private UseStatement parseUseStatement(AnchorUnion anchorSet) {
@@ -291,6 +294,7 @@ public class Parser {
         var body = parseBlock(anchorSet);
         return new FunctionDeclaration(
                 Span.of(firstSpan, body.getSpan()),
+                this.currentUnit,
                 new IdentifierExpression(functionName.span(), functionName.value()),
                 genericParameters, parameters, returnType, body, instanceMethod
         );
@@ -355,6 +359,7 @@ public class Parser {
         if (!this.stream.peek().is(TokenType.L_CURLY_PAREN)) {
             return new StructDeclaration(
                     Span.of(firstSpan, genericParameters.getSpanOrElse(structName.isInvalid() ? firstSpan : structName.span())),
+                    this.currentUnit,
                     new IdentifierExpression(structName.span(), structName.value()),
                     genericParameters, Collections.emptyList(), Collections.emptyList()
             );
@@ -401,6 +406,7 @@ public class Parser {
 
         return new StructDeclaration(
                 Span.of(firstSpan, endSpan),
+                this.currentUnit,
                 new IdentifierExpression(structName.span(), structName.value()),
                 genericParameters,
                 fields,

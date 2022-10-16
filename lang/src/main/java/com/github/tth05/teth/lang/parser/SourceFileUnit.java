@@ -7,7 +7,11 @@ import java.util.Objects;
 public class SourceFileUnit implements IDumpable {
 
     private final String moduleName;
-    private final StatementList statements;
+    private StatementList statements;
+
+    SourceFileUnit(String moduleName) {
+        this.moduleName = moduleName;
+    }
 
     public SourceFileUnit(String moduleName, StatementList statements) {
         this.moduleName = moduleName;
@@ -16,6 +20,10 @@ public class SourceFileUnit implements IDumpable {
 
     public String getUniquePath() {
         return this.moduleName;
+    }
+
+    void setStatements(StatementList statements) {
+        this.statements = statements;
     }
 
     public StatementList getStatements() {

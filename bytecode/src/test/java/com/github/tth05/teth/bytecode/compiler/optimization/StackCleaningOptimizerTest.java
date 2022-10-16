@@ -81,7 +81,7 @@ public class StackCleaningOptimizerTest implements OpCodes {
     private static PlaceholderInvokeInsn createPlaceholderInvokeInsn(int paramCount, boolean returnsValue) {
         var parameters = IntStream.range(0, paramCount).mapToObj(i -> new FunctionDeclaration.ParameterDeclaration(null, null, null)).toList();
         var returnExpr = returnsValue ? new TypeExpression(null, null) : null;
-        return new PlaceholderInvokeInsn(new FunctionDeclaration(null, null, List.of(), parameters, returnExpr, null, false));
+        return new PlaceholderInvokeInsn(new FunctionDeclaration(null, null, null, List.of(), parameters, returnExpr, null, false));
     }
 
     @Test

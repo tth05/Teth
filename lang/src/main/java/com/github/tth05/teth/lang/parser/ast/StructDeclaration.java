@@ -1,6 +1,7 @@
 package com.github.tth05.teth.lang.parser.ast;
 
 import com.github.tth05.teth.lang.parser.ASTVisitor;
+import com.github.tth05.teth.lang.parser.SourceFileUnit;
 import com.github.tth05.teth.lang.span.Span;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
@@ -11,18 +12,20 @@ import java.util.Objects;
 // TODO: Migrate to list with span
 public final class StructDeclaration extends Statement implements ITopLevelDeclaration, IHasName {
 
+    private final SourceFileUnit containingUnit;
     private final IdentifierExpression nameExpr;
     private final List<GenericParameterDeclaration> genericParameters;
     private final List<FieldDeclaration> fields;
     private final List<FunctionDeclaration> functions;
     private final boolean intrinsic;
 
-    public StructDeclaration(Span span, IdentifierExpression nameExpr, List<GenericParameterDeclaration> genericParameters, List<FieldDeclaration> fields, List<FunctionDeclaration> functions) {
-        this(span, nameExpr, genericParameters, fields, functions, false);
+    public StructDeclaration(Span span, SourceFileUnit containingUnit, IdentifierExpression nameExpr, List<GenericParameterDeclaration> genericParameters, List<FieldDeclaration> fields, List<FunctionDeclaration> functions) {
+        this(span, containingUnit, nameExpr, genericParameters, fields, functions, false);
     }
 
-    public StructDeclaration(Span span, IdentifierExpression nameExpr, List<GenericParameterDeclaration> genericParameters, List<FieldDeclaration> fields, List<FunctionDeclaration> functions, boolean intrinsic) {
+    public StructDeclaration(Span span,  SourceFileUnit containingUnit, IdentifierExpression nameExpr, List<GenericParameterDeclaration> genericParameters, List<FieldDeclaration> fields, List<FunctionDeclaration> functions, boolean intrinsic) {
         super(span);
+        this.containingUnit = containingUnit;
         this.nameExpr = nameExpr;
         this.genericParameters = Collections.unmodifiableList(Objects.requireNonNull(genericParameters));
         this.fields = Collections.unmodifiableList(Objects.requireNonNull(fields));
@@ -45,6 +48,11 @@ public final class StructDeclaration extends Statement implements ITopLevelDecla
 
     public List<FunctionDeclaration> getFunctions() {
         return this.functions;
+    }
+
+    @Override
+    public SourceFileUnit getContainingUnit() {
+        return this.containingUnit;
     }
 
     public boolean isIntrinsic() {
