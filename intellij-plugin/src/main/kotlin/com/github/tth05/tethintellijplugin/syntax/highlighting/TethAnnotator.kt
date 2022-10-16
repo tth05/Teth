@@ -123,6 +123,8 @@ private class AnnotatingVisitor(val analyzer: Analyzer, val holder: AnnotationHo
             is FieldDeclaration -> annotateWithColor(
                 identifierExpression.span, TethSyntaxHighlighter.FIELD
             )
+
+            else -> {}
         }
     }
 
@@ -141,6 +143,7 @@ private class AnnotatingVisitor(val analyzer: Analyzer, val holder: AnnotationHo
         when (analyzer.resolvedReference(typeExpression)) {
             is StructDeclaration -> annotateWithColor(span, TethSyntaxHighlighter.TYPE)
             is GenericParameterDeclaration -> annotateWithColor(span, TethSyntaxHighlighter.TYPE_PARAMETER)
+            else -> {}
         }
     }
 

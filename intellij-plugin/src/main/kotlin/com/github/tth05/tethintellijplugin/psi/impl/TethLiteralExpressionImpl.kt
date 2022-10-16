@@ -1,6 +1,8 @@
 package com.github.tth05.tethintellijplugin.psi.impl
 
+import com.github.tth05.teth.lang.parser.ASTUtil
 import com.github.tth05.teth.lang.parser.ASTVisitor
+import com.github.tth05.teth.lang.parser.ast.IDeclarationReference
 import com.github.tth05.teth.lang.parser.ast.IdentifierExpression
 import com.github.tth05.teth.lang.parser.ast.Statement
 import com.github.tth05.tethintellijplugin.psi.api.*
@@ -38,19 +40,16 @@ class TethIdentifierLiteralExpressionImpl(node: ASTNode) : ASTWrapperPsiElement(
 
         return tethCache().resolveWithCaching(this) {
             // Convert psi element to teth ast node and get reference
-            var target: Statement? = null
-            object : ASTVisitor() {
-                override fun visit(identifierExpression: IdentifierExpression) {
-                    if ((identifierExpression.span?.offset ?: -1) == startOffset) target =
-                        analyzer.resolvedReference(identifierExpression)
-                }
-            }.visit(result.unit)
-
-            if (target == null || target!!.span == null /* Intrinsic decls */) return@resolveWithCaching TethReference.UNRESOLVED
+            val target: Statement = analyzer.resolvedReference(
+                ASTUtil.findStatementAtExact(
+                    result.unit,
+                    startOffset
+                ) as? IDeclarationReference ?: return@resolveWithCaching TethReference.UNRESOLVED
+            ) ?: return@resolveWithCaching TethReference.UNRESOLVED
 
             // Convert teth ast node to psi element
             val psiTarget: PsiElement =
-                findDeclarationAt(target!!.span.offset) ?: return@resolveWithCaching TethReference.UNRESOLVED
+                findDeclarationAt(target.span!!.offset) ?: return@resolveWithCaching TethReference.UNRESOLVED
 
             // Create reference
             return@resolveWithCaching resolvedRefTo(psiTarget)
