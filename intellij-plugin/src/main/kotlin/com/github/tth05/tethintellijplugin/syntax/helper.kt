@@ -7,7 +7,6 @@ import com.github.tth05.teth.lang.parser.Parser
 import com.github.tth05.teth.lang.parser.ParserResult
 import com.github.tth05.teth.lang.parser.SourceFileUnit
 import com.github.tth05.teth.lang.source.InMemorySource
-import com.intellij.execution.ExecutionException
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.vfs.LocalFileSystem
@@ -33,20 +32,26 @@ fun analyzeAndParseFile(file: PsiFile): CachedAnalyzerState {
 fun parse(file: PsiFile): ParserResult =
     Parser.parse(InMemorySource(FileUtil.toSystemIndependentName(file.originalFile.virtualFile.path), file.text))
 
+fun Project.findPsiFileByPath(path: String): PsiFile? {
+    val virtualFile = LocalFileSystem.getInstance().findFileByPath(path) ?: return null
+    return PsiManager.getInstance(this).findFile(virtualFile)
+}
+
 class IntellijModuleLoader(val project: Project) : IModuleLoader {
 
     override fun toUniquePath(relativeToUniquePath: String, path: String): String {
         return try {
             val nioPath = Paths.get(relativeToUniquePath)
-            FileUtil.toSystemIndependentName(nioPath.parent.resolve("$path.teth").normalize().toAbsolutePath().toString())
+            FileUtil.toSystemIndependentName(
+                nioPath.parent.resolve("$path.teth").normalize().toAbsolutePath().toString()
+            )
         } catch (e: Throwable) {
             e.printStackTrace()
             ""
         }
     }
+
     override fun loadModule(uniquePath: String): SourceFileUnit? {
-        val file = LocalFileSystem.getInstance().findFileByPath(uniquePath) ?: return null
-        val psiFile = PsiManager.getInstance(project).findFile(file) ?: return null
-        return parse(psiFile).unit
+        return parse(project.findPsiFileByPath(uniquePath) ?: return null).unit
     }
 }

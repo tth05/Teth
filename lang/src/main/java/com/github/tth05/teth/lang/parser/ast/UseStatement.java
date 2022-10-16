@@ -12,16 +12,16 @@ import java.util.stream.Collectors;
 
 public final class UseStatement extends Statement implements ITopLevelDeclaration {
 
-    private final IdentifierExpression path;
+    private final StringLiteralExpression path;
     private final List<IdentifierExpression> imports;
 
-    public UseStatement(Span span, IdentifierExpression path, List<IdentifierExpression> imports) {
+    public UseStatement(Span span, StringLiteralExpression path, List<IdentifierExpression> imports) {
         super(span);
         this.path = path;
         this.imports = Collections.unmodifiableList(Objects.requireNonNull(imports));
     }
 
-    public IdentifierExpression getPathExpr() {
+    public StringLiteralExpression getPathExpr() {
         return this.path;
     }
 
@@ -58,8 +58,12 @@ public final class UseStatement extends Statement implements ITopLevelDeclaratio
     @Override
     public void dump(ASTDumpBuilder builder) {
         builder.append("UseStatement {").newLine().startBlock();
-        builder.appendAttribute("path", this.path.getValue()).newLine();
-        builder.appendAttribute("imports", this.imports.stream().map(IdentifierExpression::getValue).collect(Collectors.joining(", "))).newLine();
+        builder.appendAttribute("path");
+        if (this.path != null)
+            this.path.dump(builder);
+        else
+            builder.append("<null>");
+        builder.newLine().appendAttribute("imports", this.imports.stream().map(IdentifierExpression::getValue).collect(Collectors.joining(", "))).newLine();
         builder.endBlock().append("}");
     }
 

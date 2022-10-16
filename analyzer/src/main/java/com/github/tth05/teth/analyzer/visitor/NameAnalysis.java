@@ -96,25 +96,23 @@ public class NameAnalysis extends AnalysisASTVisitor {
 
     @Override
     public void visit(UseStatement useStatement) {
-        var path = useStatement.getPathExpr().getValue();
+        var pathExpr = useStatement.getPathExpr();
+        var path = pathExpr != null ? pathExpr.asSingleString() : null;
 
         if (!ModuleCache.isValidModulePath(path)) {
-            var span = useStatement.getPathExpr().getSpan();
-            if (span != null)
-                report(span, "Invalid module path");
+            var span = pathExpr != null ? pathExpr.getSpan() : useStatement.getSpan();
+            report(span, "Invalid module path");
             return;
         }
 
         var uniquePath = this.analyzer.toUniquePath(this.unit.getUniquePath(), path);
         if (uniquePath.equals(this.unit.getUniquePath())) {
-            report(useStatement.getPathExpr().getSpan(), "Cannot use 'this' module path");
+            report(pathExpr.getSpan(), "Cannot use 'this' module path");
             return;
         }
 
         if (!this.analyzer.hasModule(uniquePath)) {
-            var span = useStatement.getPathExpr().getSpan();
-            if (span != null)
-                report(span, "Module '" + path + "' does not exist");
+            report(pathExpr.getSpan(), "Module '" + path + "' does not exist");
             return;
         }
 

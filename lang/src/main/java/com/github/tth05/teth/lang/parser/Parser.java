@@ -60,8 +60,10 @@ public class Parser {
         if (path == null) {
             reportAndRecover(anchorSet.union(AnchorSets.FIRST_SET_USE_STATEMENT), this.stream.peek().span(), "Expected string literal path");
         } else {
-            if (!path.isSingleString())
+            if (!path.isSingleString()) {
                 this.problems.add(new Problem(path.getSpan(), "Expressions in string literals are not allowed here"));
+                path = new StringLiteralExpression(path.getSpan(), List.of(path.getParts().get(0)));
+            }
             lastSpan = path.getSpan();
         }
 
@@ -88,10 +90,9 @@ public class Parser {
             lastSpan = endToken.span();
 
         consumeLineBreaks();
-        var firstPart = path == null ? null : path.getParts().get(0);
         return new UseStatement(
                 Span.of(firstSpan, lastSpan),
-                new IdentifierExpression(firstPart == null ? null : firstPart.getSpan(), firstPart == null ? null : firstPart.asString()),
+                path,
                 imports
         );
     }

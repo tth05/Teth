@@ -123,6 +123,8 @@ private class PsiConstructorVisitor(val builder: PsiBuilder) : ASTVisitor() {
 
     override fun visit(useStatement: UseStatement) {
         marked(useStatement, TethElementTypes.USE_STATEMENT) {
+            if (useStatement.pathExpr != null)
+                useStatement.pathExpr.accept(this)
             super.visit(useStatement)
         }
     }

@@ -35,169 +35,178 @@ public class ASTUtil {
             if (right != null)
                 return right;
         } else if (statement instanceof BlockStatement block) {
-            statement = findStatementAtExact(block.getStatements(), offset);
-            if (statement != null)
-                return statement;
+            var child = findStatementAtExact(block.getStatements(), offset);
+            if (child != null)
+                return child;
         } else if (statement instanceof GenericParameterDeclaration p) {
-            statement = findStatementAtExact(p.getNameExpr(), offset);
-            if (statement != null)
-                return statement;
+            var child = findStatementAtExact(p.getNameExpr(), offset);
+            if (child != null)
+                return child;
         } else if (statement instanceof FunctionDeclaration func) {
-            statement = findStatementAtExact(func.getNameExpr(), offset);
-            if (statement != null)
-                return statement;
+            var child = findStatementAtExact(func.getNameExpr(), offset);
+            if (child != null)
+                return child;
 
-            statement = findStatementAtExact(func.getGenericParameters(), offset);
-            if (statement != null)
-                return statement;
+            child = findStatementAtExact(func.getGenericParameters(), offset);
+            if (child != null)
+                return child;
 
-            statement = findStatementAtExact(func.getParameters(), offset);
-            if (statement != null)
-                return statement;
+            child = findStatementAtExact(func.getParameters(), offset);
+            if (child != null)
+                return child;
 
-            statement = findStatementAtExact(func.getReturnTypeExpr(), offset);
-            if (statement != null)
-                return statement;
+            child = findStatementAtExact(func.getReturnTypeExpr(), offset);
+            if (child != null)
+                return child;
 
-            statement = findStatementAtExact(func.getBody(), offset);
-            if (statement != null)
-                return statement;
+            child = findStatementAtExact(func.getBody(), offset);
+            if (child != null)
+                return child;
         } else if (statement instanceof FunctionDeclaration.ParameterDeclaration param) {
-            statement = findStatementAtExact(param.getNameExpr(), offset);
-            if (statement != null)
-                return statement;
+            var child = findStatementAtExact(param.getNameExpr(), offset);
+            if (child != null)
+                return child;
 
-            statement = findStatementAtExact(param.getTypeExpr(), offset);
-            if (statement != null)
-                return statement;
+            child = findStatementAtExact(param.getTypeExpr(), offset);
+            if (child != null)
+                return child;
         } else if (statement instanceof FunctionInvocationExpression expr) {
-            statement = findStatementAtExact(expr.getTarget(), offset);
-            if (statement != null)
-                return statement;
+            var child = findStatementAtExact(expr.getTarget(), offset);
+            if (child != null)
+                return child;
 
-            statement = findStatementAtExact(expr.getGenericParameters(), offset);
-            if (statement != null)
-                return statement;
+            child = findStatementAtExact(expr.getGenericParameters(), offset);
+            if (child != null)
+                return child;
 
-            statement = findStatementAtExact(expr.getParameters(), offset);
-            if (statement != null)
-                return statement;
+            child = findStatementAtExact(expr.getParameters(), offset);
+            if (child != null)
+                return child;
         } else if (statement instanceof IfStatement ifStmt) {
-            statement = findStatementAtExact(ifStmt.getCondition(), offset);
-            if (statement != null)
-                return statement;
+            var child = findStatementAtExact(ifStmt.getCondition(), offset);
+            if (child != null)
+                return child;
 
-            statement = findStatementAtExact(ifStmt.getBody(), offset);
-            if (statement != null)
-                return statement;
+            child = findStatementAtExact(ifStmt.getBody(), offset);
+            if (child != null)
+                return child;
 
-            statement = findStatementAtExact(ifStmt.getElseStatement(), offset);
-            if (statement != null)
-                return statement;
+            child = findStatementAtExact(ifStmt.getElseStatement(), offset);
+            if (child != null)
+                return child;
         } else if (statement instanceof ListLiteralExpression expr) {
-            statement = findStatementAtExact(expr.getInitializers(), offset);
-            if (statement != null)
-                return statement;
+            var child = findStatementAtExact(expr.getInitializers(), offset);
+            if (child != null)
+                return child;
         } else if (statement instanceof LoopStatement loop) {
-            statement = findStatementAtExact(loop.getVariableDeclarations(), offset);
-            if (statement != null)
-                return statement;
+            var child = findStatementAtExact(loop.getVariableDeclarations(), offset);
+            if (child != null)
+                return child;
 
-            statement = findStatementAtExact(loop.getCondition(), offset);
-            if (statement != null)
-                return statement;
+            child = findStatementAtExact(loop.getCondition(), offset);
+            if (child != null)
+                return child;
 
-            statement = findStatementAtExact(loop.getAdvanceStatement(), offset);
-            if (statement != null)
-                return statement;
+            child = findStatementAtExact(loop.getAdvanceStatement(), offset);
+            if (child != null)
+                return child;
 
-            statement = findStatementAtExact(loop.getBody(), offset);
-            if (statement != null)
-                return statement;
+            child = findStatementAtExact(loop.getBody(), offset);
+            if (child != null)
+                return child;
         } else if (statement instanceof MemberAccessExpression expr) {
-            statement = findStatementAtExact(expr.getTarget(), offset);
-            if (statement != null)
-                return statement;
+            var child = findStatementAtExact(expr.getTarget(), offset);
+            if (child != null)
+                return child;
 
-            statement = findStatementAtExact(expr.getMemberNameExpr(), offset);
-            if (statement != null)
-                return statement;
+            child = findStatementAtExact(expr.getMemberNameExpr(), offset);
+            if (child != null)
+                return child;
         } else if (statement instanceof ObjectCreationExpression expr) {
-            statement = findStatementAtExact(expr.getTargetNameExpr(), offset);
-            if (statement != null)
-                return statement;
+            var child = findStatementAtExact(expr.getTargetNameExpr(), offset);
+            if (child != null)
+                return child;
 
-            statement = findStatementAtExact(expr.getGenericParameters(), offset);
-            if (statement != null)
-                return statement;
+            child = findStatementAtExact(expr.getGenericParameters(), offset);
+            if (child != null)
+                return child;
 
-            statement = findStatementAtExact(expr.getParameters(), offset);
-            if (statement != null)
-                return statement;
+            child = findStatementAtExact(expr.getParameters(), offset);
+            if (child != null)
+                return child;
         } else if (statement instanceof ParenthesisedExpression expr) {
-            statement = findStatementAtExact(expr.getExpression(), offset);
-            if (statement != null)
-                return statement;
+            var child = findStatementAtExact(expr.getExpression(), offset);
+            if (child != null)
+                return child;
         } else if (statement instanceof ReturnStatement ret) {
-            statement = findStatementAtExact(ret.getValueExpr(), offset);
-            if (statement != null)
-                return statement;
+            var child = findStatementAtExact(ret.getValueExpr(), offset);
+            if (child != null)
+                return child;
         } else if (statement instanceof StructDeclaration struct) {
-            statement = findStatementAtExact(struct.getNameExpr(), offset);
-            if (statement != null)
-                return statement;
+            var child = findStatementAtExact(struct.getNameExpr(), offset);
+            if (child != null)
+                return child;
 
-            statement = findStatementAtExact(struct.getGenericParameters(), offset);
-            if (statement != null)
-                return statement;
+            child = findStatementAtExact(struct.getGenericParameters(), offset);
+            if (child != null)
+                return child;
 
-            statement = findStatementAtExact(struct.getFields(), offset);
-            if (statement != null)
-                return statement;
+            child = findStatementAtExact(struct.getFields(), offset);
+            if (child != null)
+                return child;
 
-            statement = findStatementAtExact(struct.getFunctions(), offset);
-            if (statement != null)
-                return statement;
+            child = findStatementAtExact(struct.getFunctions(), offset);
+            if (child != null)
+                return child;
         } else if (statement instanceof StructDeclaration.FieldDeclaration field) {
-            statement = findStatementAtExact(field.getNameExpr(), offset);
-            if (statement != null)
-                return statement;
+            var child = findStatementAtExact(field.getNameExpr(), offset);
+            if (child != null)
+                return child;
 
-            statement = findStatementAtExact(field.getTypeExpr(), offset);
-            if (statement != null)
-                return statement;
+            child = findStatementAtExact(field.getTypeExpr(), offset);
+            if (child != null)
+                return child;
         } else if (statement instanceof TypeExpression expr) {
-            statement = findStatementAtExact(expr.getNameExpr(), offset);
-            if (statement != null)
-                return statement;
+            var child = findStatementAtExact(expr.getNameExpr(), offset);
+            if (child != null)
+                return child;
 
-            statement = findStatementAtExact(expr.getGenericParameters(), offset);
-            if (statement != null)
-                return statement;
+            child = findStatementAtExact(expr.getGenericParameters(), offset);
+            if (child != null)
+                return child;
         } else if (statement instanceof UnaryExpression expr) {
-            statement = findStatementAtExact(expr.getExpression(), offset);
-            if (statement != null)
-                return statement;
+            var child = findStatementAtExact(expr.getExpression(), offset);
+            if (child != null)
+                return child;
         } else if (statement instanceof UseStatement use) {
-            statement = findStatementAtExact(use.getPathExpr(), offset);
-            if (statement != null)
-                return statement;
+            var child = findStatementAtExact(use.getPathExpr(), offset);
+            if (child != null)
+                return child;
 
-            statement = findStatementAtExact(use.getImports(), offset);
-            if (statement != null)
-                return statement;
+            child = findStatementAtExact(use.getImports(), offset);
+            if (child != null)
+                return child;
         } else if (statement instanceof VariableDeclaration var) {
-            statement = findStatementAtExact(var.getNameExpr(), offset);
-            if (statement != null)
-                return statement;
+            var child = findStatementAtExact(var.getNameExpr(), offset);
+            if (child != null)
+                return child;
 
-            statement = findStatementAtExact(var.getTypeExpr(), offset);
-            if (statement != null)
-                return statement;
+            child = findStatementAtExact(var.getTypeExpr(), offset);
+            if (child != null)
+                return child;
 
-            statement = findStatementAtExact(var.getInitializerExpr(), offset);
-            if (statement != null)
-                return statement;
+            child = findStatementAtExact(var.getInitializerExpr(), offset);
+            if (child != null)
+                return child;
+        } else if (statement instanceof StringLiteralExpression expr) {
+            for (StringLiteralExpression.Part part : expr.getParts()) {
+                if (part.getType() != StringLiteralExpression.PartType.EXPRESSION)
+                    continue;
+
+                var child = findStatementAtExact(part.asExpression(), offset);
+                if (child != null)
+                    return child;
+            }
         }
 
         return statement;

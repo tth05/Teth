@@ -22,6 +22,7 @@ public abstract class ASTVisitor {
     }
 
     public void visit(UseStatement useStatement) {
+        useStatement.getImports().forEach(i -> i.accept(this));
     }
 
     public void visit(BlockStatement statement) {

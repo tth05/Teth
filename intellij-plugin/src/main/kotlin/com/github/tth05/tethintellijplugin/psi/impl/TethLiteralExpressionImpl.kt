@@ -1,15 +1,16 @@
 package com.github.tth05.tethintellijplugin.psi.impl
 
+import com.github.tth05.teth.analyzer.module.ModuleCache
 import com.github.tth05.teth.lang.parser.ASTUtil
-import com.github.tth05.teth.lang.parser.ASTVisitor
 import com.github.tth05.teth.lang.parser.ast.IDeclarationReference
-import com.github.tth05.teth.lang.parser.ast.IdentifierExpression
+import com.github.tth05.teth.lang.parser.ast.ITopLevelDeclaration
 import com.github.tth05.teth.lang.parser.ast.Statement
 import com.github.tth05.tethintellijplugin.psi.api.*
 import com.github.tth05.tethintellijplugin.psi.caching.tethCache
 import com.github.tth05.tethintellijplugin.psi.reference.TethReference
 import com.github.tth05.tethintellijplugin.psi.reference.resolvedRefTo
 import com.github.tth05.tethintellijplugin.syntax.analyzeAndParseFile
+import com.github.tth05.tethintellijplugin.syntax.findPsiFileByPath
 import com.intellij.extapi.psi.ASTWrapperPsiElement
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
@@ -23,7 +24,30 @@ class TethLongLiteralExpressionImpl(node: ASTNode) : ASTWrapperPsiElement(node),
 
 class TethDoubleLiteralExpressionImpl(node: ASTNode) : ASTWrapperPsiElement(node), TethDoubleLiteralExpression
 
-class TethStringLiteralExpressionImpl(node: ASTNode) : ASTWrapperPsiElement(node), TethStringLiteralExpression
+class TethStringLiteralExpressionImpl(node: ASTNode) : ASTWrapperPsiElement(node), TethStringLiteralExpression {
+    override fun getReference(): PsiReference? {
+        // Get analyzed file
+        val file = containingFile ?: return null
+        val (analyzer, _, result) = file.tethCache().resolveWithCaching(file) {
+            analyzeAndParseFile(file)
+        }
+
+        return tethCache().resolveWithCaching(this) {
+            if (parent !is TethUseStatement) return@resolveWithCaching TethReference.UNRESOLVED
+            val path = text.removeSurrounding("\"")
+            if (!ModuleCache.isValidModulePath(path)) return@resolveWithCaching TethReference.UNRESOLVED
+
+            return@resolveWithCaching resolvedRefTo(
+                project.findPsiFileByPath(
+                    analyzer.toUniquePath(
+                        result.unit.uniquePath,
+                        path
+                    ) ?: return@resolveWithCaching TethReference.UNRESOLVED
+                ) ?: return@resolveWithCaching TethReference.UNRESOLVED
+            )
+        }.takeIf { it != TethReference.UNRESOLVED }
+    }
+}
 
 class TethBooleanLiteralExpressionImpl(node: ASTNode) : ASTWrapperPsiElement(node), TethBooleanLiteralExpression
 
@@ -47,9 +71,19 @@ class TethIdentifierLiteralExpressionImpl(node: ASTNode) : ASTWrapperPsiElement(
                 ) as? IDeclarationReference ?: return@resolveWithCaching TethReference.UNRESOLVED
             ) ?: return@resolveWithCaching TethReference.UNRESOLVED
 
+            if (target.span == null) return@resolveWithCaching TethReference.UNRESOLVED
+
+            val referenceUnit: TethUnit = if (target is ITopLevelDeclaration && target.containingUnit != result.unit) {
+                val psiFile = project.findPsiFileByPath(target.containingUnit.uniquePath)
+                    ?: return@resolveWithCaching TethReference.UNRESOLVED
+                psiFile.childrenOfType<TethUnit>().firstOrNull() ?: return@resolveWithCaching TethReference.UNRESOLVED
+            } else {
+                findParentOfType()!!
+            }
+
             // Convert teth ast node to psi element
-            val psiTarget: PsiElement =
-                findDeclarationAt(target.span!!.offset) ?: return@resolveWithCaching TethReference.UNRESOLVED
+            val psiTarget: PsiElement = findDeclarationAt(referenceUnit, target.span!!.offset)
+                ?: return@resolveWithCaching TethReference.UNRESOLVED
 
             // Create reference
             return@resolveWithCaching resolvedRefTo(psiTarget)
@@ -71,7 +105,7 @@ class TethTypeExpressionImpl(node: ASTNode) : ASTWrapperPsiElement(node), TethTy
 
 private fun String.emptyToNull() = ifEmpty { null }
 
-private fun PsiElement.findDeclarationAt(offset: Int): PsiElement? {
+private fun findDeclarationAt(unit: TethUnit, offset: Int): PsiElement? {
     fun isMatch(current: PsiElement?, offset: Int) = current is PsiNameIdentifierOwner && current.startOffset == offset
     fun checkChildren(current: PsiElement, offset: Int): PsiElement? {
         if (current.startOffset > offset) return null
@@ -85,5 +119,5 @@ private fun PsiElement.findDeclarationAt(offset: Int): PsiElement? {
         return null
     }
 
-    return checkChildren(findParentOfType<TethUnit>()!!, offset)
+    return checkChildren(unit, offset)
 }

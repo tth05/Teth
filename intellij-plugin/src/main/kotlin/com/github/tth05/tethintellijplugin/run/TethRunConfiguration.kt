@@ -5,6 +5,7 @@ import com.github.tth05.teth.bytecodeInterpreter.Interpreter
 import com.github.tth05.teth.lang.parser.Parser
 import com.github.tth05.teth.lang.source.InMemorySource
 import com.github.tth05.tethintellijplugin.syntax.IntellijModuleLoader
+import com.github.tth05.tethintellijplugin.syntax.findPsiFileByPath
 import com.github.tth05.tethintellijplugin.syntax.parse
 import com.intellij.execution.DefaultExecutionResult
 import com.intellij.execution.ExecutionException
@@ -35,14 +36,8 @@ class TethRunConfiguration(
         return RunProfileState { _, _ ->
             if (filePath == null) throw ExecutionException("File path is not set")
 
-            val file =
-                LocalFileSystem.getInstance().findFileByPath(filePath!!) ?: throw ExecutionException(
-                    "File does not exist"
-                )
-
-            val psiFile =
-                PsiManager.getInstance(project).findFile(file) ?: throw ExecutionException("PsiFile not found")
-            val parserResult = parse(psiFile)
+            val parserResult =
+                parse(project.findPsiFileByPath(filePath!!) ?: throw ExecutionException("File not found"))
             if (parserResult.hasProblems()) throw ExecutionException("File has problems")
 
             val compiler = Compiler()

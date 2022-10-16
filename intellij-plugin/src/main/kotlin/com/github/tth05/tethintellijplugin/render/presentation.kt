@@ -1,6 +1,7 @@
 package com.github.tth05.tethintellijplugin.render
 
 import com.github.tth05.teth.lang.parser.ast.VariableDeclaration
+import com.github.tth05.tethintellijplugin.psi.TethPsiFile
 import com.github.tth05.tethintellijplugin.psi.api.*
 import com.github.tth05.tethintellijplugin.psi.impl.TethNamedElement
 import com.github.tth05.tethintellijplugin.syntax.highlighting.TethSyntaxHighlighter
@@ -46,6 +47,10 @@ fun renderElement(element: PsiElement): String {
 
 private fun renderElement(element: PsiElement, builder: RenderBuilder): String {
     when (element) {
+        is TethPsiFile -> {
+            builder.append(element.name)
+        }
+
         is TethStructDeclaration -> {
             builder.appendStyled("struct ", TethSyntaxHighlighter.KEYWORD)
                 .appendStyled(element.name.orEmpty(), TethSyntaxHighlighter.TYPE)

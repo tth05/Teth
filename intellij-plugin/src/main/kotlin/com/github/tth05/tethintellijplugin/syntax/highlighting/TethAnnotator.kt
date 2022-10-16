@@ -70,6 +70,12 @@ private class AnnotatingVisitor(val analyzer: Analyzer, val holder: AnnotationHo
         annotateWithColor(declaration.nameExpr.span, TethSyntaxHighlighter.TYPE)
     }
 
+    override fun visit(useStatement: UseStatement?) {
+        super.visit(useStatement)
+
+
+    }
+
     override fun visit(declaration: FunctionDeclaration?) {
         super.visit(declaration)
 
