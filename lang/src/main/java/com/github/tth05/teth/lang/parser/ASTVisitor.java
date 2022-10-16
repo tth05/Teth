@@ -153,6 +153,7 @@ public abstract class ASTVisitor {
     }
 
     public void visit(GenericParameterDeclaration declaration) {
+        declaration.getNameExpr().accept(this);
     }
 
     public void visit(TypeExpression typeExpression) {

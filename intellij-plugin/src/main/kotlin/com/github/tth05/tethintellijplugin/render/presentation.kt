@@ -114,7 +114,13 @@ private fun renderCommaList(list: List<PsiElement>, builder: RenderBuilder) {
 }
 
 private fun renderType(type: TethTypeExpression, builder: RenderBuilder) {
-    builder.appendStyled(type.typeName.identifier.orEmpty(), TethSyntaxHighlighter.TYPE)
+    builder.appendStyled(
+        type.typeName.identifier.orEmpty(), when (type.typeName.reference?.resolve()) {
+            is TethGenericParameterDeclaration -> TethSyntaxHighlighter.TYPE_PARAMETER
+            else -> TethSyntaxHighlighter.TYPE
+        }
+    )
+
     if (type.genericArguments.isNotEmpty()) {
         builder.appendStyled("<", TethSyntaxHighlighter.OPERATOR)
         renderCommaList(type.genericArguments, builder)
