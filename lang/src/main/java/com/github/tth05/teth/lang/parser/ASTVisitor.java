@@ -27,7 +27,7 @@ public abstract class ASTVisitor {
 
     public void visit(BlockStatement statement) {
         for (Statement child : statement.getStatements()) {
-            if (!this.blockStatementFilter.test(statement))
+            if (!this.blockStatementFilter.test(child))
                 continue;
 
             child.accept(this);
