@@ -20,9 +20,7 @@ import com.intellij.psi.tree.IFileElementType
 import com.intellij.psi.tree.TokenSet
 
 //TODO:
-// - Inlay hints
-// - Parameter info
-// - Auto-completin
+// - Auto-completion
 class TethParserDefinition : ParserDefinition {
     override fun createLexer(project: Project?): Lexer = TethLexer()
 

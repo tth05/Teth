@@ -8,6 +8,7 @@ import com.github.tth05.teth.lang.span.Span;
 public class AnalysisASTVisitor extends ASTVisitor {
 
     private final ProblemList problems = new ProblemList();
+    private boolean errorFlag;
 
     public ProblemList getProblems() {
         return this.problems;
@@ -18,5 +19,14 @@ public class AnalysisASTVisitor extends ASTVisitor {
             return;
 
         this.problems.add(new Problem(span, message));
+        this.errorFlag = true;
+    }
+
+    protected void clearErrorFlag() {
+        this.errorFlag = false;
+    }
+
+    protected boolean hasErrorFlag() {
+        return this.errorFlag;
     }
 }

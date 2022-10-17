@@ -162,13 +162,20 @@ public class TypeAnalysis extends AnalysisASTVisitor {
                 declaration.getTypeExpr().accept(this);
         }
 
+        if (hasErrorFlag()) {
+            clearErrorFlag();
+            return;
+        }
+
         var varTypeExpr = declaration.getTypeExpr();
         var expression = declaration.getInitializerExpr();
-        if (varTypeExpr != null) {
-            var resolvedType = this.resolvedExpressionTypes.get(expression);
-            if (resolvedType == null)
-                return;
+        var resolvedType = this.resolvedExpressionTypes.get(expression);
+        if (resolvedType == null) {
+            report(expression.getSpan(), "Cannot determine type of expression");
+            return;
+        }
 
+        if (varTypeExpr != null) {
             if (!this.typeCache.isSubtypeOf(resolvedType, asType(varTypeExpr)))
                 report(expression.getSpan(), "Cannot assign value of type " + this.typeCache.toString(resolvedType) + " to variable of type " + varTypeExpr);
         }
@@ -269,6 +276,11 @@ public class TypeAnalysis extends AnalysisASTVisitor {
     public void visit(BinaryExpression expression) {
         super.visit(expression);
 
+        if (hasErrorFlag()) {
+            clearErrorFlag();
+            return;
+        }
+
         if (expression.getOperator() == BinaryExpression.Operator.OP_ASSIGN) {
             visitAssignmentExpression(expression);
             return;
@@ -276,13 +288,13 @@ public class TypeAnalysis extends AnalysisASTVisitor {
 
         var leftType = this.resolvedExpressionTypes.get(expression.getLeft());
         if (leftType == null) {
-            report(expression.getLeft().getSpan(), "Invalid type for binary expression");
+            report(expression.getLeft().getSpan(), "Cannot determine type of expression");
             return;
         }
 
         var rightType = this.resolvedExpressionTypes.get(expression.getRight());
         if (rightType == null) {
-            report(expression.getRight().getSpan(), "Invalid type for binary expression");
+            report(expression.getRight().getSpan(), "Cannot determine type of expression");
             return;
         }
 
