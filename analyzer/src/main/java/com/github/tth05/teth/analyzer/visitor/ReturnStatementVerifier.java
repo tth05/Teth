@@ -14,6 +14,9 @@ public class ReturnStatementVerifier extends AnalysisASTVisitor {
 
     @Override
     public void visit(FunctionDeclaration declaration) {
+        // Visit to validate nested functions
+        declaration.getBody().accept(this);
+
         if (declaration.getReturnTypeExpr() == null)
             return;
 
