@@ -652,12 +652,16 @@ public class Parser {
         firstSpan = current.span();
         var secondSpan = firstSpan;
 
-        List<TypeExpression> genericParameters;
+        ListWithSpan<TypeExpression> genericParameters;
         if (this.stream.peek().is(TokenType.LESS)) {
             var genericStartSpan = consume(false).span();
-            genericParameters = parseList(anchorSet, this::parseType, ArrayList::new, TokenType.GREATER);
+            secondSpan = genericStartSpan;
+
+            genericParameters = parseList(anchorSet, this::parseType, ArrayListWithSpan::new, TokenType.GREATER);
             if (genericParameters.isEmpty())
                 this.problems.add(new Problem(genericStartSpan, "Empty generic parameter list"));
+
+            secondSpan = genericParameters.getSpanOrElse(secondSpan);
 
             var greaterToken = expectToken(TokenType.GREATER, anchorSet, () -> "Expected '>'");
             if (!greaterToken.isInvalid())
@@ -665,7 +669,7 @@ public class Parser {
 
             consumeLineBreaks();
         } else {
-            genericParameters = Collections.emptyList();
+            genericParameters = ArrayListWithSpan.emptyList();
         }
 
         return new TypeExpression(Span.of(firstSpan, secondSpan), new IdentifierExpression(current.span(), current.value()), genericParameters);
