@@ -4,6 +4,7 @@ import com.github.tth05.teth.lang.parser.ast.*;
 import com.github.tth05.teth.lang.span.Span;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 public class ASTUtil {
 
@@ -12,213 +13,113 @@ public class ASTUtil {
      * {@link Span#offset()} is equal to {@code offset}.
      */
     public static Statement findStatementAtExact(SourceFileUnit unit, int offset) {
-        return findStatementAtExact(unit.getStatements(), offset);
+        class NodeCollector implements Consumer<Statement> {
+
+            Statement statement = null;
+
+            @Override
+            public void accept(Statement statement) {
+                if (statement.getSpan().offset() == offset)
+                    this.statement = statement;
+            }
+        }
+
+        var collector = new NodeCollector();
+
+        for (var statement : unit.getStatements()) {
+            walkNodesAtOffset(statement, offset, collector);
+        }
+
+        return collector.statement;
     }
 
-    public static Statement findStatementAtExact(Statement statement, int offset) {
+    public static void walkNodesAtOffset(Statement statement, int offset, Consumer<Statement> consumer) {
         if (statement == null)
-            return null;
+            return;
 
         var span = statement.getSpan();
         if (span == null)
-            return null;
+            return;
 
         if (offset < span.offset() || offset >= span.offsetEnd())
-            return null;
+            return;
+
+        consumer.accept(statement);
 
         if (statement instanceof BinaryExpression expr) {
-            var left = findStatementAtExact(expr.getLeft(), offset);
-            if (left != null)
-                return left;
-
-            var right = findStatementAtExact(expr.getRight(), offset);
-            if (right != null)
-                return right;
+            walkNodesAtOffset(expr.getLeft(), offset, consumer);
+            walkNodesAtOffset(expr.getRight(), offset, consumer);
         } else if (statement instanceof BlockStatement block) {
-            var child = findStatementAtExact(block.getStatements(), offset);
-            if (child != null)
-                return child;
+            walkNodesAtOffset(block.getStatements(), offset, consumer);
         } else if (statement instanceof GenericParameterDeclaration p) {
-            var child = findStatementAtExact(p.getNameExpr(), offset);
-            if (child != null)
-                return child;
+            walkNodesAtOffset(p.getNameExpr(), offset, consumer);
         } else if (statement instanceof FunctionDeclaration func) {
-            var child = findStatementAtExact(func.getNameExpr(), offset);
-            if (child != null)
-                return child;
-
-            child = findStatementAtExact(func.getGenericParameters(), offset);
-            if (child != null)
-                return child;
-
-            child = findStatementAtExact(func.getParameters(), offset);
-            if (child != null)
-                return child;
-
-            child = findStatementAtExact(func.getReturnTypeExpr(), offset);
-            if (child != null)
-                return child;
-
-            child = findStatementAtExact(func.getBody(), offset);
-            if (child != null)
-                return child;
+            walkNodesAtOffset(func.getNameExpr(), offset, consumer);
+            walkNodesAtOffset(func.getGenericParameters(), offset, consumer);
+            walkNodesAtOffset(func.getParameters(), offset, consumer);
+            walkNodesAtOffset(func.getReturnTypeExpr(), offset, consumer);
+            walkNodesAtOffset(func.getBody(), offset, consumer);
         } else if (statement instanceof FunctionDeclaration.ParameterDeclaration param) {
-            var child = findStatementAtExact(param.getNameExpr(), offset);
-            if (child != null)
-                return child;
-
-            child = findStatementAtExact(param.getTypeExpr(), offset);
-            if (child != null)
-                return child;
+            walkNodesAtOffset(param.getNameExpr(), offset, consumer);
+            walkNodesAtOffset(param.getTypeExpr(), offset, consumer);
         } else if (statement instanceof FunctionInvocationExpression expr) {
-            var child = findStatementAtExact(expr.getTarget(), offset);
-            if (child != null)
-                return child;
-
-            child = findStatementAtExact(expr.getGenericParameters(), offset);
-            if (child != null)
-                return child;
-
-            child = findStatementAtExact(expr.getParameters(), offset);
-            if (child != null)
-                return child;
+            walkNodesAtOffset(expr.getTarget(), offset, consumer);
+            walkNodesAtOffset(expr.getGenericParameters(), offset, consumer);
+            walkNodesAtOffset(expr.getParameters(), offset, consumer);
         } else if (statement instanceof IfStatement ifStmt) {
-            var child = findStatementAtExact(ifStmt.getCondition(), offset);
-            if (child != null)
-                return child;
-
-            child = findStatementAtExact(ifStmt.getBody(), offset);
-            if (child != null)
-                return child;
-
-            child = findStatementAtExact(ifStmt.getElseStatement(), offset);
-            if (child != null)
-                return child;
+            walkNodesAtOffset(ifStmt.getCondition(), offset, consumer);
+            walkNodesAtOffset(ifStmt.getBody(), offset, consumer);
+            walkNodesAtOffset(ifStmt.getElseStatement(), offset, consumer);
         } else if (statement instanceof ListLiteralExpression expr) {
-            var child = findStatementAtExact(expr.getInitializers(), offset);
-            if (child != null)
-                return child;
+            walkNodesAtOffset(expr.getInitializers(), offset, consumer);
         } else if (statement instanceof LoopStatement loop) {
-            var child = findStatementAtExact(loop.getVariableDeclarations(), offset);
-            if (child != null)
-                return child;
-
-            child = findStatementAtExact(loop.getCondition(), offset);
-            if (child != null)
-                return child;
-
-            child = findStatementAtExact(loop.getAdvanceStatement(), offset);
-            if (child != null)
-                return child;
-
-            child = findStatementAtExact(loop.getBody(), offset);
-            if (child != null)
-                return child;
+            walkNodesAtOffset(loop.getVariableDeclarations(), offset, consumer);
+            walkNodesAtOffset(loop.getCondition(), offset, consumer);
+            walkNodesAtOffset(loop.getAdvanceStatement(), offset, consumer);
+            walkNodesAtOffset(loop.getBody(), offset, consumer);
         } else if (statement instanceof MemberAccessExpression expr) {
-            var child = findStatementAtExact(expr.getTarget(), offset);
-            if (child != null)
-                return child;
-
-            child = findStatementAtExact(expr.getMemberNameExpr(), offset);
-            if (child != null)
-                return child;
+            walkNodesAtOffset(expr.getTarget(), offset, consumer);
+            walkNodesAtOffset(expr.getMemberNameExpr(), offset, consumer);
         } else if (statement instanceof ObjectCreationExpression expr) {
-            var child = findStatementAtExact(expr.getTargetNameExpr(), offset);
-            if (child != null)
-                return child;
-
-            child = findStatementAtExact(expr.getGenericParameters(), offset);
-            if (child != null)
-                return child;
-
-            child = findStatementAtExact(expr.getParameters(), offset);
-            if (child != null)
-                return child;
+            walkNodesAtOffset(expr.getTargetNameExpr(), offset, consumer);
+            walkNodesAtOffset(expr.getGenericParameters(), offset, consumer);
+            walkNodesAtOffset(expr.getParameters(), offset, consumer);
         } else if (statement instanceof ParenthesisedExpression expr) {
-            var child = findStatementAtExact(expr.getExpression(), offset);
-            if (child != null)
-                return child;
+            walkNodesAtOffset(expr.getExpression(), offset, consumer);
         } else if (statement instanceof ReturnStatement ret) {
-            var child = findStatementAtExact(ret.getValueExpr(), offset);
-            if (child != null)
-                return child;
+            walkNodesAtOffset(ret.getValueExpr(), offset, consumer);
         } else if (statement instanceof StructDeclaration struct) {
-            var child = findStatementAtExact(struct.getNameExpr(), offset);
-            if (child != null)
-                return child;
-
-            child = findStatementAtExact(struct.getGenericParameters(), offset);
-            if (child != null)
-                return child;
-
-            child = findStatementAtExact(struct.getFields(), offset);
-            if (child != null)
-                return child;
-
-            child = findStatementAtExact(struct.getFunctions(), offset);
-            if (child != null)
-                return child;
+            walkNodesAtOffset(struct.getNameExpr(), offset, consumer);
+            walkNodesAtOffset(struct.getGenericParameters(), offset, consumer);
+            walkNodesAtOffset(struct.getFields(), offset, consumer);
+            walkNodesAtOffset(struct.getFunctions(), offset, consumer);
         } else if (statement instanceof StructDeclaration.FieldDeclaration field) {
-            var child = findStatementAtExact(field.getNameExpr(), offset);
-            if (child != null)
-                return child;
-
-            child = findStatementAtExact(field.getTypeExpr(), offset);
-            if (child != null)
-                return child;
+            walkNodesAtOffset(field.getNameExpr(), offset, consumer);
+            walkNodesAtOffset(field.getTypeExpr(), offset, consumer);
         } else if (statement instanceof TypeExpression expr) {
-            var child = findStatementAtExact(expr.getNameExpr(), offset);
-            if (child != null)
-                return child;
-
-            child = findStatementAtExact(expr.getGenericParameters(), offset);
-            if (child != null)
-                return child;
+            walkNodesAtOffset(expr.getNameExpr(), offset, consumer);
+            walkNodesAtOffset(expr.getGenericParameters(), offset, consumer);
         } else if (statement instanceof UnaryExpression expr) {
-            var child = findStatementAtExact(expr.getExpression(), offset);
-            if (child != null)
-                return child;
+            walkNodesAtOffset(expr.getExpression(), offset, consumer);
         } else if (statement instanceof UseStatement use) {
-            var child = findStatementAtExact(use.getPathExpr(), offset);
-            if (child != null)
-                return child;
-
-            child = findStatementAtExact(use.getImports(), offset);
-            if (child != null)
-                return child;
+            walkNodesAtOffset(use.getPathExpr(), offset, consumer);
+            walkNodesAtOffset(use.getImports(), offset, consumer);
         } else if (statement instanceof VariableDeclaration var) {
-            var child = findStatementAtExact(var.getNameExpr(), offset);
-            if (child != null)
-                return child;
-
-            child = findStatementAtExact(var.getTypeExpr(), offset);
-            if (child != null)
-                return child;
-
-            child = findStatementAtExact(var.getInitializerExpr(), offset);
-            if (child != null)
-                return child;
+            walkNodesAtOffset(var.getNameExpr(), offset, consumer);
+            walkNodesAtOffset(var.getTypeExpr(), offset, consumer);
+            walkNodesAtOffset(var.getInitializerExpr(), offset, consumer);
         } else if (statement instanceof StringLiteralExpression expr) {
             for (StringLiteralExpression.Part part : expr.getParts()) {
                 if (part.getType() != StringLiteralExpression.PartType.EXPRESSION)
                     continue;
 
-                var child = findStatementAtExact(part.asExpression(), offset);
-                if (child != null)
-                    return child;
+                walkNodesAtOffset(part.asExpression(), offset, consumer);
             }
         }
-
-        return statement;
     }
 
-    private static Statement findStatementAtExact(List<? extends Statement> children, int offset) {
-        for (var child : children) {
-            var result = findStatementAtExact(child, offset);
-            if (result != null)
-                return result;
-        }
-
-        return null;
+    private static void walkNodesAtOffset(List<? extends Statement> children, int offset, Consumer<Statement> consumer) {
+        for (var child : children)
+            walkNodesAtOffset(child, offset, consumer);
     }
 }
