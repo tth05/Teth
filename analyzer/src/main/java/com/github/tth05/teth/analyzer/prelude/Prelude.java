@@ -106,6 +106,14 @@ public class Prelude {
         };
     }
 
+    public static FunctionDeclaration[] getGlobalFunctions() {
+        return new FunctionDeclaration[]{
+                PRINT_FUNCTION,
+                STRINGIFY_FUNCTION,
+                NANO_TIME_FUNCTION
+        };
+    }
+
     public static boolean isBuiltInTypeName(String name) {
         if (name == null)
             return false;
@@ -128,16 +136,22 @@ public class Prelude {
         };
     }
 
+    public static StructDeclaration[] getGlobalStructs() {
+        return new StructDeclaration[]{
+                LONG_STRUCT_DECLARATION,
+                DOUBLE_STRUCT_DECLARATION,
+                BOOLEAN_STRUCT_DECLARATION,
+                STRING_STRUCT_DECLARATION,
+                LIST_STRUCT_DECLARATION,
+                ANY_STRUCT_DECLARATION
+        };
+    }
+
     public static void injectStatements(List<Statement> statements) {
-        statements.add(0, LONG_STRUCT_DECLARATION);
-        statements.add(0, DOUBLE_STRUCT_DECLARATION);
-        statements.add(0, BOOLEAN_STRUCT_DECLARATION);
-        statements.add(0, STRING_STRUCT_DECLARATION);
-        statements.add(0, LIST_STRUCT_DECLARATION);
-        statements.add(0, ANY_STRUCT_DECLARATION);
-        statements.add(0, PRINT_FUNCTION);
-        statements.add(0, STRINGIFY_FUNCTION);
-        statements.add(0, NANO_TIME_FUNCTION);
+        for (var function : getGlobalFunctions())
+            statements.add(0, function);
+        for (var struct : getGlobalStructs())
+            statements.add(0, struct);
     }
 
     private static TypeExpression type(String name, TypeExpression... params) {
