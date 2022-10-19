@@ -261,7 +261,7 @@ public class NameAnalysis extends AnalysisASTVisitor {
         var genericParameters = typeExpression.getGenericParameters();
         genericParameters.forEach(t -> t.accept(this));
 
-        if (typeExpression.getNameExpr() == null)
+        if (type == null)
             return;
 
         Statement decl;
