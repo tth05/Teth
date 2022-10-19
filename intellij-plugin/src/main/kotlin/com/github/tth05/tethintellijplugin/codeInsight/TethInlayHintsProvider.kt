@@ -38,9 +38,10 @@ class TethInlayHintsProvider : InlayHintsProvider<NoSettings> {
                 analyzeAndParseFile(file)
             }
 
-            val variableDeclaration = ASTUtil.findStatementAtExact(result.unit, element.letKeyword.startOffset)
-                ?.let { it as? VariableDeclaration }
-                ?: return true
+            val variableDeclaration =
+                ASTUtil.findStatementAtExact(result.unit, element.letKeyword?.startOffset ?: return true)
+                    ?.let { it as? VariableDeclaration }
+                    ?: return true
 
             val resolvedType = analyzer.resolvedExpressionType(variableDeclaration.initializerExpr)
                 .takeIf { it != SemanticType.UNRESOLVED } ?: return true

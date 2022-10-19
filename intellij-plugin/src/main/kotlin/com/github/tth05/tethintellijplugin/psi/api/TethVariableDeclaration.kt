@@ -4,7 +4,7 @@ import com.intellij.psi.PsiElement
 
 interface TethVariableDeclaration : TethStatement, TethNameIdentifierOwner {
 
-    val letKeyword: PsiElement
+    val letKeyword: PsiElement?
     val type: TethTypeExpression?
     val initializer: TethExpression
 }

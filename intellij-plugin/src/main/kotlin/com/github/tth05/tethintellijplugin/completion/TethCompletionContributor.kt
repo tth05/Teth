@@ -41,6 +41,7 @@ class TethCompletionContributor : CompletionContributor() {
                     CompletionItem.Type.STRUCT -> AllIcons.Nodes.Class
                     CompletionItem.Type.FIELD -> AllIcons.Nodes.Field
                     CompletionItem.Type.VARIABLE -> AllIcons.Nodes.Variable
+                    CompletionItem.Type.PARAMETER -> AllIcons.Nodes.Parameter
                 }
             )
             .withTailText(tailText, true)

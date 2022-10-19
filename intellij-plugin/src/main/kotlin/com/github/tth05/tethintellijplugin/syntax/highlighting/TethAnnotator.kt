@@ -57,6 +57,7 @@ class TethAnnotator : Annotator {
             .applyIf(file.findElementAt(range.startOffset)?.textMatches("\n") ?: false) {
                 afterEndOfLine()
             }
+            .needsUpdateOnTyping()
             .create()
     }
 }
@@ -146,8 +147,11 @@ private class AnnotatingVisitor(val analyzer: Analyzer, val holder: AnnotationHo
     }
 
     private fun annotateWithColor(span: Span, color: TextAttributesKey) {
-        holder.newSilentAnnotation(HighlightSeverity.TEXT_ATTRIBUTES).range(span.toTextRange())
-            .textAttributes(color).create()
+        holder.newSilentAnnotation(HighlightSeverity.TEXT_ATTRIBUTES)
+            .range(span.toTextRange())
+            .textAttributes(color)
+            .needsUpdateOnTyping()
+            .create()
     }
 }
 

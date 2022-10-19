@@ -8,12 +8,11 @@ import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.descendants
-import com.intellij.psi.util.descendantsOfType
 import com.intellij.psi.util.elementType
 
 class TethVariableDeclarationImpl(node: ASTNode) : TethNamedElement(node), TethVariableDeclaration {
-    override val letKeyword: PsiElement
-        get() = descendants { true }.first { it.elementType == TethTokenTypes.KEYWORD }
+    override val letKeyword: PsiElement?
+        get() = descendants { true }.firstOrNull { it.elementType == TethTokenTypes.KEYWORD }
     override val type: TethTypeExpression?
         get() = findChildByClass(TethTypeExpression::class.java)
     override val initializer: TethExpression
