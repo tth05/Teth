@@ -126,7 +126,7 @@ public class AutoCompletion {
         }
     }
 
-    private static <T extends Statement> void collectDeclarationsFromCollection(List<CompletionItem> results,
+    private <T extends Statement> void collectDeclarationsFromCollection(List<CompletionItem> results,
                                                                                 Collection<T> stack,
                                                                                 int priority,
                                                                                 Predicate<T> predicate) {
@@ -138,25 +138,25 @@ public class AutoCompletion {
         }
     }
 
-    private static void collectPreludeFunctions(List<CompletionItem> results) {
+    private void collectPreludeFunctions(List<CompletionItem> results) {
         for (var f : Prelude.getGlobalFunctions())
             addFunction(results, f, CompletionItem.PRELUDE_PRIORITY);
     }
 
-    private static void collectPreludeStructs(List<CompletionItem> results) {
+    private void collectPreludeStructs(List<CompletionItem> results) {
         for (var s : Prelude.getGlobalStructs())
             addStruct(results, s, CompletionItem.PRELUDE_PRIORITY);
     }
 
-    private static void addFunction(List<CompletionItem> results, FunctionDeclaration function, int priority) {
+    private void addFunction(List<CompletionItem> results, FunctionDeclaration function, int priority) {
         addNamed(results, function, priority);
     }
 
-    private static void addStruct(List<CompletionItem> results, StructDeclaration struct, int priority) {
+    private void addStruct(List<CompletionItem> results, StructDeclaration struct, int priority) {
         addNamed(results, struct, priority);
     }
 
-    private static void addNamed(List<CompletionItem> results, Statement statement, int priority) {
+    private void addNamed(List<CompletionItem> results, Statement statement, int priority) {
         if (!(statement instanceof IHasName named))
             return;
 
@@ -178,7 +178,7 @@ public class AutoCompletion {
         results.add(new CompletionItem(name, getTailText(statement), getTypeText(statement), getType(statement), priority));
     }
 
-    private static CompletionItem.Type getType(Statement statement) {
+    private CompletionItem.Type getType(Statement statement) {
         // TODO: Switch preview disabled
         //noinspection IfCanBeSwitch
         if (statement instanceof FunctionDeclaration)
@@ -195,7 +195,7 @@ public class AutoCompletion {
             throw new IllegalArgumentException("Unknown statement type: " + statement.getClass().getName());
     }
 
-    private static String getTailText(Statement statement) {
+    private String getTailText(Statement statement) {
         if (statement instanceof FunctionDeclaration func) {
             var builder = new ASTDumpBuilder();
             builder.append("(");
@@ -224,7 +224,7 @@ public class AutoCompletion {
         return null;
     }
 
-    private static String getTypeText(Statement statement) {
+    private String getTypeText(Statement statement) {
         if (statement instanceof FunctionDeclaration func && func.getReturnTypeExpr() != null) {
             var builder = new ASTDumpBuilder();
             func.getReturnTypeExpr().dump(builder);
@@ -237,10 +237,17 @@ public class AutoCompletion {
             var builder = new ASTDumpBuilder();
             param.getTypeExpr().dump(builder);
             return builder.toString();
-        } else if (statement instanceof VariableDeclaration var && var.getTypeExpr() != null) {
-            // TODO: Use resolved type when no explicit type is available
+        } else if (statement instanceof VariableDeclaration var) {
             var builder = new ASTDumpBuilder();
-            var.getTypeExpr().dump(builder);
+            if (var.getTypeExpr() != null) {
+                var.getTypeExpr().dump(builder);
+            } else {
+                var type = this.analyzer.resolvedExpressionType(var.getInitializerExpr());
+                if (type == null)
+                    return null;
+
+                builder.append(this.analyzer.getTypeCache().toString(type));
+            }
             return builder.toString();
         }
         return null;
