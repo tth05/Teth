@@ -6,6 +6,7 @@ import com.github.tth05.teth.analyzer.type.SemanticType;
 import com.github.tth05.teth.lang.parser.ASTUtil;
 import com.github.tth05.teth.lang.parser.SourceFileUnit;
 import com.github.tth05.teth.lang.parser.ast.*;
+import com.github.tth05.teth.lang.span.Span;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
 import java.util.*;
@@ -27,41 +28,55 @@ public class AutoCompletion {
 
         var results = new ArrayList<CompletionItem>();
         if (stack.isEmpty()) {
-            collectDeclarationsFromCollection("", results, this.unit.getStatements(), CompletionItem.TOP_LEVEL_PRIORITY, (s) -> s instanceof FunctionDeclaration);
-            collectFromUseStatements("", results, this.unit.getStatements(), CompletionItem.TOP_LEVEL_PRIORITY, (s) -> s instanceof FunctionDeclaration);
+            collectDeclarationsFromCollection(results, this.unit.getStatements(), CompletionItem.TOP_LEVEL_PRIORITY, (s) -> s instanceof FunctionDeclaration);
+            collectFromUseStatements(results, this.unit.getStatements(), CompletionItem.TOP_LEVEL_PRIORITY, (s) -> s instanceof FunctionDeclaration);
+            collectLocals(results, new LinkedList<>(), offset);
             return results;
         }
 
-        var first = stack.pop();
+        var first = stack.peek();
         if (first instanceof IdentifierExpression expr) {
+            // We keep the first element in the stack to allow collectLocals to work correctly
+            stack.pop();
+            var second = stack.peek();
+            stack.push(first);
+
             var text = expr.getValue() == null ? "" : expr.getValue().substring(0, offset - expr.getSpan().offset());
-            if (stack.peek() instanceof TypeExpression || stack.peek() instanceof ObjectCreationExpression) { // Types
-                collectPreludeStructs(text, results);
-                collectDeclarationsFromCollection(text, results, stack, CompletionItem.SCOPE_STACK_PRIORITY, (s) -> s instanceof StructDeclaration);
-                collectDeclarationsFromCollection(text, results, this.unit.getStatements(), CompletionItem.TOP_LEVEL_PRIORITY, (s) -> s instanceof StructDeclaration);
-                collectFromUseStatements(text, results, this.unit.getStatements(), CompletionItem.TOP_LEVEL_PRIORITY, (s) -> s instanceof StructDeclaration);
-            } else if (stack.peek() instanceof MemberAccessExpression memberAccess) { // Members
-                collectMemberAccess(text, results, memberAccess);
+            if (second instanceof TypeExpression ||
+                (second instanceof ObjectCreationExpression objExpr && offset <= Optional.ofNullable(objExpr.getTargetNameExpr().getSpan()).map(Span::offsetEnd).orElse(offset))) { // Types
+                collectTypes(results, stack);
+            } else if (second instanceof MemberAccessExpression memberAccess) { // Members
+                collectMemberAccess(results, memberAccess);
             } else { // Just an identifier
-                collectIdentifier(text, results, stack);
+                collectIdentifier(results, stack, offset);
             }
         } else if (first instanceof MemberAccessExpression memberAccess) {
-            collectMemberAccess("", results, memberAccess);
+            collectMemberAccess(results, memberAccess);
         } else if (first instanceof BlockStatement) {
-            collectIdentifier("", results, stack);
+            collectIdentifier(results, stack, offset);
+        } else if (first instanceof TypeExpression) {
+            collectTypes(results, stack);
         }
 
         return results;
     }
 
-    private void collectIdentifier(String text, List<CompletionItem> results, Deque<Statement> stack) {
-        collectPreludeFunctions(text, results);
-        collectDeclarationsFromCollection(text, results, stack, CompletionItem.SCOPE_STACK_PRIORITY, (s) -> s instanceof FunctionDeclaration f && !f.isInstanceFunction());
-        collectDeclarationsFromCollection(text, results, this.unit.getStatements(), CompletionItem.TOP_LEVEL_PRIORITY, (s) -> s instanceof FunctionDeclaration);
-        collectFromUseStatements(text, results, this.unit.getStatements(), CompletionItem.TOP_LEVEL_PRIORITY, (s) -> s instanceof FunctionDeclaration);
+    private void collectTypes(ArrayList<CompletionItem> results, ArrayDeque<Statement> stack) {
+        collectPreludeStructs(results);
+        collectDeclarationsFromCollection(results, stack, CompletionItem.SCOPE_STACK_PRIORITY, (s) -> s instanceof StructDeclaration);
+        collectDeclarationsFromCollection(results, this.unit.getStatements(), CompletionItem.TOP_LEVEL_PRIORITY, (s) -> s instanceof StructDeclaration);
+        collectFromUseStatements(results, this.unit.getStatements(), CompletionItem.TOP_LEVEL_PRIORITY, (s) -> s instanceof StructDeclaration);
     }
 
-    private void collectMemberAccess(String text, List<CompletionItem> results, MemberAccessExpression memberAccess) {
+    private void collectIdentifier(List<CompletionItem> results, Deque<Statement> stack, int offset) {
+        collectPreludeFunctions(results);
+        collectDeclarationsFromCollection(results, stack, CompletionItem.SCOPE_STACK_PRIORITY, (s) -> s instanceof FunctionDeclaration f && !f.isInstanceFunction());
+        collectDeclarationsFromCollection(results, this.unit.getStatements(), CompletionItem.TOP_LEVEL_PRIORITY, (s) -> s instanceof FunctionDeclaration);
+        collectFromUseStatements(results, this.unit.getStatements(), CompletionItem.TOP_LEVEL_PRIORITY, (s) -> s instanceof FunctionDeclaration);
+        collectLocals(results, stack, offset);
+    }
+
+    private void collectMemberAccess(List<CompletionItem> results, MemberAccessExpression memberAccess) {
         var type = this.analyzer.resolvedExpressionType(memberAccess.getTarget());
         if (type == SemanticType.UNRESOLVED)
             return;
@@ -69,11 +84,34 @@ public class AutoCompletion {
         if (!(this.analyzer.getTypeCache().getDeclaration(type) instanceof StructDeclaration structDeclaration))
             return;
 
-        collectDeclarationsFromCollection(text, results, structDeclaration.getFields(), CompletionItem.LOCALS_PRIORITY, (s) -> true);
-        collectDeclarationsFromCollection(text, results, structDeclaration.getFunctions(), CompletionItem.LOCALS_PRIORITY, (s) -> true);
+        collectDeclarationsFromCollection(results, structDeclaration.getFields(), CompletionItem.LOCALS_PRIORITY, (s) -> true);
+        collectDeclarationsFromCollection(results, structDeclaration.getFunctions(), CompletionItem.LOCALS_PRIORITY, (s) -> true);
     }
 
-    private void collectFromUseStatements(String text, List<CompletionItem> results, List<Statement> allStatements, int priority, Predicate<Statement> predicate) {
+    private void collectLocals(List<CompletionItem> results, Deque<Statement> stack, int offset) {
+        for (var statement : stack) {
+            if (statement instanceof FunctionDeclaration function) {
+                function.getParameters().forEach(p -> addNamed(results, p, CompletionItem.LOCALS_PRIORITY));
+                return;
+            } else if (statement instanceof LoopStatement loop) {
+                loop.getVariableDeclarations().forEach(v -> addNamed(results, v, CompletionItem.LOCALS_PRIORITY));
+            } else if (statement instanceof BlockStatement block) {
+                block.getStatements().forEach(s -> {
+                    if (s instanceof VariableDeclaration variable && variable.getSpan().offset() < offset)
+                        addNamed(results, variable, CompletionItem.LOCALS_PRIORITY);
+                });
+            }
+        }
+
+        for (var statement : this.unit.getStatements()) {
+            if (!(statement instanceof VariableDeclaration) || statement.getSpan().offset() > offset)
+                continue;
+
+            addNamed(results, statement, CompletionItem.LOCALS_PRIORITY);
+        }
+    }
+
+    private void collectFromUseStatements(List<CompletionItem> results, List<Statement> allStatements, int priority, Predicate<Statement> predicate) {
         for (var statement : allStatements) {
             if (!(statement instanceof UseStatement useStatement))
                 continue;
@@ -83,13 +121,12 @@ public class AutoCompletion {
                 if (ref == null || !predicate.test(ref))
                     continue;
 
-                addNamed(text, results, ref, priority);
+                addNamed(results, ref, priority);
             }
         }
     }
 
-    private static <T extends Statement> void collectDeclarationsFromCollection(String text,
-                                                                                List<CompletionItem> results,
+    private static <T extends Statement> void collectDeclarationsFromCollection(List<CompletionItem> results,
                                                                                 Collection<T> stack,
                                                                                 int priority,
                                                                                 Predicate<T> predicate) {
@@ -97,48 +134,63 @@ public class AutoCompletion {
             if (!predicate.test(statement))
                 continue;
 
-            addNamed(text, results, statement, priority);
+            addNamed(results, statement, priority);
         }
     }
 
-    private static void collectPreludeFunctions(String text, List<CompletionItem> results) {
+    private static void collectPreludeFunctions(List<CompletionItem> results) {
         for (var f : Prelude.getGlobalFunctions())
-            addFunction(text, results, f, CompletionItem.PRELUDE_PRIORITY);
+            addFunction(results, f, CompletionItem.PRELUDE_PRIORITY);
     }
 
-    private static void collectPreludeStructs(String text, List<CompletionItem> results) {
+    private static void collectPreludeStructs(List<CompletionItem> results) {
         for (var s : Prelude.getGlobalStructs())
-            addStruct(text, results, s, CompletionItem.PRELUDE_PRIORITY);
+            addStruct(results, s, CompletionItem.PRELUDE_PRIORITY);
     }
 
-    private static void addFunction(String text, List<CompletionItem> results, FunctionDeclaration function, int priority) {
-        addNamed(text, results, function, priority);
+    private static void addFunction(List<CompletionItem> results, FunctionDeclaration function, int priority) {
+        addNamed(results, function, priority);
     }
 
-    private static void addStruct(String text, List<CompletionItem> results, StructDeclaration struct, int priority) {
-        addNamed(text, results, struct, priority);
+    private static void addStruct(List<CompletionItem> results, StructDeclaration struct, int priority) {
+        addNamed(results, struct, priority);
     }
 
-    private static void addNamed(String text, List<CompletionItem> results, Statement statement, int priority) {
+    private static void addNamed(List<CompletionItem> results, Statement statement, int priority) {
         if (!(statement instanceof IHasName named))
             return;
 
         var name = named.getNameExpr().getValue();
-        if (name == null || !name.startsWith(text))
+        if (name == null)
             return;
+
+        for (int i = results.size() - 1; i >= 0; i--) {
+            var item = results.get(i);
+            if (!item.text().equals(name))
+                continue;
+
+            if (item.priority() <= priority)
+                results.set(i, new CompletionItem(name, getTailText(statement), getTypeText(statement), getType(statement), priority));
+
+            return;
+        }
 
         results.add(new CompletionItem(name, getTailText(statement), getTypeText(statement), getType(statement), priority));
     }
 
     private static CompletionItem.Type getType(Statement statement) {
+        // TODO: Switch preview disabled
+        //noinspection IfCanBeSwitch
         if (statement instanceof FunctionDeclaration)
             return CompletionItem.Type.FUNCTION;
         else if (statement instanceof StructDeclaration)
             return CompletionItem.Type.STRUCT;
         else if (statement instanceof StructDeclaration.FieldDeclaration)
             return CompletionItem.Type.FIELD;
-        else if (statement instanceof VariableDeclaration || statement instanceof FunctionDeclaration.ParameterDeclaration)
+        else if (statement instanceof VariableDeclaration)
             return CompletionItem.Type.VARIABLE;
+        else if (statement instanceof FunctionDeclaration.ParameterDeclaration)
+            return CompletionItem.Type.PARAMETER;
         else
             throw new IllegalArgumentException("Unknown statement type: " + statement.getClass().getName());
     }

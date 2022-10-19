@@ -12,6 +12,7 @@ public record CompletionItem(String text, String tailText, String typeText,
         STRUCT,
         FUNCTION,
         FIELD,
-        VARIABLE;
+        VARIABLE,
+        PARAMETER;
     }
 }
