@@ -23,7 +23,7 @@ public final class StructDeclaration extends Statement implements ITopLevelDecla
         this(span, containingUnit, nameExpr, genericParameters, fields, functions, false);
     }
 
-    public StructDeclaration(Span span,  SourceFileUnit containingUnit, IdentifierExpression nameExpr, List<GenericParameterDeclaration> genericParameters, List<FieldDeclaration> fields, List<FunctionDeclaration> functions, boolean intrinsic) {
+    public StructDeclaration(Span span, SourceFileUnit containingUnit, IdentifierExpression nameExpr, List<GenericParameterDeclaration> genericParameters, List<FieldDeclaration> fields, List<FunctionDeclaration> functions, boolean intrinsic) {
         super(span);
         this.containingUnit = containingUnit;
         this.nameExpr = nameExpr;

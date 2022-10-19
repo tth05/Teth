@@ -69,13 +69,13 @@ public class NameAnalysis extends AnalysisASTVisitor {
 
         for (var decl : topLevelDeclarations) {
             if (decl instanceof StructDeclaration structDeclaration) {
-                this.declarationStack.beginScope(false);
+                this.declarationStack.beginStructScope(structDeclaration);
                 structDeclaration.getGenericParameters().forEach(this::addDeclaration);
                 structDeclaration.getFields().forEach(f -> visit(f.getTypeExpr()));
                 structDeclaration.getFunctions().forEach(this::visitFunctionDeclarationHeader);
                 this.declarationStack.endScope();
             } else if (decl instanceof FunctionDeclaration functionDeclaration) {
-                this.declarationStack.beginScope(false);
+                this.declarationStack.beginFunctionScope(functionDeclaration);
                 visitFunctionDeclarationHeader(functionDeclaration);
                 this.declarationStack.endScope();
             } else if (decl instanceof UseStatement) {
@@ -133,9 +133,8 @@ public class NameAnalysis extends AnalysisASTVisitor {
         if (declaration.isIntrinsic())
             return;
 
-        var willBeNested = this.currentFunctionStack.size() > 1;
         // Add nested functions to outer scope, as if this were a variable declaration
-        if (willBeNested)
+        if (isInFunction() && !declaration.isInstanceFunction())
             addDeclaration(declaration);
 
         beginFunctionDeclaration(declaration);
@@ -172,6 +171,9 @@ public class NameAnalysis extends AnalysisASTVisitor {
 
         validateNoDuplicates(declaration.getGenericParameters(), "Duplicate generic parameter name");
         validateNoDuplicates(BiIterator.of(declaration.getFields(), declaration.getFunctions()), "Duplicate member name");
+
+        if (isInFunction())
+            addDeclaration(declaration);
 
         this.declarationStack.beginStructScope(declaration);
         { // Don't want to visit struct name here
@@ -240,7 +242,7 @@ public class NameAnalysis extends AnalysisASTVisitor {
 
     @Override
     public void visit(BlockStatement statement) {
-        this.declarationStack.beginScope(true);
+        this.declarationStack.beginSubScope();
         super.visit(statement);
         this.declarationStack.endScope();
     }
@@ -329,8 +331,8 @@ public class NameAnalysis extends AnalysisASTVisitor {
         declaration.getGenericParameters().forEach(this::addDeclaration);
         declaration.getParameters().forEach(this::addDeclaration);
 
-        var currentStruct = this.declarationStack.getEnclosingStruct();
-        if (currentStruct != null) {
+        if (declaration.isInstanceFunction()) {
+            var currentStruct = this.declarationStack.getEnclosingStruct();
             var selfParameter = new FunctionDeclaration.ParameterDeclaration(
                     null,
                     new TypeExpression(null,
@@ -349,9 +351,6 @@ public class NameAnalysis extends AnalysisASTVisitor {
             this.resolvedReferences.put(selfParameter.getTypeExpr(), currentStruct);
         }
 
-        // Add self to inner scope, to allow nested functions to access themselves
-        if (isInNestedFunction())
-            addDeclaration(declaration);
         declaration.getBody().accept(this);
     }
 
@@ -388,8 +387,12 @@ public class NameAnalysis extends AnalysisASTVisitor {
 
     private void beginFunctionDeclaration(FunctionDeclaration declaration) {
         this.currentFunctionStack.addLast(declaration);
-        this.declarationStack.beginScope(declaration.isInstanceFunction());
+        this.declarationStack.beginFunctionScope(declaration == GLOBAL_FUNCTION ? null : declaration);
         this.functionLocalsCount.put(declaration, 0);
+    }
+
+    private boolean isInFunction() {
+        return this.currentFunctionStack.size() > 1;
     }
 
     private boolean isInNestedFunction() {

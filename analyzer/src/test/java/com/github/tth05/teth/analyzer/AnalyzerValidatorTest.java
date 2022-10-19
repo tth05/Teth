@@ -289,4 +289,31 @@ public class AnalyzerValidatorTest extends AbstractAnalyzerTest {
         assertEquals(1, problems.size());
         assertEquals("Generic parameter cannot have generic parameters", problems.get(0).message());
     }
+
+    @Test
+    public void testNestedScopeResolution() {
+        var problems = analyze("""
+                fn inner() {
+                    inner()
+                    fn inner2() {
+                        inner() inner2()
+                        fn inner3() {
+                            inner() inner2() inner3()
+                            struct Inner {
+                                 fn inner4() {
+                                    let a: Inner= new Inner()
+                                    self.inner4()
+                                    a.inner4()
+                                    inner() inner2() inner3()
+                                 }
+                            }
+                        }
+                        inner() inner2() inner3()
+                    }
+                    inner() inner2()
+                }
+                """);
+
+        assertTrue(problems.isEmpty());
+    }
 }

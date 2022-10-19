@@ -1,5 +1,7 @@
 package com.github.tth05.teth.analyzer;
 
+import com.github.tth05.teth.lang.parser.ast.FunctionDeclaration;
+import com.github.tth05.teth.lang.parser.ast.IHasName;
 import com.github.tth05.teth.lang.parser.ast.Statement;
 import com.github.tth05.teth.lang.parser.ast.StructDeclaration;
 
@@ -16,14 +18,22 @@ public class DeclarationStack {
         if (ident == null)
             return null;
 
+        var pastSubScope = false;
         for (var it = this.stack.descendingIterator(); it.hasNext(); ) {
             var scope = it.next();
-            var decl = scope.declarations.get(ident);
-            if (decl != null)
-                return decl;
+            if (!pastSubScope) {
+                var decl = scope.declarations.get(ident);
+                if (decl != null)
+                    return decl;
 
-            if (!scope.subScope)
-                break;
+                if (!scope.subScope)
+                    pastSubScope = true;
+            }
+
+            var owner = scope.owner;
+            if (pastSubScope && owner != null && ident.equals(owner.getNameExpr().getValue()) && // Check name matches
+                (!(owner instanceof FunctionDeclaration func) || !func.isInstanceFunction())) // Filter instance functions
+                return (Statement) owner;
         }
 
         // Check top level declarations
@@ -32,28 +42,33 @@ public class DeclarationStack {
     }
 
     public StructDeclaration getEnclosingStruct() {
-        for (var it = this.stack.descendingIterator(); it.hasNext(); ) {
+        var it = this.stack.descendingIterator();
+        while (it.hasNext()) {
             var scope = it.next();
-            if (scope.struct != null)
-                return scope.struct;
+            if (scope.owner instanceof StructDeclaration s)
+                return s;
 
             if (!scope.subScope)
                 break;
         }
 
-        return null;
+        return (it.hasNext() && it.next().owner instanceof StructDeclaration s) ? s : null;
     }
 
     public void addDeclaration(String value, Statement declaration) {
         this.stack.getLast().declarations.put(value, declaration);
     }
 
-    public void beginScope(boolean subScope) {
-        this.stack.addLast(new Scope(null, subScope));
+    public void beginSubScope() {
+        this.stack.addLast(new Scope(null, true));
     }
 
     public void beginStructScope(StructDeclaration struct) {
         this.stack.addLast(new Scope(struct, false));
+    }
+
+    public void beginFunctionScope(FunctionDeclaration function) {
+        this.stack.addLast(new Scope(function, false));
     }
 
     public void endScope() {
@@ -66,11 +81,11 @@ public class DeclarationStack {
     private static final class Scope {
 
         private final Map<String, Statement> declarations = new HashMap<>();
-        private final StructDeclaration struct;
+        private final IHasName owner;
         private final boolean subScope;
 
-        private Scope(StructDeclaration struct, boolean subScope) {
-            this.struct = struct;
+        private Scope(IHasName owner, boolean subScope) {
+            this.owner = owner;
             this.subScope = subScope;
         }
     }
