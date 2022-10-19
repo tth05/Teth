@@ -235,8 +235,11 @@ public class Parser {
 
     private VariableDeclaration parseVariableDeclaration(AnchorUnion anchorSet) {
         var firstSpan = consume(false).span();
+        var lastSpan = firstSpan;
         consumeLineBreaks();
         var name = expectIdentifier(anchorSet.union(AnchorSets.FIRST_SET_LET_STATEMENT), () -> "Expected variable name");
+        if (!name.isInvalid())
+            lastSpan = name.span();
         consumeLineBreaks();
 
         TypeExpression type = null;
@@ -244,19 +247,25 @@ public class Parser {
             consume(false);
             consumeLineBreaks();
             type = parseType(anchorSet.union(AnchorSets.MIDDLE_SET_LET_STATEMENT));
+            if (type.getSpan() != null)
+                lastSpan = type.getSpan();
             consumeLineBreaks();
         }
 
         var equalToken = expectToken(TokenType.EQUAL, anchorSet.union(AnchorSets.FIRST_SET_EXPRESSION), () -> "Expected '=' after variable name");
+        if (!equalToken.isInvalid())
+            lastSpan = equalToken.span();
 
         Expression initializer;
         if (!equalToken.isInvalid())
             initializer = parseExpression(anchorSet);
         else
-            initializer = new GarbageExpression(name.span() == null ? firstSpan : name.span());
+            initializer = new GarbageExpression(this.stream.peek().span());
 
+        if (initializer.getSpan() != null)
+            lastSpan = initializer.getSpan();
         return new VariableDeclaration(
-                Span.of(firstSpan, initializer.getSpan()),
+                Span.of(firstSpan, lastSpan),
                 type, new IdentifierExpression(name.span(), name.value()), initializer
         );
     }
@@ -524,9 +533,8 @@ public class Parser {
     }
 
     private Expression parseMemberAccessExpression(AnchorUnion anchorSet, Expression target) {
-        consume(false);
+        var lastSpan = consume(false).span();
 
-        var lastSpan = this.stream.peek().span();
         var name = expectIdentifier(anchorSet, () -> "Expected member name after '.'");
         if (!name.isInvalid())
             lastSpan = name.span();
