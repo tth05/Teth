@@ -245,7 +245,6 @@ public class Parser {
         TypeExpression type = null;
         if (this.stream.peek().is(TokenType.COLON)) {
             consume(false);
-            consumeLineBreaks();
             type = parseType(anchorSet.union(AnchorSets.MIDDLE_SET_LET_STATEMENT));
             if (type.getSpan() != null)
                 lastSpan = type.getSpan();
