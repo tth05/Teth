@@ -26,6 +26,10 @@ public class AutoCompletion {
         var stack = new ArrayDeque<Statement>();
         ASTUtil.walkNodesAtOffset(this.unit.getStatements(), offset, true, stack::push);
 
+        // Allows for completion on type `let a: l`, ignoring the garbage initializer expression
+        if (stack.peek() instanceof GarbageExpression garbage && garbage.getSpan().offset() == offset)
+            stack.pop();
+
         var results = new ArrayList<CompletionItem>();
         if (stack.isEmpty()) {
             collectDeclarationsFromCollection(results, this.unit.getStatements(), CompletionItem.TOP_LEVEL_PRIORITY, (s) -> s instanceof FunctionDeclaration);
@@ -127,9 +131,9 @@ public class AutoCompletion {
     }
 
     private <T extends Statement> void collectDeclarationsFromCollection(List<CompletionItem> results,
-                                                                                Collection<T> stack,
-                                                                                int priority,
-                                                                                Predicate<T> predicate) {
+                                                                         Collection<T> stack,
+                                                                         int priority,
+                                                                         Predicate<T> predicate) {
         for (var statement : stack) {
             if (!predicate.test(statement))
                 continue;
