@@ -2,27 +2,19 @@ package com.github.tth05.tethintellijplugin.run
 
 import com.github.tth05.teth.bytecode.compiler.Compiler
 import com.github.tth05.teth.bytecodeInterpreter.Interpreter
-import com.github.tth05.teth.lang.parser.Parser
-import com.github.tth05.teth.lang.source.InMemorySource
 import com.github.tth05.tethintellijplugin.syntax.IntellijModuleLoader
 import com.github.tth05.tethintellijplugin.syntax.findPsiFileByPath
 import com.github.tth05.tethintellijplugin.syntax.parse
+import com.intellij.execution.CantRunException
 import com.intellij.execution.DefaultExecutionResult
-import com.intellij.execution.ExecutionException
 import com.intellij.execution.Executor
-import com.intellij.execution.configurations.LocatableConfigurationBase
-import com.intellij.execution.configurations.RunConfiguration
-import com.intellij.execution.configurations.RunConfigurationOptions
-import com.intellij.execution.configurations.RunProfileState
-import com.intellij.execution.configurations.RuntimeConfigurationError
-import com.intellij.execution.configurations.RuntimeConfigurationWarning
+import com.intellij.execution.configurations.*
 import com.intellij.execution.filters.TextConsoleBuilderFactory
-import com.intellij.execution.process.*
+import com.intellij.execution.process.ProcessTerminatedListener
 import com.intellij.execution.runners.ExecutionEnvironment
 import com.intellij.openapi.options.SettingsEditor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.LocalFileSystem
-import com.intellij.psi.PsiManager
 import com.intellij.util.text.nullize
 import org.jdom.Element
 
@@ -34,17 +26,17 @@ class TethRunConfiguration(
 
     override fun getState(executor: Executor, environment: ExecutionEnvironment): RunProfileState {
         return RunProfileState { _, _ ->
-            if (filePath == null) throw ExecutionException("File path is not set")
+            if (filePath == null) throw CantRunException("File path is not set")
 
             val parserResult =
-                parse(project.findPsiFileByPath(filePath!!) ?: throw ExecutionException("File not found"))
-            if (parserResult.hasProblems()) throw ExecutionException("File has problems")
+                parse(project.findPsiFileByPath(filePath!!) ?: throw CantRunException("File not found"))
+            if (parserResult.hasProblems()) throw CantRunException("File has problems")
 
             val compiler = Compiler()
             compiler.setEntryPoint(parserResult.unit)
             compiler.setModuleLoader(IntellijModuleLoader(project))
             val compilationResult = compiler.compile()
-            if (compilationResult.hasProblems()) throw ExecutionException("Compilation failed")
+            if (compilationResult.hasProblems()) throw CantRunException("Compilation failed")
 
             val processHandler = InterpreterProcessHandler(Interpreter(compilationResult.program))
             ProcessTerminatedListener.attach(processHandler)

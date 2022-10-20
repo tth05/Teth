@@ -241,6 +241,13 @@ public class NameAnalysis extends AnalysisASTVisitor {
     }
 
     @Override
+    public void visit(LoopStatement statement) {
+        this.declarationStack.beginSubScope();
+        super.visit(statement);
+        this.declarationStack.endScope();
+    }
+
+    @Override
     public void visit(BlockStatement statement) {
         this.declarationStack.beginSubScope();
         super.visit(statement);
