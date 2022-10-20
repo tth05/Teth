@@ -8,7 +8,7 @@ import javax.swing.Icon
 
 class TethLanguageFileType : LanguageFileType(TethLanguage.INSTANCE) {
 
-    override fun getName(): String = "Teth File"
+    override fun getName(): String = "TETH"
 
     override fun getDescription(): String = "Teth language file"
 

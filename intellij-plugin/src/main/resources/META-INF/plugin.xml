@@ -7,9 +7,10 @@
     <vendor>tth05</vendor>
 
     <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.java</depends>
 
     <extensions defaultExtensionNs="com.intellij">
-        <fileType name="Teth File"
+        <fileType name="TETH"
                   implementationClass="com.github.tth05.tethintellijplugin.TethLanguageFileType"
                   fieldName="INSTANCE"
                   language="Teth"
@@ -20,7 +21,7 @@
         <lang.syntaxHighlighter language="Teth"
                                 implementationClass="com.github.tth05.tethintellijplugin.syntax.highlighting.TethSyntaxHighlighter"/>
         <lang.braceMatcher language="Teth"
-                           implementationClass="com.github.tth05.tethintellijplugin.TethBraceMatcher"/>
+                           implementationClass="com.github.tth05.tethintellijplugin.syntax.brace.TethPairedBraceMatcher"/>
         <lang.commenter language="Teth"
                         implementationClass="com.github.tth05.tethintellijplugin.syntax.TethCommenter"/>
         <lang.namesValidator language="Teth"
@@ -33,6 +34,8 @@
                                  implementationClass="com.github.tth05.tethintellijplugin.psi.reference.TethFindUsagesProvider"/>
         <lang.documentationProvider language="Teth"
                                     implementationClass="com.github.tth05.tethintellijplugin.render.TethDocumentationProvider"/>
+        <typedHandler implementation="com.github.tth05.tethintellijplugin.syntax.brace.TethBraceMatchingTypedHandler"/>
+
         <codeInsight.inlayProvider language="Teth"
                                    implementationClass="com.github.tth05.tethintellijplugin.codeInsight.TethInlayHintsProvider"/>
 

@@ -23,9 +23,10 @@ class TethSyntaxHighlighter : SyntaxHighlighterBase() {
         TethTokenTypes.STRING_LITERAL -> STRING_VALUE_KEYS
         TethTokenTypes.DOUBLE, TethTokenTypes.LONG -> NUMBER_VALUE_KEYS
         TethTokenTypes.SEPARATOR, TethTokenTypes.L_CURLY_PAREN, TethTokenTypes.R_CURLY_PAREN, TethTokenTypes.L_PAREN,
-        TethTokenTypes.R_PAREN, TethTokenTypes.L_SQUARE_BRACKET, TethTokenTypes.R_SQUARE_BRACKET -> SEPARATOR_KEYS
+        TethTokenTypes.R_PAREN, TethTokenTypes.L_SQUARE_BRACKET, TethTokenTypes.R_SQUARE_BRACKET,
+        TethTokenTypes.COMMA -> SEPARATOR_KEYS
 
-        TethTokenTypes.OPERATOR -> OPERATOR_KEYS
+        TethTokenTypes.OPERATOR, TethTokenTypes.LESS, TethTokenTypes.GREATER, TethTokenTypes.LESS_PIPE -> OPERATOR_KEYS
         TokenType.BAD_CHARACTER -> BAD_CHARACTER_KEYS
         else -> TextAttributesKey.EMPTY_ARRAY
     }

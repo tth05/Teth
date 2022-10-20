@@ -19,8 +19,6 @@ import com.intellij.psi.impl.source.tree.PsiCommentImpl
 import com.intellij.psi.tree.IFileElementType
 import com.intellij.psi.tree.TokenSet
 
-//TODO:
-// - Auto-completion
 class TethParserDefinition : ParserDefinition {
     override fun createLexer(project: Project?): Lexer = TethLexer()
 

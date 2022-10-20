@@ -1,4 +1,4 @@
-package com.github.tth05.tethintellijplugin
+package com.github.tth05.tethintellijplugin.syntax.brace
 
 import com.github.tth05.tethintellijplugin.syntax.TethTokenTypes
 import com.intellij.lang.BracePair
@@ -17,6 +17,8 @@ class TethBraceMatcher : PairedBraceMatcher {
         val PAIRS= arrayOf(
             BracePair(TethTokenTypes.L_PAREN, TethTokenTypes.R_PAREN, false),
             BracePair(TethTokenTypes.L_SQUARE_BRACKET, TethTokenTypes.R_SQUARE_BRACKET, false),
+            BracePair(TethTokenTypes.LESS_PIPE, TethTokenTypes.GREATER, false),
+            BracePair(TethTokenTypes.LESS, TethTokenTypes.GREATER, false),
             BracePair(TethTokenTypes.L_CURLY_PAREN, TethTokenTypes.R_CURLY_PAREN, true),
         )
     }

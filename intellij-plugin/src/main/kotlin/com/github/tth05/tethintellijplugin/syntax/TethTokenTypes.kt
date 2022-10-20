@@ -16,6 +16,10 @@ object TethTokenTypes {
     val R_PAREN = TethTokenType("R_PAREN")
     val L_SQUARE_BRACKET = TethTokenType("L_SQUARE_BRACKET")
     val R_SQUARE_BRACKET = TethTokenType("R_SQUARE_BRACKET")
+    val LESS = TethTokenType("LESS")
+    val LESS_PIPE = TethTokenType("LESS_PIPE")
+    val GREATER = TethTokenType("GREATER")
+    val COMMA = TethTokenType("COMMA")
     val STRING_LITERAL = TethTokenType("String literal")
     val DOUBLE = TethTokenType("Double literal")
     val LONG = TethTokenType("Long literal")
@@ -32,8 +36,7 @@ object TethTokenTypes {
             TokenType.KEYWORD_LOOP, TokenType.KEYWORD_STRUCT, TokenType.KEYWORD_NEW, TokenType.KEYWORD_RETURN,
             TokenType.KEYWORD_USE -> KEYWORD
 
-            TokenType.COLON, TokenType.COMMA, TokenType.DOT, TokenType.LESS_PIPE, TokenType.STRING_LITERAL_CODE_END,
-            TokenType.STRING_LITERAL_CODE_START -> SEPARATOR
+            TokenType.COLON, TokenType.DOT, TokenType.STRING_LITERAL_CODE_END, TokenType.STRING_LITERAL_CODE_START -> SEPARATOR
 
             TokenType.L_CURLY_PAREN -> L_CURLY_PAREN
             TokenType.R_CURLY_PAREN -> R_CURLY_PAREN
@@ -41,10 +44,14 @@ object TethTokenTypes {
             TokenType.R_PAREN -> R_PAREN
             TokenType.L_SQUARE_BRACKET -> L_SQUARE_BRACKET
             TokenType.R_SQUARE_BRACKET -> R_SQUARE_BRACKET
+            TokenType.LESS -> LESS
+            TokenType.GREATER -> GREATER
+            TokenType.LESS_PIPE -> LESS_PIPE
+            TokenType.COMMA -> COMMA
 
-            TokenType.AMPERSAND_AMPERSAND, TokenType.EQUAL, TokenType.GREATER_EQUAL, TokenType.GREATER, TokenType.LESS,
-            TokenType.LESS_EQUAL, TokenType.EQUAL_EQUAL, TokenType.PIPE_PIPE, TokenType.NOT_EQUAL, TokenType.MINUS,
-            TokenType.PLUS, TokenType.MULTIPLY, TokenType.SLASH, TokenType.POW, TokenType.NOT -> OPERATOR
+            TokenType.AMPERSAND_AMPERSAND, TokenType.EQUAL, TokenType.GREATER_EQUAL, TokenType.LESS_EQUAL,
+            TokenType.EQUAL_EQUAL, TokenType.PIPE_PIPE, TokenType.NOT_EQUAL, TokenType.MINUS, TokenType.PLUS,
+            TokenType.MULTIPLY, TokenType.SLASH, TokenType.POW, TokenType.NOT -> OPERATOR
 
             TokenType.COMMENT -> COMMENT
             TokenType.WHITESPACE, TokenType.LINE_BREAK -> com.intellij.psi.TokenType.WHITE_SPACE
