@@ -367,6 +367,7 @@ public class Compiler {
                 case OP_SUBTRACT -> this.currentFunctionInsn.add(new LD_SUB_Insn());
                 case OP_MULTIPLY -> this.currentFunctionInsn.add(new LD_MUL_Insn());
                 case OP_DIVIDE -> this.currentFunctionInsn.add(new LD_DIV_Insn());
+                case OP_POW -> this.currentFunctionInsn.add(new LD_POW_Insn());
                 case OP_LESS -> this.currentFunctionInsn.add(new LD_LESS_Insn());
                 case OP_LESS_EQUAL -> this.currentFunctionInsn.add(new LD_LESS_EQUAL_Insn());
                 case OP_GREATER -> this.currentFunctionInsn.add(new LD_GREATER_Insn());

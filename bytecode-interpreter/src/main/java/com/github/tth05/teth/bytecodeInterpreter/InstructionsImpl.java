@@ -149,6 +149,18 @@ public class InstructionsImpl {
                     else
                         interpreter.push(leftNum.longValue() / rightNum.longValue());
                 }
+                case OpCodes.LD_POW -> {
+                    var left = interpreter.pop();
+                    var right = interpreter.pop();
+                    boolean useDouble = validateLongDoubleOperands(left, right);
+                    var leftNum = (Number) right;
+                    var rightNum = (Number) left;
+
+                    if (useDouble)
+                        interpreter.push(Math.pow(leftNum.doubleValue(), rightNum.doubleValue()));
+                    else
+                        interpreter.push((long) Math.pow(leftNum.longValue(), rightNum.longValue()));
+                }
                 case OpCodes.L_CONST -> {
                     var value = ((L_CONST_Insn) insn).getValue();
                     interpreter.push(value);

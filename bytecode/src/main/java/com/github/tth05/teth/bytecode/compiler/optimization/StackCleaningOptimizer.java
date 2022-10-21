@@ -26,7 +26,7 @@ public class StackCleaningOptimizer implements IOptimizer, OpCodes {
             var instruction = instructions.get(i);
             switch (instruction.getOpCode()) {
                 // 2 -> 1
-                case LD_ADD, LD_SUB, LD_MUL, LD_DIV, LD_EQUAL, LD_LESS, LD_LESS_EQUAL, LD_GREATER, LD_GREATER_EQUAL, B_OR, B_AND -> {
+                case LD_ADD, LD_SUB, LD_MUL, LD_DIV, LD_POW, LD_EQUAL, LD_LESS, LD_LESS_EQUAL, LD_GREATER, LD_GREATER_EQUAL, B_OR, B_AND -> {
                     unusedStackValues.pop();
                     unusedStackValues.pop();
                     unusedStackValues.push(new Marker(i, instruction));
@@ -191,7 +191,7 @@ public class StackCleaningOptimizer implements IOptimizer, OpCodes {
     private static int getPopCount(IInstrunction instruction) {
         return switch (instruction.getOpCode()) {
             // 2 -> 1
-            case LD_ADD, LD_SUB, LD_MUL, LD_DIV, LD_EQUAL, LD_LESS, LD_LESS_EQUAL, LD_GREATER, LD_GREATER_EQUAL,
+            case LD_ADD, LD_SUB, LD_MUL, LD_DIV, LD_POW, LD_EQUAL, LD_LESS, LD_LESS_EQUAL, LD_GREATER, LD_GREATER_EQUAL,
                     B_OR, B_AND -> 2;
             // 2 -> 0
             case STORE_MEMBER -> 2;
@@ -208,8 +208,7 @@ public class StackCleaningOptimizer implements IOptimizer, OpCodes {
             // 0 -> 1
             case S_CONST, L_CONST, D_CONST, B_CONST, CREATE_LIST, CREATE_OBJECT, LOAD_LOCAL, DUP -> 0;
             // 0 -> 0
-            case JUMP -> 0;
-            case EXIT -> 0;
+            case JUMP, EXIT -> 0;
             // INVOKE
             case INVOKE -> ((PlaceholderInvokeInsn) instruction).getParamCount();
             case INVOKE_INTRINSIC -> {

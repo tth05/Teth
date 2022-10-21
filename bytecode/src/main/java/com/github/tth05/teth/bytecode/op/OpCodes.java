@@ -39,7 +39,7 @@ public interface OpCodes {
      * value1, value2 -> result
      * </code></pre>
      */
-    byte LD_ADD = 1;
+    byte LD_ADD = LD_NEGATE + 1;
     /**
      * Subtracts two longs/doubles. If any operand is a double, the result is a double.
      * <br>
@@ -48,7 +48,7 @@ public interface OpCodes {
      * value1, value2 -> result
      * </code></pre>
      */
-    byte LD_SUB = 27;
+    byte LD_SUB = LD_ADD + 1;
     /**
      * Multiplies two longs/doubles.  If any operand is a double, the result is a double.
      * <br>
@@ -57,7 +57,7 @@ public interface OpCodes {
      * value1, value2 -> result
      * </code></pre>
      */
-    byte LD_MUL = 2;
+    byte LD_MUL = LD_SUB + 1;
     /**
      * Divides two longs/doubles.  If any operand is a double, the result is a double.
      * <br>
@@ -66,12 +66,13 @@ public interface OpCodes {
      * value1, value2 -> result
      * </code></pre>
      */
-    byte LD_DIV = 3;
-    byte LD_EQUAL = 4;
-    byte LD_LESS = 5;
-    byte LD_LESS_EQUAL = 6;
-    byte LD_GREATER = 7;
-    byte LD_GREATER_EQUAL = 8;
+    byte LD_DIV = LD_MUL + 1;
+    byte LD_POW = LD_DIV + 1;
+    byte LD_EQUAL = LD_POW + 1;
+    byte LD_LESS = LD_EQUAL + 1;
+    byte LD_LESS_EQUAL = LD_LESS + 1;
+    byte LD_GREATER = LD_LESS_EQUAL + 1;
+    byte LD_GREATER_EQUAL = LD_GREATER + 1;
     /**
      * Logical ORs two booleans.
      * <br>
@@ -80,7 +81,7 @@ public interface OpCodes {
      * value1, value2 -> result
      * </code></pre>
      */
-    byte B_OR = 9;
+    byte B_OR = LD_GREATER_EQUAL + 1;
     /**
      * Logical ANDs two booleans.
      * <br>
@@ -89,7 +90,7 @@ public interface OpCodes {
      * value1, value2 -> result
      * </code></pre>
      */
-    byte B_AND = 10;
+    byte B_AND = B_OR + 1;
     /**
      * Logically inverts a boolean.
      * <br>
@@ -98,7 +99,7 @@ public interface OpCodes {
      * value -> result
      * </code></pre>
      */
-    byte B_INVERT = 11;
+    byte B_INVERT = B_AND + 1;
     /**
      * Invokes a function.
      * <br>
@@ -115,7 +116,7 @@ public interface OpCodes {
      *   <li>4 byte absolute jump address</li>
      * </ul>
      */
-    byte INVOKE = 12;
+    byte INVOKE = B_INVERT + 1;
     /**
      * Invokes an intrinsic function.
      * <br>
@@ -130,7 +131,7 @@ public interface OpCodes {
      *   <li>N bytes intrinsic name</li>
      * </ul>
      */
-    byte INVOKE_INTRINSIC = 13;
+    byte INVOKE_INTRINSIC = INVOKE + 1;
     /**
      * Returns from a function.
      * <br>
@@ -141,7 +142,7 @@ public interface OpCodes {
      *   <li>1 byte returns value</li>
      * </ul>
      */
-    byte RETURN = 14;
+    byte RETURN = INVOKE_INTRINSIC + 1;
     /**
      * Performs an unconditional jump.
      * <br>
@@ -152,7 +153,7 @@ public interface OpCodes {
      *   <li>4 byte relative jump offset</li>
      * </ul>
      */
-    byte JUMP = 15;
+    byte JUMP = RETURN + 1;
     /**
      * Performs a conditional jump.
      * <br>
@@ -167,7 +168,7 @@ public interface OpCodes {
      *   <li>4 byte relative jump offset if true</li>
      * </ul>
      */
-    byte JUMP_IF_FALSE = 16;
+    byte JUMP_IF_FALSE = JUMP + 1;
     /**
      * Pushes a long constant onto the stack.
      * <br>
@@ -181,7 +182,7 @@ public interface OpCodes {
      *   <li>4 byte long constant</li>
      * </ul>
      */
-    byte L_CONST = 17;
+    byte L_CONST = JUMP_IF_FALSE + 1;
     /**
      * Pushes a double constant onto the stack.
      * <br>
@@ -195,7 +196,7 @@ public interface OpCodes {
      *   <li>4 byte double constant</li>
      * </ul>
      */
-    byte D_CONST = 18;
+    byte D_CONST = L_CONST + 1;
     /**
      * Pushes a boolean constant onto the stack.
      * <br>
@@ -209,7 +210,7 @@ public interface OpCodes {
      *   <li>1 byte boolean constant</li>
      * </ul>
      */
-    byte B_CONST = 19;
+    byte B_CONST = D_CONST + 1;
     /**
      * Pushes a string constant onto the stack.
      * <br>
@@ -224,7 +225,7 @@ public interface OpCodes {
      *   <li><strong>n</strong> bytes string constant bytes</li>
      * </ul>
      */
-    byte S_CONST = 20;
+    byte S_CONST = B_CONST + 1;
     /**
      * Pushes an empty list onto the stack.
      * <br>
@@ -233,7 +234,7 @@ public interface OpCodes {
      * -> value
      * </code></pre>
      */
-    byte CREATE_LIST = 21;
+    byte CREATE_LIST = S_CONST + 1;
     /**
      * Pushes a new object instance onto the stack.
      * <br>
@@ -247,9 +248,9 @@ public interface OpCodes {
      *   <li>2 byte object field count</li>
      * </ul>
      */
-    byte CREATE_OBJECT = 28;
-    byte LOAD_LOCAL = 22;
-    byte STORE_LOCAL = 23;
+    byte CREATE_OBJECT = CREATE_LIST + 1;
+    byte LOAD_LOCAL = CREATE_OBJECT + 1;
+    byte STORE_LOCAL = LOAD_LOCAL + 1;
     /**
      * Pushes a member of an instance onto the stack.
      * <br>
@@ -263,7 +264,7 @@ public interface OpCodes {
      *   <li>2 byte member index</li>
      * </ul>
      */
-    byte LOAD_MEMBER = 24;
+    byte LOAD_MEMBER = STORE_LOCAL + 1;
     /**
      * Stores a value from the stack into a member of an instance.
      * <br>
@@ -277,8 +278,8 @@ public interface OpCodes {
      *   <li>2 byte member index</li>
      * </ul>
      */
-    byte STORE_MEMBER = 29;
-    byte EXIT = 25;
-    byte DUP = 26;
-    byte POP = 30;
+    byte STORE_MEMBER = LOAD_MEMBER + 1;
+    byte EXIT = STORE_MEMBER + 1;
+    byte DUP = EXIT + 1;
+    byte POP = DUP + 1;
 }
