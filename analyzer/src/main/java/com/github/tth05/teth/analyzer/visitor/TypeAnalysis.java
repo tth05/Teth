@@ -263,7 +263,7 @@ public class TypeAnalysis extends AnalysisASTVisitor {
             return;
 
         var operator = expression.getOperator();
-        if ((operator == UnaryExpression.Operator.OP_NEGATIVE && !this.typeCache.isNumber(type)) ||
+        if ((operator == UnaryExpression.Operator.OP_NEGATE && !this.typeCache.isNumber(type)) ||
             (operator == UnaryExpression.Operator.OP_NOT && type != this.typeCache.getType(BOOLEAN_STRUCT_DECLARATION))) {
             report(expression.getExpression().getSpan(), "Unary operator " + operator.asString() + " cannot be applied to " + this.typeCache.toString(type));
             return;

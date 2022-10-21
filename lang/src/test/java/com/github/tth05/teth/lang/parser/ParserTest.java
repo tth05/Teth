@@ -185,17 +185,17 @@ public class ParserTest extends AbstractParserTest {
                                                 new UnaryExpression(
                                                         null,
                                                         new LongLiteralExpression(null, 1),
-                                                        UnaryExpression.Operator.OP_NEGATIVE
+                                                        UnaryExpression.Operator.OP_NEGATE
                                                 ),
                                                 new UnaryExpression(
                                                         null,
                                                         new LongLiteralExpression(null, 2),
-                                                        UnaryExpression.Operator.OP_NEGATIVE
+                                                        UnaryExpression.Operator.OP_NEGATE
                                                 ),
                                                 BinaryExpression.Operator.OP_ADD
                                         )
                                 ),
-                                UnaryExpression.Operator.OP_NEGATIVE
+                                UnaryExpression.Operator.OP_NEGATE
                         ),
                         new UnaryExpression(
                                 null,

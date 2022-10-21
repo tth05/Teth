@@ -383,6 +383,17 @@ public class Compiler {
             }
         }
 
+        @Override
+        public void visit(UnaryExpression expression) {
+            super.visit(expression);
+
+            switch (expression.getOperator()) {
+                case OP_NOT -> this.currentFunctionInsn.add(new B_INVERT_Insn());
+                case OP_NEGATE -> this.currentFunctionInsn.add(new LD_NEGATE_Insn());
+                default -> throw new UnsupportedOperationException("Unsupported operator: " + expression.getOperator());
+            }
+        }
+
         public void visitAssignmentExpression(BinaryExpression expression) {
             {
                 expression.getRight().accept(this);

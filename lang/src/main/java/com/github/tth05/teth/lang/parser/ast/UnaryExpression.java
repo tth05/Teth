@@ -18,12 +18,12 @@ public final class UnaryExpression extends Expression {
     }
 
     public enum Operator {
-        OP_NEGATIVE,
+        OP_NEGATE,
         OP_NOT;
 
         public static Operator fromTokenType(TokenType type) {
             return switch (type) {
-                case MINUS -> Operator.OP_NEGATIVE;
+                case MINUS -> Operator.OP_NEGATE;
                 case NOT -> Operator.OP_NOT;
                 default -> null;
             };
@@ -31,7 +31,7 @@ public final class UnaryExpression extends Expression {
 
         public String asString() {
             return switch (this) {
-                case OP_NEGATIVE -> "-";
+                case OP_NEGATE -> "-";
                 case OP_NOT -> "!";
             };
         }
