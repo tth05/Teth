@@ -28,7 +28,9 @@ public class Prelude {
             new IdentifierExpression(null, "double"),
             List.of(),
             List.of(),
-            List.of(),
+            List.of(
+                    createFakeFunctionDeclaration("toLong", true, type("long"))
+            ),
             true
     );
     public static final StructDeclaration BOOLEAN_STRUCT_DECLARATION = new StructDeclaration(
