@@ -1,7 +1,7 @@
 package com.github.tth05.teth.analyzer.visitor;
 
 import com.github.tth05.teth.analyzer.Analyzer;
-import com.github.tth05.teth.analyzer.DeclarationStack;
+import com.github.tth05.teth.analyzer.ScopeStack;
 import com.github.tth05.teth.analyzer.module.ModuleCache;
 import com.github.tth05.teth.analyzer.prelude.Prelude;
 import com.github.tth05.teth.lang.parser.SourceFileUnit;
@@ -14,12 +14,11 @@ import java.util.stream.Collectors;
 
 public class NameAnalysis extends AnalysisASTVisitor {
 
-    public static final FunctionDeclaration GLOBAL_FUNCTION = new FunctionDeclaration(null, null, null, List.of(), List.of(), null, null, false);
+    public static final FunctionDeclaration GLOBAL_FUNCTION = new FunctionDeclaration(null, null, new IdentifierExpression(null, null), List.of(), List.of(), null, null, false);
 
     private static final HashSet<String> DUPLICATION_SET = new HashSet<>();
 
-    private final Deque<FunctionDeclaration> currentFunctionStack = new ArrayDeque<>(5);
-    private final DeclarationStack declarationStack = new DeclarationStack();
+    private final ScopeStack scopeStack = new ScopeStack();
 
     private final Analyzer analyzer;
     private final Map<IDeclarationReference, Statement> resolvedReferences;
@@ -69,15 +68,15 @@ public class NameAnalysis extends AnalysisASTVisitor {
 
         for (var decl : topLevelDeclarations) {
             if (decl instanceof StructDeclaration structDeclaration) {
-                this.declarationStack.beginStructScope(structDeclaration);
+                this.scopeStack.beginScope(structDeclaration);
                 structDeclaration.getGenericParameters().forEach(this::addDeclaration);
                 structDeclaration.getFields().forEach(f -> visit(f.getTypeExpr()));
                 structDeclaration.getFunctions().forEach(this::visitFunctionDeclarationHeader);
-                this.declarationStack.endScope();
+                this.scopeStack.endScope();
             } else if (decl instanceof FunctionDeclaration functionDeclaration) {
-                this.declarationStack.beginFunctionScope(functionDeclaration);
+                this.scopeStack.beginScope(functionDeclaration);
                 visitFunctionDeclarationHeader(functionDeclaration);
-                this.declarationStack.endScope();
+                this.scopeStack.endScope();
             } else if (decl instanceof UseStatement) {
                 decl.accept(this);
             } else {
@@ -137,13 +136,13 @@ public class NameAnalysis extends AnalysisASTVisitor {
         if (isInFunction() && !declaration.isInstanceFunction())
             addDeclaration(declaration);
 
+        var enclosingStruct = declaration.isInstanceFunction() ? this.scopeStack.getCurrentOfType(StructDeclaration.class) : null;
         beginFunctionDeclaration(declaration);
         if (isInNestedFunction())
             visitFunctionDeclarationHeader(declaration);
-        visitFunctionDeclarationBody(declaration);
+        visitFunctionDeclarationBody(declaration, enclosingStruct);
 
-        this.declarationStack.endScope();
-        this.currentFunctionStack.removeLast();
+        this.scopeStack.endScope();
     }
 
     @Override
@@ -175,12 +174,12 @@ public class NameAnalysis extends AnalysisASTVisitor {
         if (isInFunction())
             addDeclaration(declaration);
 
-        this.declarationStack.beginStructScope(declaration);
+        this.scopeStack.beginScope(declaration);
         { // Don't want to visit struct name here
             declaration.getFields().forEach(p -> p.accept(this));
             declaration.getFunctions().forEach(p -> p.accept(this));
         }
-        this.declarationStack.endScope();
+        this.scopeStack.endScope();
     }
 
     @Override
@@ -220,7 +219,7 @@ public class NameAnalysis extends AnalysisASTVisitor {
     public void visit(ReturnStatement returnStatement) {
         super.visit(returnStatement);
 
-        if (this.currentFunctionStack.size() == 1)
+        if (getFunctionStackSize() == 1)
             report(returnStatement.getSpan(), "Return statement outside of function");
     }
 
@@ -235,23 +234,41 @@ public class NameAnalysis extends AnalysisASTVisitor {
             declaration.getInitializerExpr().accept(this);
         }
 
-        this.functionLocalsCount.merge(this.currentFunctionStack.getLast(), 1, Integer::sum);
+        this.functionLocalsCount.merge(this.scopeStack.getClosestOfType(FunctionDeclaration.class), 1, Integer::sum);
 
         addDeclaration(declaration);
     }
 
     @Override
     public void visit(LoopStatement statement) {
-        this.declarationStack.beginSubScope();
+        this.scopeStack.beginSubScope(statement);
         super.visit(statement);
-        this.declarationStack.endScope();
+        this.scopeStack.endScope();
+    }
+
+    @Override
+    public void visit(BreakStatement statement) {
+        var loopStatement = this.scopeStack.getClosestOfType(LoopStatement.class);
+        if (loopStatement == null)
+            report(statement.getSpan(), "Break statement outside of loop");
+
+        this.resolvedReferences.put(statement, loopStatement);
+    }
+
+    @Override
+    public void visit(ContinueStatement statement) {
+        var loopStatement = this.scopeStack.getClosestOfType(LoopStatement.class);
+        if (loopStatement == null)
+            report(statement.getSpan(), "Continue statement outside of loop");
+
+        this.resolvedReferences.put(statement, loopStatement);
     }
 
     @Override
     public void visit(BlockStatement statement) {
-        this.declarationStack.beginSubScope();
+        this.scopeStack.beginSubScope(statement);
         super.visit(statement);
-        this.declarationStack.endScope();
+        this.scopeStack.endScope();
     }
 
     @Override
@@ -275,7 +292,7 @@ public class NameAnalysis extends AnalysisASTVisitor {
         if (Prelude.isBuiltInTypeName(type))
             decl = Prelude.getStructForTypeName(type);
         else
-            decl = this.declarationStack.resolveIdentifier(type);
+            decl = this.scopeStack.resolveIdentifier(type);
 
         if (decl == null) {
             report(span, "Unknown type " + type);
@@ -301,7 +318,7 @@ public class NameAnalysis extends AnalysisASTVisitor {
 
     @Override
     public void visit(IdentifierExpression identifierExpression) {
-        var decl = this.declarationStack.resolveIdentifier(identifierExpression.getValue());
+        var decl = this.scopeStack.resolveIdentifier(identifierExpression.getValue());
         if (decl == null)
             decl = Prelude.getGlobalFunction(identifierExpression.getValue());
         if (decl == null) {
@@ -333,18 +350,17 @@ public class NameAnalysis extends AnalysisASTVisitor {
             returnTypeExpr.accept(this);
     }
 
-    private void visitFunctionDeclarationBody(FunctionDeclaration declaration) {
+    private void visitFunctionDeclarationBody(FunctionDeclaration declaration, StructDeclaration enclosingStruct) {
         // Parameters
         declaration.getGenericParameters().forEach(this::addDeclaration);
         declaration.getParameters().forEach(this::addDeclaration);
 
         if (declaration.isInstanceFunction()) {
-            var currentStruct = this.declarationStack.getEnclosingStruct();
             var selfParameter = new FunctionDeclaration.ParameterDeclaration(
                     null,
                     new TypeExpression(null,
-                            currentStruct.getNameExpr(),
-                            currentStruct.getGenericParameters().stream()
+                            enclosingStruct.getNameExpr(),
+                            enclosingStruct.getGenericParameters().stream()
                                     .map(p -> {
                                         var typeExpr = new TypeExpression(null, new IdentifierExpression(null, p.getNameExpr().getValue()));
                                         this.resolvedReferences.put(typeExpr, p);
@@ -355,7 +371,7 @@ public class NameAnalysis extends AnalysisASTVisitor {
                     new IdentifierExpression(null, "self")
             );
             addDeclaration(selfParameter);
-            this.resolvedReferences.put(selfParameter.getTypeExpr(), currentStruct);
+            this.resolvedReferences.put(selfParameter.getTypeExpr(), enclosingStruct);
         }
 
         declaration.getBody().accept(this);
@@ -389,21 +405,24 @@ public class NameAnalysis extends AnalysisASTVisitor {
         if (name == null)
             return;
 
-        this.declarationStack.addDeclaration(name, declaration);
+        this.scopeStack.addDeclaration(name, declaration);
     }
 
     private void beginFunctionDeclaration(FunctionDeclaration declaration) {
-        this.currentFunctionStack.addLast(declaration);
-        this.declarationStack.beginFunctionScope(declaration == GLOBAL_FUNCTION ? null : declaration);
+        this.scopeStack.beginScope(declaration);
         this.functionLocalsCount.put(declaration, 0);
     }
 
     private boolean isInFunction() {
-        return this.currentFunctionStack.size() > 1;
+        return getFunctionStackSize() > 1;
     }
 
     private boolean isInNestedFunction() {
-        return this.currentFunctionStack.size() > 2;
+        return getFunctionStackSize() > 2;
+    }
+
+    private int getFunctionStackSize() {
+        return this.scopeStack.countScopesOfType(FunctionDeclaration.class);
     }
 
     private static class TopLevelDeclComparator implements Comparator<Statement> {

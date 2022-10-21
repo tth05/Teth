@@ -5,9 +5,7 @@ import com.github.tth05.teth.lang.parser.IVisitable;
 import com.github.tth05.teth.lang.span.Span;
 
 public abstract sealed class Statement implements IDumpable, IVisitable
-        permits BlockStatement, Expression, FunctionDeclaration, FunctionDeclaration.ParameterDeclaration,
-        GenericParameterDeclaration, IfStatement, LoopStatement, ReturnStatement, StructDeclaration,
-        StructDeclaration.FieldDeclaration, TypeExpression, UseStatement, VariableDeclaration {
+        permits BlockStatement, BreakStatement, ContinueStatement, Expression, FunctionDeclaration, FunctionDeclaration.ParameterDeclaration, GenericParameterDeclaration, IfStatement, LoopStatement, ReturnStatement, StructDeclaration, StructDeclaration.FieldDeclaration, TypeExpression, UseStatement, VariableDeclaration {
 
     private Span span;
 

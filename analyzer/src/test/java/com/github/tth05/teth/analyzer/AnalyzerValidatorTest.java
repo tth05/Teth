@@ -70,6 +70,30 @@ public class AnalyzerValidatorTest extends AbstractAnalyzerTest {
     }
 
     @Test
+    public void testBreakAndContinue() {
+        var problems = analyze("""
+                loop {
+                    break
+                    continue
+                }
+                """);
+
+        assertTrue(problems.isEmpty());
+
+        problems = analyze("break");
+
+        assertFalse(problems.isEmpty());
+        assertEquals(1, problems.size());
+        assertEquals("Break statement outside of loop", problems.get(0).message());
+
+        problems = analyze("continue");
+
+        assertFalse(problems.isEmpty());
+        assertEquals(1, problems.size());
+        assertEquals("Continue statement outside of loop", problems.get(0).message());
+    }
+
+    @Test
     public void testFunctionReturnInAllCases() {
         var problems = analyze("""
                 fn f() long {

@@ -80,6 +80,8 @@ public class Tokenizer {
             case "return" -> TokenType.KEYWORD_RETURN;
             case "let" -> TokenType.KEYWORD_LET;
             case "loop" -> TokenType.KEYWORD_LOOP;
+            case "break" -> TokenType.KEYWORD_BREAK;
+            case "continue" -> TokenType.KEYWORD_CONTINUE;
             case "new" -> TokenType.KEYWORD_NEW;
             case "struct" -> TokenType.KEYWORD_STRUCT;
             case "use" -> TokenType.KEYWORD_USE;
@@ -331,8 +333,8 @@ public class Tokenizer {
     }
 
     public static boolean isKeyword(String value) {
-        return value.equals("if") || value.equals("else") || value.equals("fn") ||
-               value.equals("return") || value.equals("let") || value.equals("loop") ||
+        return value.equals("if") || value.equals("else") || value.equals("fn") || value.equals("return") ||
+               value.equals("let") || value.equals("loop") || value.equals("break") || value.equals("continue") ||
                value.equals("new") || value.equals("struct") || value.equals("use");
     }
 

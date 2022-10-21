@@ -9,6 +9,8 @@ public enum TokenType {
     KEYWORD_RETURN("return"),
     KEYWORD_LET("let"),
     KEYWORD_LOOP("loop"),
+    KEYWORD_BREAK("break"),
+    KEYWORD_CONTINUE("continue"),
     KEYWORD_NEW("new"),
     KEYWORD_STRUCT("struct"),
     KEYWORD_USE("use"),

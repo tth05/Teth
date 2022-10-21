@@ -118,6 +118,12 @@ public abstract class ASTVisitor {
         statement.getBody().accept(this);
     }
 
+    public void visit(BreakStatement statement) {
+    }
+
+    public void visit(ContinueStatement statement) {
+    }
+
     public void visit(ListLiteralExpression listLiteralExpression) {
         listLiteralExpression.getInitializers().forEach(e -> e.accept(this));
     }

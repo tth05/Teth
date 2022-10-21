@@ -452,6 +452,10 @@ public class ParserTest extends AbstractParserTest {
                 loop (i < 5, i = i + 1) {}
                 loop (let a = 5, let b = 3) {}
                 loop (let a = 5, a, print([a])) {}
+                loop {
+                    break
+                    continue
+                }
                 """);
         assertEquals(
                 new SourceFileUnit(
@@ -545,9 +549,18 @@ public class ParserTest extends AbstractParserTest {
                                                 new ListLiteralExpression(null, ExpressionList.of(new IdentifierExpression(null, "a")))
                                         )
                                 )
+                        ),
+                        new LoopStatement(
+                                null, List.of(), null,
+                                new BlockStatement(
+                                        null,
+                                        StatementList.of(
+                                                new BreakStatement(null),
+                                                new ContinueStatement(null)
+                                        )
+                                ), null
                         )
-                )
-                ),
+                )),
                 this.unit
         );
     }

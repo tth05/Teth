@@ -123,6 +123,8 @@ public class Parser {
         return switch (current.type()) {
             case KEYWORD_IF -> parseIfStatement(anchorSet);
             case KEYWORD_LOOP -> parseLoopStatement(anchorSet);
+            case KEYWORD_BREAK -> parseBreakStatement();
+            case KEYWORD_CONTINUE -> parseContinueStatement();
             case KEYWORD_STRUCT -> parseStructDeclaration(anchorSet);
             case KEYWORD_FN -> parseFunctionDeclaration(anchorSet, false);
             case KEYWORD_RETURN -> parseReturnStatement(anchorSet);
@@ -207,6 +209,14 @@ public class Parser {
 
         var body = parseBlock(anchorSet);
         return new LoopStatement(Span.of(firstSpan, body.getSpan()), variableDeclarations, condition, body, advance);
+    }
+
+    private BreakStatement parseBreakStatement() {
+        return new BreakStatement(consume(false).span());
+    }
+
+    private ContinueStatement parseContinueStatement() {
+        return new ContinueStatement(consume(false).span());
     }
 
     private BlockStatement parseBlock(AnchorUnion anchorSet) {

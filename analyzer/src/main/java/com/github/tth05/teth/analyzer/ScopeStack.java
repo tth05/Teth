@@ -3,14 +3,13 @@ package com.github.tth05.teth.analyzer;
 import com.github.tth05.teth.lang.parser.ast.FunctionDeclaration;
 import com.github.tth05.teth.lang.parser.ast.IHasName;
 import com.github.tth05.teth.lang.parser.ast.Statement;
-import com.github.tth05.teth.lang.parser.ast.StructDeclaration;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.Map;
 
-public class DeclarationStack {
+public class ScopeStack {
 
     private final Deque<Scope> stack = new ArrayDeque<>();
 
@@ -31,9 +30,9 @@ public class DeclarationStack {
             }
 
             var owner = scope.owner;
-            if (pastSubScope && owner != null && ident.equals(owner.getNameExpr().getValue()) && // Check name matches
+            if (pastSubScope && owner instanceof IHasName named && ident.equals(named.getNameExpr().getValue()) && // Check name matches
                 (!(owner instanceof FunctionDeclaration func) || !func.isInstanceFunction())) // Filter instance functions
-                return (Statement) owner;
+                return owner;
         }
 
         // Check top level declarations
@@ -41,39 +40,50 @@ public class DeclarationStack {
         return this.stack.peekFirst().declarations.get(ident);
     }
 
-    public StructDeclaration getEnclosingStruct() {
+    public <T extends Statement> T getClosestOfType(Class<T> clazz) {
         var it = this.stack.descendingIterator();
         while (it.hasNext()) {
             var scope = it.next();
-            if (scope.owner instanceof StructDeclaration s)
-                return s;
+            if (clazz.isInstance(scope.owner))
+                return (T) scope.owner;
 
             if (!scope.subScope)
                 break;
         }
 
-        return (it.hasNext() && it.next().owner instanceof StructDeclaration s) ? s : null;
+        return null;
+    }
+
+    public <T extends Statement> T getCurrentOfType(Class<T> clazz) {
+        var owner = this.stack.getLast().owner;
+        return clazz.isInstance(this.stack.getLast().owner) ? (T) owner : null;
+    }
+
+    public int countScopesOfType(Class<? extends Statement> clazz) {
+        var count = 0;
+        for (var el : this.stack) {
+            if (clazz.isInstance(el.owner))
+                count++;
+        }
+
+        return count;
     }
 
     public void addDeclaration(String value, Statement declaration) {
         this.stack.getLast().declarations.put(value, declaration);
     }
 
-    public void beginSubScope() {
-        this.stack.addLast(new Scope(null, true));
+    public void beginScope(Statement owner) {
+        this.stack.addLast(new Scope(owner, false));
     }
 
-    public void beginStructScope(StructDeclaration struct) {
-        this.stack.addLast(new Scope(struct, false));
-    }
-
-    public void beginFunctionScope(FunctionDeclaration function) {
-        this.stack.addLast(new Scope(function, false));
+    public void beginSubScope(Statement owner) {
+        this.stack.addLast(new Scope(owner, true));
     }
 
     public void endScope() {
         if (this.stack.size() < 2)
-            throw new IllegalStateException("Cannot end scope");
+            throw new IllegalStateException("Cannot end global scope");
 
         this.stack.removeLast();
     }
@@ -81,10 +91,10 @@ public class DeclarationStack {
     private static final class Scope {
 
         private final Map<String, Statement> declarations = new HashMap<>();
-        private final IHasName owner;
+        private final Statement owner;
         private final boolean subScope;
 
-        private Scope(IHasName owner, boolean subScope) {
+        private Scope(Statement owner, boolean subScope) {
             this.owner = owner;
             this.subScope = subScope;
         }

@@ -33,8 +33,8 @@ object TethTokenTypes {
             TokenType.LONG_LITERAL -> LONG
             TokenType.BOOLEAN_LITERAL -> KEYWORD
             TokenType.KEYWORD_IF, TokenType.KEYWORD_ELSE, TokenType.KEYWORD_FN, TokenType.KEYWORD_LET,
-            TokenType.KEYWORD_LOOP, TokenType.KEYWORD_STRUCT, TokenType.KEYWORD_NEW, TokenType.KEYWORD_RETURN,
-            TokenType.KEYWORD_USE -> KEYWORD
+            TokenType.KEYWORD_BREAK, TokenType.KEYWORD_CONTINUE, TokenType.KEYWORD_LOOP, TokenType.KEYWORD_STRUCT,
+            TokenType.KEYWORD_NEW, TokenType.KEYWORD_RETURN, TokenType.KEYWORD_USE -> KEYWORD
 
             TokenType.COLON, TokenType.DOT, TokenType.STRING_LITERAL_CODE_END, TokenType.STRING_LITERAL_CODE_START -> SEPARATOR
 
