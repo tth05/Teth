@@ -103,4 +103,17 @@ public class InterpreterTest extends AbstractInterpreterTest {
 
         assertLinesMatch(List.of("832040"), getSystemOutputLines());
     }
+
+    @Test
+    public void testBreakAndContinue() {
+        execute("""
+                loop (let i = 0, i < 10, i = i + 1) {
+                    if (i == 5) break
+                    if (i / 2 == 0) continue
+                    print([i])
+                }
+                """);
+
+        assertLinesMatch(List.of("2", "3", "4"), getSystemOutputLines());
+    }
 }

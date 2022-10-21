@@ -311,7 +311,7 @@ public class Compiler {
         public void visit(LoopStatement statement) {
             statement.getVariableDeclarations().forEach(v -> v.accept(this));
 
-            var startIndex = this.currentFunctionInsn.size();
+            var startIndex = this.currentFunctionInsn.size() - 1;
 
             var condition = statement.getCondition();
             if (condition != null)
@@ -324,15 +324,33 @@ public class Compiler {
             this.currentFunctionInsn.add(null);
 
             statement.getBody().accept(this);
+            var advanceStatementIndex = this.currentFunctionInsn.size();
             var advanceStatement = statement.getAdvanceStatement();
             if (advanceStatement != null)
                 advanceStatement.accept(this);
 
             // Unconditional jump to start
-            this.currentFunctionInsn.add(new JUMP_Insn(startIndex - this.currentFunctionInsn.size() - 1));
-
+            this.currentFunctionInsn.add(new JUMP_Insn(startIndex - this.currentFunctionInsn.size()));
             // Jump after body if condition is false
             this.currentFunctionInsn.set(conditionIndex, new JUMP_IF_FALSE_Insn(this.currentFunctionInsn.size() - conditionIndex - 1));
+
+            for (int i = conditionIndex + 1; i < this.currentFunctionInsn.size() - 1; i++) {
+                var insn = this.currentFunctionInsn.get(i);
+                if (insn instanceof PlaceholderBreakInsn)
+                    this.currentFunctionInsn.set(i, new JUMP_Insn(this.currentFunctionInsn.size() - i - 1));
+                else if (insn instanceof PlaceholderContinueInsn)
+                    this.currentFunctionInsn.set(i, new JUMP_Insn(advanceStatementIndex - i - 1));
+            }
+        }
+
+        @Override
+        public void visit(BreakStatement statement) {
+            this.currentFunctionInsn.add(new PlaceholderBreakInsn());
+        }
+
+        @Override
+        public void visit(ContinueStatement statement) {
+            this.currentFunctionInsn.add(new PlaceholderContinueInsn());
         }
 
         @Override
@@ -452,6 +470,32 @@ public class Compiler {
 
         private int getStructId(StructDeclaration declaration) {
             return structIds.computeIfAbsent(declaration, k -> structIds.size());
+        }
+
+        private record PlaceholderBreakInsn() implements IInstrunction {
+
+            @Override
+            public byte getOpCode() {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public String getDebugParametersString() {
+                throw new UnsupportedOperationException();
+            }
+        }
+
+        private record PlaceholderContinueInsn() implements IInstrunction {
+
+            @Override
+            public byte getOpCode() {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public String getDebugParametersString() {
+                throw new UnsupportedOperationException();
+            }
         }
     }
 }
