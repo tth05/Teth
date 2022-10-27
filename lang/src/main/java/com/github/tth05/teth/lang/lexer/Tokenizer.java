@@ -225,8 +225,8 @@ public class Tokenizer {
             }
             case '!' -> {
                 if (this.stream.peek() == '=') {
-                    emit("!=", TokenType.NOT_EQUAL);
                     this.stream.consume();
+                    emit("!=", TokenType.NOT_EQUAL);
                 } else {
                     emit("!", TokenType.NOT);
                 }
