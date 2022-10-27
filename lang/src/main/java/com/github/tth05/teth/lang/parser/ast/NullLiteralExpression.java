@@ -21,6 +21,16 @@ public final class NullLiteralExpression extends Expression {
     }
 
     @Override
+    public boolean equals(Object obj) {
+        return obj instanceof NullLiteralExpression;
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
+
+    @Override
     public String toString() {
         return dumpToString();
     }
