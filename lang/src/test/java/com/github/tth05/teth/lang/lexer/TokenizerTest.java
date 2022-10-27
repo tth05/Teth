@@ -120,14 +120,14 @@ public class TokenizerTest extends AbstractTokenizerTest {
 
     @Test
     public void testAssign() {
-        createStreams("let anIdentifier: type = 56");
+        createStreams("let anIdentifier: type = null");
         assertIterableEquals(tokenList(
                 new Token(makeSpan(0, 3), "let", TokenType.KEYWORD_LET),
                 new Token(makeSpan(4, 16), "anIdentifier", TokenType.IDENTIFIER),
                 new Token(makeSpan(16, 17), ":", TokenType.COLON),
                 new Token(makeSpan(18, 22), "type", TokenType.IDENTIFIER),
                 new Token(makeSpan(23, 24), "=", TokenType.EQUAL),
-                new Token(makeSpan(25, 27), "56", TokenType.LONG_LITERAL)
+                new Token(makeSpan(25, 29), "null", TokenType.KEYWORD_NULL)
         ), tokensIntoList());
     }
 

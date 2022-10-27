@@ -85,6 +85,7 @@ public class Tokenizer {
             case "new" -> TokenType.KEYWORD_NEW;
             case "struct" -> TokenType.KEYWORD_STRUCT;
             case "use" -> TokenType.KEYWORD_USE;
+            case "null" -> TokenType.KEYWORD_NULL;
             default -> throw new IllegalStateException("Unexpected value: " + ident.value());
         }));
     }
@@ -335,7 +336,7 @@ public class Tokenizer {
     public static boolean isKeyword(String value) {
         return value.equals("if") || value.equals("else") || value.equals("fn") || value.equals("return") ||
                value.equals("let") || value.equals("loop") || value.equals("break") || value.equals("continue") ||
-               value.equals("new") || value.equals("struct") || value.equals("use");
+               value.equals("new") || value.equals("struct") || value.equals("use") || value.equals("null");
     }
 
     private static boolean isBooleanLiteral(String value) {
