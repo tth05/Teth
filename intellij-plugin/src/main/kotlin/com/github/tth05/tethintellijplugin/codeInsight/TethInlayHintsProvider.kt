@@ -44,7 +44,7 @@ class TethInlayHintsProvider : InlayHintsProvider<NoSettings> {
                     ?: return true
 
             val resolvedType = analyzer.resolvedExpressionType(variableDeclaration.initializerExpr)
-                .takeIf { it != SemanticType.UNRESOLVED } ?: return true
+                .takeIf { it != SemanticType.UNRESOLVED && it != SemanticType.NULL } ?: return true
 
             sink.addInlineElement(
                 element.nameIdentifier!!.endOffset,
