@@ -613,6 +613,7 @@ public class Parser {
             case DOUBLE_LITERAL -> new DoubleLiteralExpression(span, Double.parseDouble(consume(false).value()));
             case STRING_LITERAL -> parseStringLiteralExpression();
             case BOOLEAN_LITERAL -> new BooleanLiteralExpression(span, Boolean.parseBoolean(consume(false).value()));
+            case KEYWORD_NULL -> new NullLiteralExpression(consume(false).span());
             case IDENTIFIER -> new IdentifierExpression(span, consume(false).value());
             case L_SQUARE_BRACKET -> {
                 consume(false);

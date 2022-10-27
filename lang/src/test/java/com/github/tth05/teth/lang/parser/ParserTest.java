@@ -370,7 +370,7 @@ public class ParserTest extends AbstractParserTest {
     public void testParseIfStatement() {
         createAST("""
                 if (5 == 5) { 1 } else if (b) c = 2 else \nc = 5
-                if (c == 2) "true"
+                if (c != null) "true"
                 """);
         assertEquals(
                 new SourceFileUnit(
@@ -426,8 +426,8 @@ public class ParserTest extends AbstractParserTest {
                                 new BinaryExpression(
                                         null,
                                         new IdentifierExpression(null, "c"),
-                                        new LongLiteralExpression(null, 2),
-                                        BinaryExpression.Operator.OP_EQUAL
+                                        new NullLiteralExpression(null),
+                                        BinaryExpression.Operator.OP_NOT_EQUAL
                                 ),
                                 new BlockStatement(
                                         null,
