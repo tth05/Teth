@@ -165,7 +165,11 @@ public class Tokenizer {
             }
         }
 
-        emit(string.toString(), TokenType.STRING_LITERAL);
+        var span = this.stream.popMarkedSpan();
+        if (span.getLength() <= 0)
+            return;
+
+        emit(span, string.toString(), TokenType.STRING_LITERAL);
     }
 
     private void emitNumber() {
