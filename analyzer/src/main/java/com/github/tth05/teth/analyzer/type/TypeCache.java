@@ -53,6 +53,10 @@ public class TypeCache {
             return false;
         if (subType == VOID)
             return type == VOID;
+        if (type == SemanticType.NULL)
+            return false;
+        if (subType == SemanticType.NULL)
+            return type != getType(Prelude.LONG_STRUCT_DECLARATION) && type != getType(Prelude.DOUBLE_STRUCT_DECLARATION) && type != getType(Prelude.BOOLEAN_STRUCT_DECLARATION);
 
         var ANY = getType(Prelude.ANY_STRUCT_DECLARATION);
         if (subType == type)
@@ -79,6 +83,9 @@ public class TypeCache {
             return "???";
         if (type == VOID)
             return "void";
+        if (type == SemanticType.NULL)
+            return "null";
+
         String name;
         // TODO: Switch preview disabled
         var declaration = getDeclaration(type);

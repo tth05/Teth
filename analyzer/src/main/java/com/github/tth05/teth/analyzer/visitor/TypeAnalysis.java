@@ -32,6 +32,9 @@ public class TypeAnalysis extends AnalysisASTVisitor {
                 BinaryExpression.Operator.OP_EQUAL, BinaryExpression.Operator.OP_NOT_EQUAL,
                 BinaryExpression.Operator.OP_AND, BinaryExpression.Operator.OP_OR
         });
+        this.binaryOperatorsAllowedTypes.put(SemanticType.NULL.getTypeId(), new BinaryExpression.Operator[]{
+                BinaryExpression.Operator.OP_EQUAL, BinaryExpression.Operator.OP_NOT_EQUAL
+        });
     }
 
     @Override
@@ -302,14 +305,28 @@ public class TypeAnalysis extends AnalysisASTVisitor {
         var rightIsNumber = this.typeCache.isNumber(rightType);
         var anyNumber = leftIsNumber || rightIsNumber;
         var typesMatch = anyNumber ? leftIsNumber && rightIsNumber : leftType.equals(rightType);
+        // Specific checks for comparing with null
+        if (!typesMatch && (leftType == SemanticType.NULL || rightType == SemanticType.NULL)) {
+            // Check for == and !=
+            if (Arrays.stream(this.binaryOperatorsAllowedTypes.get(SemanticType.NULL.getTypeId())).noneMatch(op -> op == expression.getOperator())) {
+                report(expression.getSpan(), "Operator " + expression.getOperator().asString() + " cannot be applied to " + this.typeCache.toString(leftType) + " and " + this.typeCache.toString(rightType));
+                return;
+            }
 
-        if (!typesMatch ||
+            // Disallow null comparisons for non-nullable types
+            var nonNullType = leftType == SemanticType.NULL ? rightType : leftType;
+            if (nonNullType == this.typeCache.getType(LONG_STRUCT_DECLARATION) || nonNullType == this.typeCache.getType(DOUBLE_STRUCT_DECLARATION) || nonNullType == this.typeCache.getType(BOOLEAN_STRUCT_DECLARATION)) {
+                report(expression.getSpan(), "Operator " + expression.getOperator().asString() + " cannot be applied to " + this.typeCache.toString(leftType) + " and " + this.typeCache.toString(rightType));
+                return;
+            }
+        } else if (!typesMatch || // Make sure types match and operator is allowed for that type otherwise
             !this.binaryOperatorsAllowedTypes.containsKey(leftType.getTypeId()) ||
             Arrays.stream(this.binaryOperatorsAllowedTypes.get(leftType.getTypeId())).noneMatch(op -> op == expression.getOperator())) {
             report(expression.getSpan(), "Operator " + expression.getOperator().asString() + " cannot be applied to " + this.typeCache.toString(leftType) + " and " + this.typeCache.toString(rightType));
             return;
         }
 
+        // Compute output type
         SemanticType binaryType;
         if (expression.getOperator().producesBoolean()) {
             binaryType = this.typeCache.getType(BOOLEAN_STRUCT_DECLARATION);
@@ -331,17 +348,21 @@ public class TypeAnalysis extends AnalysisASTVisitor {
         // Can only be done after type resolution, therefore not contained in NameAnalysis
         if (!(this.resolvedReferences.get((IDeclarationReference) expression.getLeft()) instanceof IVariableDeclaration varDecl)) {
             report(expression.getSpan(), "Invalid assignment target");
+            clearErrorFlag();
             return;
         }
 
         var type = this.resolvedExpressionTypes.get(expression.getRight());
-        if (type == null)
+        if (type == null) {
+            clearErrorFlag();
             return;
+        }
 
-        if (!type.equals(getVariableDeclarationType(varDecl)))
+        if (!this.typeCache.isSubtypeOf(type, getVariableDeclarationType(varDecl)))
             report(expression.getRight().getSpan(), "Cannot assign expression of type " + this.typeCache.toString(type) + " to variable of type " + this.typeCache.toString(getVariableDeclarationType(varDecl)));
 
         this.resolvedExpressionTypes.put(expression, type);
+        clearErrorFlag();
     }
 
     @Override
@@ -356,6 +377,10 @@ public class TypeAnalysis extends AnalysisASTVisitor {
         var elementType = this.resolvedExpressionTypes.get(listLiteralExpression.getInitializers().get(0));
         if (elementType == null)
             return;
+        if (elementType == SemanticType.NULL) {
+            report(listLiteralExpression.getInitializers().get(0).getSpan(), "Cannot infer type of list element");
+            return;
+        }
 
         for (Expression initializer : listLiteralExpression.getInitializers()) {
             if (!this.typeCache.isSubtypeOf(this.resolvedExpressionTypes.get(initializer), elementType))
@@ -368,6 +393,11 @@ public class TypeAnalysis extends AnalysisASTVisitor {
     @Override
     public void visit(BooleanLiteralExpression booleanLiteralExpression) {
         this.resolvedExpressionTypes.put(booleanLiteralExpression, this.typeCache.getType(BOOLEAN_STRUCT_DECLARATION));
+    }
+
+    @Override
+    public void visit(NullLiteralExpression doubleLiteralExpression) {
+        this.resolvedExpressionTypes.put(doubleLiteralExpression, SemanticType.NULL);
     }
 
     @Override

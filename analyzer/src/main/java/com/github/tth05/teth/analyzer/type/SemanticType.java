@@ -6,6 +6,7 @@ import java.util.Objects;
 
 public class SemanticType {
 
+    public static final SemanticType NULL = new SemanticType(-2);
     public static final SemanticType UNRESOLVED = new SemanticType(-1);
 
     private final int typeId;
@@ -57,6 +58,9 @@ public class SemanticType {
 
     @Override
     public String toString() {
-        throw new UnsupportedOperationException("Wrong");
+        return "SemanticType{" +
+               "typeId=" + this.typeId +
+               ", genericBounds=" + this.genericBounds +
+               '}';
     }
 }

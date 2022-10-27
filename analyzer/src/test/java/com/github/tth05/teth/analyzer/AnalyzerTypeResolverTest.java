@@ -39,6 +39,18 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
         assertFalse(problems.isEmpty());
         assertEquals(1, problems.size());
         assertEquals("Operator * cannot be applied to double and string", problems.get(0).message());
+
+        problems = analyze("null == 5");
+
+        assertFalse(problems.isEmpty());
+        assertEquals(1, problems.size());
+        assertEquals("Operator == cannot be applied to null and long", problems.get(0).message());
+
+        problems = analyze("5.0 > null");
+
+        assertFalse(problems.isEmpty());
+        assertEquals(1, problems.size());
+        assertEquals("Operator > cannot be applied to double and null", problems.get(0).message());
     }
 
     @Test
@@ -227,6 +239,15 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
         var problems = analyze("let a = 0\n a = 5");
 
         assertTrue(problems.isEmpty());
+
+        problems = analyze("""
+                let a: any = null
+                let b: list<long> = null
+                a = null
+                b = null
+                """);
+
+        assertTrue(problems.isEmpty());
     }
 
     @Test
@@ -236,6 +257,15 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
         assertFalse(problems.isEmpty());
         assertEquals(1, problems.size());
         assertEquals("Cannot assign expression of type double to variable of type long", problems.get(0).message());
+
+        problems = analyze("""
+                let a = 0
+                a = null
+                """);
+
+        assertFalse(problems.isEmpty());
+        assertEquals(1, problems.size());
+        assertEquals("Cannot assign expression of type null to variable of type long", problems.get(0).message());
     }
 
     @Test

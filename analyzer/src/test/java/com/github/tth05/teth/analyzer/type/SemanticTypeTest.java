@@ -41,6 +41,32 @@ public class SemanticTypeTest {
     }
 
     @Test
+    public void testIsSubTypeOfNull() {
+        var nullType = SemanticType.NULL;
+        var nullSuperTypes = List.of(
+                this.typeCache.getType(Prelude.STRING_STRUCT_DECLARATION),
+                new SemanticType(56),
+                new SemanticType(78, List.of(new SemanticType(7999)))
+        );
+
+        for (var t : nullSuperTypes) {
+            assertTrue(this.typeCache.isSubtypeOf(nullType, t), () -> "Type " + t + " is not supertype of null");
+            assertFalse(this.typeCache.isSubtypeOf(t, nullType), () -> "Type " + t + " is subtype of null");
+        }
+
+        var nonNullableTypes = List.of(
+                this.typeCache.getType(Prelude.BOOLEAN_STRUCT_DECLARATION),
+                this.typeCache.getType(Prelude.DOUBLE_STRUCT_DECLARATION),
+                this.typeCache.getType(Prelude.LONG_STRUCT_DECLARATION)
+        );
+
+        for (var t : nonNullableTypes) {
+            assertFalse(this.typeCache.isSubtypeOf(nullType, t), () -> "Type " + t + " is supertype of null");
+            assertFalse(this.typeCache.isSubtypeOf(t, nullType), () -> "Type " + t + " is subtype of null");
+        }
+    }
+
+    @Test
     public void testIsSubTypeOfGenerics() {
         var LONG = this.typeCache.getType(Prelude.LONG_STRUCT_DECLARATION);
         var ANY = this.typeCache.getType(Prelude.ANY_STRUCT_DECLARATION);
