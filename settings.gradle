@@ -6,4 +6,5 @@ include 'bytecode'
 include 'bytecode-interpreter'
 include 'analyzer'
 include 'intellij-plugin'
+include 'repl'
 
