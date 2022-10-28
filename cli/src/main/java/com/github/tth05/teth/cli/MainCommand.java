@@ -2,6 +2,7 @@ package com.github.tth05.teth.cli;
 
 import com.github.tth05.teth.cli.commands.ASTCommand;
 import com.github.tth05.teth.cli.commands.BytecodeCommand;
+import com.github.tth05.teth.cli.commands.REPLCommand;
 import com.github.tth05.teth.cli.commands.RunCommand;
 import org.fusesource.jansi.AnsiConsole;
 import picocli.CommandLine;
@@ -9,7 +10,7 @@ import picocli.CommandLine;
 @CommandLine.Command(
         name = "teth-cli",
         version = "teth-cli 0.0.1",
-        subcommands = {ASTCommand.class, BytecodeCommand.class, RunCommand.class},
+        subcommands = {ASTCommand.class, BytecodeCommand.class, REPLCommand.class, RunCommand.class},
         mixinStandardHelpOptions = true,
         synopsisHeading = "@|bold,underline Usage|@:%n  ",
         parameterListHeading = "%n@|bold,underline Parameters|@:%n",

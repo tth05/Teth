@@ -10,6 +10,7 @@ dependencies {
     implementation project(":analyzer")
     implementation project(":bytecode")
     implementation project(":bytecode-interpreter")
+    implementation project(":repl")
     implementation 'info.picocli:picocli:4.6.3'
     implementation 'org.fusesource.jansi:jansi:2.4.0'
 
@@ -27,6 +28,8 @@ shadowJar {
     manifest {
         attributes 'Main-Class': 'com.github.tth05.teth.cli.MainCommand'
     }
+
+    exclude "module-info.class"
 
     archiveBaseName = 'teth-cli'
     classifier ''
