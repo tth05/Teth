@@ -76,7 +76,7 @@ public class InstructionsImpl {
         });
     }
 
-    public static void run(Interpreter interpreter, int code, IInstrunction insn) {
+    public static void run(Interpreter interpreter, byte code, IInstrunction insn) {
         try {
             switch (code) {
                 case OpCodes.B_INVERT -> {
@@ -294,7 +294,7 @@ public class InstructionsImpl {
                     interpreter.push(result);
                 }
                 case OpCodes.EXIT -> interpreter.exit();
-                default -> throw new IllegalArgumentException("Unsupported opcode: " + code);
+                default -> interpreter.handleUnknownOpCode((byte) code, insn);
             }
         } catch (Throwable e) {
             try {

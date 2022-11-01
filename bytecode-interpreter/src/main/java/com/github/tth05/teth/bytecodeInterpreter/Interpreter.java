@@ -6,11 +6,14 @@ import com.github.tth05.teth.bytecode.program.TethProgram;
 
 import java.io.DataOutputStream;
 import java.io.OutputStream;
-import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Consumer;
 
 public class Interpreter {
 
     private final TethProgram program;
+    private final Map<Byte, Consumer<IInstrunction>> customInsnHandlers = new HashMap<>();
 
     private final Object[] locals = new Object[2048];
     private int localsPointer = 0;
@@ -43,7 +46,9 @@ public class Interpreter {
         initStreams();
 
         // These locals exist for micro-optimization
-        var cachedOpCodes = Arrays.stream(this.program.getInstructions()).mapToInt(IInstrunction::getOpCode).toArray();
+        var cachedOpCodes = new byte[this.program.getInstructions().length];
+        for (int i = 0; i < this.program.getInstructions().length; i++)
+            cachedOpCodes[i] = this.program.getInstructions()[i].getOpCode();
         var instructions = this.program.getInstructions();
 
         var pc = 0;
@@ -60,6 +65,10 @@ public class Interpreter {
             return;
 
         this.killed = true;
+    }
+
+    public void addCustomInsnHandler(byte opCode, Consumer<IInstrunction> handler) {
+        this.customInsnHandlers.put(opCode, handler);
     }
 
     public boolean isRunning() {
@@ -179,16 +188,6 @@ public class Interpreter {
         return this.programCounter;
     }
 
-    public void initLocalsFromStack(int paramCount, int localCount) {
-        localCount += paramCount;
-
-        for (int i = paramCount; i >= 1; i--)
-            this.locals[this.localsPointer + i] = pop();
-
-        this.localsPointer += localCount;
-        this.locals[++this.localsPointer] = localCount;
-    }
-
     public StructData getStructData(int structId) {
         return this.program.getStructData()[structId];
     }
@@ -199,6 +198,24 @@ public class Interpreter {
 
     public OutputStream getErrStream() {
         return this.systemErrStream;
+    }
+
+    void initLocalsFromStack(int paramCount, int localCount) {
+        localCount += paramCount;
+
+        for (int i = paramCount; i >= 1; i--)
+            this.locals[this.localsPointer + i] = pop();
+
+        this.localsPointer += localCount;
+        this.locals[++this.localsPointer] = localCount;
+    }
+
+    void handleUnknownOpCode(byte opCode, IInstrunction instruction) {
+        var handler = this.customInsnHandlers.get(opCode);
+        if (handler == null)
+            throw new IllegalStateException("Unknown op code: " + opCode);
+
+        handler.accept(instruction);
     }
 
     private void initStreams() {
