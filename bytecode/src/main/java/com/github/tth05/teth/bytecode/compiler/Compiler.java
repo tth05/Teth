@@ -72,14 +72,14 @@ public class Compiler {
 
         var analyzerResults = this.analyzer.analyze();
         if (analyzerResults.stream().anyMatch(AnalyzerResult::hasProblems))
-            return new CompilationResult(analyzerResults);
+            return new CompilationResult(this.analyzer, analyzerResults);
 
         for (int i = 0; i < this.units.size(); i++) {
             var generator = new BytecodeGeneratorVisitor(this.analyzer, i != 0);
             generator.visit(this.units.get(i));
         }
 
-        return new CompilationResult(toProgram(this.analyzer));
+        return new CompilationResult(this.analyzer, toProgram(this.analyzer));
     }
 
     private TethProgram toProgram(Analyzer analyzer) {
