@@ -6,10 +6,7 @@ import com.github.tth05.teth.bytecode.compiler.Compiler;
 import com.github.tth05.teth.bytecode.op.IInstrunction;
 import com.github.tth05.teth.bytecode.program.TethProgram;
 import com.github.tth05.teth.bytecodeInterpreter.Interpreter;
-import com.github.tth05.teth.lang.parser.Parser;
-import com.github.tth05.teth.lang.parser.ParserResult;
-import com.github.tth05.teth.lang.parser.SourceFileUnit;
-import com.github.tth05.teth.lang.parser.StatementList;
+import com.github.tth05.teth.lang.parser.*;
 import com.github.tth05.teth.lang.parser.ast.*;
 import com.github.tth05.teth.lang.source.InMemorySource;
 import org.fusesource.jansi.Ansi;
@@ -114,7 +111,28 @@ public class REPL implements Runnable {
     private StatementList createStatementList(ParserResult parserResult) {
         var statements = new StatementList(this.persistentStatements);
         this.cachedLocalVariables.forEach((v) -> statements.add(new VariableDeclaration(null, v.type, new IdentifierExpression(null, v.name), v.createInitializerExpression())));
-        statements.addAll(parserResult.getUnit().getStatements());
+        var parsedStatements = parserResult.getUnit().getStatements();
+
+        // Convert last expression to print statement
+        var last = parsedStatements.get(parsedStatements.size() - 1);
+        if (last instanceof Expression expr) {
+            var shouldAddPrint = true;
+            if (expr instanceof FunctionInvocationExpression invo) {
+                var analyzer = new Analyzer(parserResult.getUnit());
+                if (analyzer.analyze().get(0).hasProblems()) {
+                    shouldAddPrint = false;
+                } else {
+                    // Functions that don't return anything should not be printed
+                    if (((FunctionDeclaration) analyzer.resolvedReference((IDeclarationReference) invo.getTarget())).getReturnTypeExpr() == null)
+                        shouldAddPrint = false;
+                }
+            }
+
+            if (shouldAddPrint)
+                parsedStatements.set(parsedStatements.size() - 1, new FunctionInvocationExpression(null, new IdentifierExpression(null, "print"), List.of(), ExpressionList.of(expr)));
+        }
+
+        statements.addAll(parsedStatements);
         return statements;
     }
 
