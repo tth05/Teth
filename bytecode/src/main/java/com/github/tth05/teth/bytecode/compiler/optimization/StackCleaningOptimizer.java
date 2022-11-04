@@ -66,7 +66,7 @@ public class StackCleaningOptimizer implements IOptimizer, OpCodes {
                     break loop;
                 }
                 // 0 -> 1
-                case S_CONST, L_CONST, D_CONST, B_CONST, CREATE_LIST, LOAD_LOCAL, DUP ->
+                case S_CONST, L_CONST, D_CONST, B_CONST, NULL_CONST, CREATE_LIST, LOAD_LOCAL, DUP ->
                         unusedStackValues.push(new Marker(i, instruction));
                 // 0 -> 0
                 case JUMP -> {
@@ -206,7 +206,7 @@ public class StackCleaningOptimizer implements IOptimizer, OpCodes {
                 yield 0;
             }
             // 0 -> 1
-            case S_CONST, L_CONST, D_CONST, B_CONST, CREATE_LIST, CREATE_OBJECT, LOAD_LOCAL, DUP -> 0;
+            case S_CONST, L_CONST, D_CONST, B_CONST, NULL_CONST, CREATE_OBJECT, LOAD_LOCAL, DUP -> 0;
             // 0 -> 0
             case JUMP, EXIT -> 0;
             // INVOKE

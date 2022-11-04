@@ -226,6 +226,7 @@ public interface OpCodes {
      * </ul>
      */
     byte S_CONST = B_CONST + 1;
+    byte NULL_CONST = S_CONST + 1;
     /**
      * Pushes an empty list onto the stack.
      * <br>
@@ -234,7 +235,7 @@ public interface OpCodes {
      * -> value
      * </code></pre>
      */
-    byte CREATE_LIST = S_CONST + 1;
+    byte CREATE_LIST = NULL_CONST + 1;
     /**
      * Pushes a new object instance onto the stack.
      * <br>

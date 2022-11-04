@@ -429,6 +429,11 @@ public class Compiler {
         }
 
         @Override
+        public void visit(NullLiteralExpression doubleLiteralExpression) {
+            this.currentFunctionInsn.add(new NULL_CONST_Insn());
+        }
+
+        @Override
         public void visit(StringLiteralExpression stringLiteralExpression) {
             if (stringLiteralExpression.isSingleString()) {
                 this.currentFunctionInsn.add(new S_CONST_Insn(stringLiteralExpression.asSingleString()));
