@@ -266,6 +266,14 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
         assertFalse(problems.isEmpty());
         assertEquals(1, problems.size());
         assertEquals("Cannot assign expression of type null to variable of type long", problems.get(0).message());
+
+        problems = analyze("""
+                let a = null
+                """);
+
+        assertFalse(problems.isEmpty());
+        assertEquals(1, problems.size());
+        assertEquals("Cannot determine type of expression", problems.get(0).message());
     }
 
     @Test

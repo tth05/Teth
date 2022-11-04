@@ -173,7 +173,7 @@ public class TypeAnalysis extends AnalysisASTVisitor {
         var varTypeExpr = declaration.getTypeExpr();
         var expression = declaration.getInitializerExpr();
         var resolvedType = this.resolvedExpressionTypes.get(expression);
-        if (resolvedType == null) {
+        if (resolvedType == null || resolvedType == SemanticType.UNRESOLVED || (resolvedType == SemanticType.NULL && varTypeExpr == null)) {
             report(expression.getSpan(), "Cannot determine type of expression");
             return;
         }
@@ -320,8 +320,8 @@ public class TypeAnalysis extends AnalysisASTVisitor {
                 return;
             }
         } else if (!typesMatch || // Make sure types match and operator is allowed for that type otherwise
-            !this.binaryOperatorsAllowedTypes.containsKey(leftType.getTypeId()) ||
-            Arrays.stream(this.binaryOperatorsAllowedTypes.get(leftType.getTypeId())).noneMatch(op -> op == expression.getOperator())) {
+                   !this.binaryOperatorsAllowedTypes.containsKey(leftType.getTypeId()) ||
+                   Arrays.stream(this.binaryOperatorsAllowedTypes.get(leftType.getTypeId())).noneMatch(op -> op == expression.getOperator())) {
             report(expression.getSpan(), "Operator " + expression.getOperator().asString() + " cannot be applied to " + this.typeCache.toString(leftType) + " and " + this.typeCache.toString(rightType));
             return;
         }
