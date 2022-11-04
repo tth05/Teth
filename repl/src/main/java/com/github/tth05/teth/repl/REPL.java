@@ -74,6 +74,13 @@ public class REPL implements Runnable {
                     continue;
                 }
 
+                var interpreter = new Interpreter(injectRestoreLocalsInsn(compilerResult.getProgram()));
+                interpreter.addCustomInsnHandler(RestoreLocalsInsn.OPCODE, (instruction) -> {
+                    for (int i = 0; i < this.cachedLocalVariables.size(); i++)
+                        interpreter.storeLocal(i, this.cachedLocalVariables.get(i).value);
+                });
+                interpreter.execute();
+
                 // Backup important statements
                 parserResult.getUnit().getStatements().stream()
                         .filter(s -> s instanceof ITopLevelDeclaration || s instanceof VariableDeclaration)
@@ -90,13 +97,6 @@ public class REPL implements Runnable {
                                 this.persistentStatements.add(s);
                             }
                         });
-
-                var interpreter = new Interpreter(injectRestoreLocalsInsn(compilerResult.getProgram()));
-                interpreter.addCustomInsnHandler(RestoreLocalsInsn.OPCODE, (instruction) -> {
-                    for (int i = 0; i < this.cachedLocalVariables.size(); i++)
-                        interpreter.storeLocal(i, this.cachedLocalVariables.get(i).value);
-                });
-                interpreter.execute();
 
                 // Cache local variable values
                 for (int i = 0; i < this.cachedLocalVariables.size(); i++) {
