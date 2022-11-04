@@ -394,7 +394,7 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
                 }
                                 
                 let a: long = test(5)
-                print([a])
+                print(a)
                 """);
 
         assertTrue(problems.isEmpty());
@@ -408,7 +408,7 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
                 }
                                 
                 let a: long = test<|long>(5)
-                print([a])
+                print(a)
                 """);
 
         assertTrue(problems.isEmpty());
@@ -418,7 +418,7 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
     public void testFunctionInferNestedGenericParam() {
         var problems = analyze("""
                 let a: list<list<long>> = test(5)
-                print([a])
+                print(a)
                                 
                 fn test<T>(t: T) list<list<T>> {
                     let l = [[t]]
@@ -462,7 +462,7 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
     public void testFunctionResolvedToCorrectNonGenericType() {
         var problems = analyze("""
                 let a: list<long> = test(5)
-                print([a])
+                print(a)
                                 
                 fn test<T>(t: T) list<list<T>> {
                     let l = [[t]]

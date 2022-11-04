@@ -12,7 +12,7 @@ public class InterpreterTest extends AbstractInterpreterTest {
     public void testStringInterpolation() {
         execute("""
                 struct S {a: long}
-                print(["Hello 5+5={stringify(5+5)}, {stringify(new S(25))}"])
+                print("Hello 5+5={stringify(5+5)}, {stringify(new S(25))}")
                 """);
 
         assertLinesMatch(List.of("Hello 5+5=10, S(a: 25)"), getSystemOutputLines());
@@ -29,7 +29,7 @@ public class InterpreterTest extends AbstractInterpreterTest {
                 print([new S(1, 2).one, new S(1, 2).two])
                 """);
 
-        assertLinesMatch(List.of("1 2"), getSystemOutputLines());
+        assertLinesMatch(List.of("[1, 2]"), getSystemOutputLines());
     }
 
     @Test
@@ -38,9 +38,9 @@ public class InterpreterTest extends AbstractInterpreterTest {
                 let a = 5
                 {
                     let a = 10
-                    print([a])
+                    print(a)
                 }
-                print([a])
+                print(a)
                 """);
 
         assertLinesMatch(List.of("10", "5"), getSystemOutputLines());
@@ -49,7 +49,7 @@ public class InterpreterTest extends AbstractInterpreterTest {
     @Test
     public void testLoop() {
         execute("""
-                loop (let i = 1, i <= 10, i = i + 1) print([i]) print(["Done"])
+                loop (let i = 1, i <= 10, i = i + 1) print(i) print("Done")
                 """);
 
         assertLinesMatch(List.of("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "Done"), getSystemOutputLines());
@@ -60,7 +60,7 @@ public class InterpreterTest extends AbstractInterpreterTest {
         execute("""
                 let a = [3,2,6,-1,2,10,11]
                 sort(a, 7, 0)
-                print([a])
+                print(a)
                                 
                 fn sort(a: list<long>, n: long, index: long) {
                     if (index == n) return
@@ -87,13 +87,13 @@ public class InterpreterTest extends AbstractInterpreterTest {
                 }
                 """);
 
-        assertLinesMatch(List.of("[1, 2, 2, 3, 6, 10, 11]"), getSystemOutputLines());
+        assertLinesMatch(List.of("[-1, 2, 2, 3, 6, 10, 11]"), getSystemOutputLines());
     }
 
     @Test
     public void testFib() {
         execute("""
-                print([fib(30).toString()])
+                print(fib(30).toString())
                                 
                 fn fib(n: long) long {
                     if(n <= 1) return n
@@ -110,7 +110,7 @@ public class InterpreterTest extends AbstractInterpreterTest {
                 loop (let i = 0, i < 10, i = i + 1) {
                     if (i == 5) break
                     if (i / 2 == 0) continue
-                    print([i])
+                    print(i)
                 }
                 """);
 

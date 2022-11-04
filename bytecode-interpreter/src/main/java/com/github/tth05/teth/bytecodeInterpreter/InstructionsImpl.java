@@ -19,13 +19,8 @@ public class InstructionsImpl {
     private static final Map<FunctionDeclaration, UncheckedBiConsumer<Interpreter, Object[]>> INTRINSICS = new HashMap<>();
     static {
         INTRINSICS.put(Prelude.getGlobalFunction("print"), (interpreter, args) -> {
-            var list = (List<Object>) args[0];
-            var first = true;
-            for (Object o : list) {
-                interpreter.getOutStream().write(((first ? "" : " ") + o).getBytes(StandardCharsets.UTF_8));
-                first = false;
-            }
-
+            var arg = args[0];
+            interpreter.getOutStream().write(intrinsicToString(interpreter, arg).getBytes(StandardCharsets.UTF_8));
             interpreter.getOutStream().write(NEW_LINE_BYTES);
         });
         INTRINSICS.put(Prelude.getGlobalFunction("stringify"), (interpreter, args) -> {
@@ -358,6 +353,8 @@ public class InstructionsImpl {
             }
             str.append(')');
             return str.toString();
+        } else if (o == ObjectValue.NULL) {
+            return "null";
         } else {
             return o.toString();
         }

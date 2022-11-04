@@ -82,7 +82,7 @@ public class Prelude {
             "print",
             false,
             null,
-            type("list", type("any"))
+            type("any")
     );
     private static final FunctionDeclaration STRINGIFY_FUNCTION = createFakeFunctionDeclaration(
             "stringify",
