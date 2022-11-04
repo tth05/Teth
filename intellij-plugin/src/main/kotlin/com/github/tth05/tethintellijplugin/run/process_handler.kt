@@ -8,6 +8,7 @@ import com.intellij.openapi.util.Key
 import com.intellij.util.concurrency.AppExecutorUtil
 import com.intellij.util.io.toByteArray
 import com.jetbrains.rd.util.string.printToString
+import io.ktor.util.*
 import java.io.OutputStream
 import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
@@ -16,9 +17,10 @@ class InterpreterProcessHandler(private val interpreter: Interpreter) : ProcessH
     private val decoder = AnsiEscapeDecoder()
     private var stopped = false
 
+    private val stdPipe = RedirectedOutputStream(ProcessHandlerForwardingInputStream(this, ProcessOutputType.STDOUT))
+    private val errPipe = RedirectedOutputStream(ProcessHandlerForwardingInputStream(this, ProcessOutputType.STDERR))
+
     init {
-        val stdPipe = RedirectedOutputStream(ProcessHandlerForwardingInputStream(this, ProcessOutputType.STDOUT))
-        val errPipe = RedirectedOutputStream(ProcessHandlerForwardingInputStream(this, ProcessOutputType.STDERR))
 
         interpreter.setSystemOutStream(stdPipe)
         interpreter.setSystemErrStream(errPipe)
@@ -53,7 +55,7 @@ class InterpreterProcessHandler(private val interpreter: Interpreter) : ProcessH
             try {
                 interpreter.execute()
             } catch (e: Throwable) {
-                notifyTextAvailable(e.printToString(), ProcessOutputType.STDERR)
+                errPipe.write(e.printToString().toByteArray(StandardCharsets.UTF_8))
             } finally {
                 stopped = true
                 destroyProcess()
