@@ -174,6 +174,9 @@ public class InstructionsImpl {
                     var value = ((D_CONST_Insn) insn).getValue();
                     interpreter.push(value);
                 }
+                case OpCodes.NULL_CONST -> {
+                    interpreter.push(ObjectValue.NULL);
+                }
                 case OpCodes.S_CONST -> {
                     var value = ((S_CONST_Insn) insn).getValue();
                     interpreter.push(value);
@@ -209,7 +212,7 @@ public class InstructionsImpl {
                     var invokeInsn = (INVOKE_Insn) insn;
                     var paramCount = invokeInsn.getParamCount();
 
-                    interpreter.initLocalsFromStack(paramCount, invokeInsn.getLocalsCount());
+                    interpreter.prepareFunctionEnter(invokeInsn.isInstanceFunction(), paramCount, invokeInsn.getLocalsCount());
                     interpreter.saveReturnAddress();
                     interpreter.setProgramCounter(invokeInsn.getAbsoluteJumpAddress());
                     interpreter.createStackBoundary();
@@ -219,7 +222,7 @@ public class InstructionsImpl {
                     var function = ((INVOKE_INTRINSIC_Insn) insn).getFunctionDeclaration();
                     var intrinsic = INTRINSICS.get(function);
                     var argCount = function.getParameters().size() + (function.isInstanceFunction() ? 1 : 0);
-                    intrinsic.accept(interpreter, collectFunctionArguments(interpreter, argCount));
+                    intrinsic.accept(interpreter, collectFunctionArguments(interpreter, function.isInstanceFunction(), argCount));
                 }
                 case OpCodes.CREATE_OBJECT -> {
                     var createInsn = (CREATE_OBJECT_Insn) insn;
@@ -294,7 +297,7 @@ public class InstructionsImpl {
                     interpreter.push(result);
                 }
                 case OpCodes.EXIT -> interpreter.exit();
-                default -> interpreter.handleUnknownOpCode((byte) code, insn);
+                default -> interpreter.handleUnknownOpCode(code, insn);
             }
         } catch (Throwable e) {
             try {
@@ -306,9 +309,13 @@ public class InstructionsImpl {
         }
     }
 
-    private static Object[] collectFunctionArguments(Interpreter interpreter, int argCount) {
-        for (int i = argCount - 1; i >= 0; i--)
+    private static Object[] collectFunctionArguments(Interpreter interpreter, boolean instanceFunction, int argCount) {
+        for (int i = argCount - 1; i >= 0; i--) {
+            if (instanceFunction && i == 0 && interpreter.peek() == ObjectValue.NULL)
+                throw new RuntimeException("Cannot call instance function on null value");
+
             ARGS_ARRAY[i] = interpreter.pop();
+        }
 
         return ARGS_ARRAY;
     }

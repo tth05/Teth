@@ -2,6 +2,8 @@ package com.github.tth05.teth.bytecodeInterpreter;
 
 public class ObjectValue {
 
+    public static final Object NULL = new Object();
+
     private final int structId;
     private final Object[] fields;
 

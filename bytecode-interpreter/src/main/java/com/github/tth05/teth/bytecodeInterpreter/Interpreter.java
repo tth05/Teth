@@ -200,11 +200,15 @@ public class Interpreter {
         return this.systemErrStream;
     }
 
-    void initLocalsFromStack(int paramCount, int localCount) {
+    void prepareFunctionEnter(boolean instanceFunction, int paramCount, int localCount) {
         localCount += paramCount;
 
-        for (int i = paramCount; i >= 1; i--)
+        for (int i = paramCount; i >= 1; i--) {
+            if (instanceFunction && i == 1 && peek() == ObjectValue.NULL)
+                throw new RuntimeException("Cannot call instance function on null value");
+
             this.locals[this.localsPointer + i] = pop();
+        }
 
         this.localsPointer += localCount;
         this.locals[++this.localsPointer] = localCount;
