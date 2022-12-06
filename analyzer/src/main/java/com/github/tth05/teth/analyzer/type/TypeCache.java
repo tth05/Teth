@@ -18,7 +18,7 @@ public class TypeCache {
     private int id = 1;
 
     private final Map<Statement, Integer> statementToTypeIdMap = new IdentityHashMap<>();
-    private final Map<Integer, Statement> typeIdToStatementMap = new IdentityHashMap<>();
+    private final Map<Integer, Statement> typeIdToStatementMap = new HashMap<>();
     private final Map<Integer, SemanticType> rawTypeCache = new HashMap<>();
 
     public int internalizeType(Statement statement) {
