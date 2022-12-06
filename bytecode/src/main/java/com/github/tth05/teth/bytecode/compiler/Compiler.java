@@ -15,6 +15,7 @@ import com.github.tth05.teth.bytecode.program.TethProgram;
 import com.github.tth05.teth.lang.parser.ASTVisitor;
 import com.github.tth05.teth.lang.parser.SourceFileUnit;
 import com.github.tth05.teth.lang.parser.ast.*;
+import com.github.tth05.teth.lang.span.Span;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -126,7 +127,7 @@ public class Compiler {
             var function = placeholder.target();
             var offset = functionOffsets.get(function);
             if (offset == null)
-                throw new IllegalStateException("Function '%s' is referenced but not compiled".formatted(function.getNameExpr().getValue()));
+                throw new IllegalStateException("Function '%s' is referenced but not compiled".formatted(function.getNameExpr().getSpan().getText()));
 
             insns[j] = new INVOKE_Insn(
                     placeholder.isInstanceFunction(),
@@ -147,8 +148,8 @@ public class Compiler {
         var data = new StructData[this.structIds.size()];
         this.structIds.forEach((struct, id) -> {
             data[id] = new StructData(
-                    struct.getNameExpr().getValue(),
-                    struct.getFields().stream().map(f -> f.getNameExpr().getValue()).toArray(String[]::new)
+                    struct.getNameExpr().getSpan().getText(),
+                    struct.getFields().stream().map(f -> f.getNameExpr().getSpan().getText()).toArray(String[]::new)
             );
         });
         return data;
@@ -157,7 +158,10 @@ public class Compiler {
     @SuppressWarnings("UnqualifiedFieldAccess")
     private class BytecodeGeneratorVisitor extends ASTVisitor {
 
-        private static final FunctionDeclaration.ParameterDeclaration SELF_PLACEHOLDER = new FunctionDeclaration.ParameterDeclaration(null, null, new IdentifierExpression(null, "self"));
+        private static final FunctionDeclaration.ParameterDeclaration SELF_PLACEHOLDER = new FunctionDeclaration.ParameterDeclaration(null, null, new IdentifierExpression(Span.fromString("self")));
+        private static final FunctionDeclaration STRING_CONCAT_FUNCTION = (FunctionDeclaration) Prelude.getStructForTypeName(Span.fromString("string")).getMember(Span.fromString("concat"));
+        private static final FunctionDeclaration LIST_ADD_FUNCTION = (FunctionDeclaration) Prelude.getStructForTypeName(Span.fromString("list")).getMember(Span.fromString("add"));
+
 
         private final Analyzer analyzer;
         private final boolean ignoreTopLevelCode;
@@ -440,16 +444,24 @@ public class Compiler {
                 return;
             }
 
-            for (var part : stringLiteralExpression.getParts()) {
+            var parts = stringLiteralExpression.getParts();
+            for (int i = 0; i < parts.size(); i++) {
+                var part = parts.get(i);
                 switch (part.getType()) {
-                    case STRING -> this.currentFunctionInsn.add(new S_CONST_Insn(part.asString()));
+                    case STRING -> {
+                        var partString = part.asString();
+                        if (i == 0)
+                            partString = partString.substring(1);
+                        if (i == parts.size() - 1)
+                            partString = partString.substring(0, partString.length() - 1);
+                        this.currentFunctionInsn.add(new S_CONST_Insn(partString));
+                    }
                     case EXPRESSION -> part.asExpression().accept(this);
                 }
             }
 
-            var concatFunction = (FunctionDeclaration) Prelude.getStructForTypeName("string").getMember("concat");
             for (int i = 0; i < stringLiteralExpression.getParts().size() - 1; i++)
-                this.currentFunctionInsn.add(new INVOKE_INTRINSIC_Insn(concatFunction));
+                this.currentFunctionInsn.add(new INVOKE_INTRINSIC_Insn(STRING_CONCAT_FUNCTION));
         }
 
         @Override
@@ -473,7 +485,7 @@ public class Compiler {
 
             listLiteralExpression.getInitializers().forEach(e -> {
                 e.accept(this);
-                this.currentFunctionInsn.add(new INVOKE_INTRINSIC_Insn((FunctionDeclaration) Prelude.LIST_STRUCT_DECLARATION.getMember("add")));
+                this.currentFunctionInsn.add(new INVOKE_INTRINSIC_Insn(LIST_ADD_FUNCTION));
             });
         }
 

@@ -18,7 +18,7 @@ public class AnalyzerInfoTest extends AbstractAnalyzerTest {
                         this.asts.get(0).unit().getStatements().stream()
                                 .filter(s -> s instanceof FunctionDeclaration)
                                 .map(FunctionDeclaration.class::cast)
-                                .filter(f -> f.getNameExpr().getValue().equals("f"))
+                                .filter(f -> f.getNameExpr().getSpan().textEquals("f"))
                                 .findFirst().orElseThrow()
                 )
         );
@@ -32,7 +32,7 @@ public class AnalyzerInfoTest extends AbstractAnalyzerTest {
                         this.asts.get(0).unit().getStatements().stream()
                                 .filter(s -> s instanceof FunctionDeclaration)
                                 .map(FunctionDeclaration.class::cast)
-                                .filter(f -> f.getNameExpr().getValue().equals("f"))
+                                .filter(f -> f.getNameExpr().getSpan().textEquals("f"))
                                 .findFirst().orElseThrow()
                 )
         );

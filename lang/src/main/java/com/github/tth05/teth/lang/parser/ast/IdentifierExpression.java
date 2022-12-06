@@ -4,20 +4,11 @@ import com.github.tth05.teth.lang.parser.ASTVisitor;
 import com.github.tth05.teth.lang.span.Span;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
-import java.util.Objects;
-
 
 public final class IdentifierExpression extends Expression implements IAssignmentTarget {
 
-    private final String value;
-
-    public IdentifierExpression(Span span, String value) {
+    public IdentifierExpression(Span span) {
         super(span);
-        this.value = value;
-    }
-
-    public String getValue() {
-        return this.value;
     }
 
     @Override
@@ -32,19 +23,17 @@ public final class IdentifierExpression extends Expression implements IAssignmen
         if (o == null || getClass() != o.getClass())
             return false;
 
-        return Objects.equals(this.value, ((IdentifierExpression) o).value);
+        return this.getSpan().textEquals(((IdentifierExpression) o).getSpan());
     }
 
     @Override
     public int hashCode() {
-        int result = super.hashCode();
-        result = 31 * result + this.value.hashCode();
-        return result;
+        return this.getSpan().getText().hashCode();
     }
 
     @Override
     public void dump(ASTDumpBuilder builder) {
-        builder.append(Objects.requireNonNullElse(this.value, "???"));
+        builder.append(this.getSpan() != null ? this.getSpan().getText() : "???");
     }
 
     @Override

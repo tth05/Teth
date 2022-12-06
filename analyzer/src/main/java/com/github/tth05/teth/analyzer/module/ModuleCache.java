@@ -4,11 +4,16 @@ import com.github.tth05.teth.lang.parser.SourceFileUnit;
 import com.github.tth05.teth.lang.parser.ast.IHasName;
 import com.github.tth05.teth.lang.parser.ast.ITopLevelDeclaration;
 import com.github.tth05.teth.lang.parser.ast.Statement;
+import com.github.tth05.teth.lang.span.Span;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ModuleCache {
+
+    private static final Matcher MODULE_PATH_MATCHER = Pattern.compile("^((\\.{2}|/|[^/.]+?)/)*?[^/.]+$").matcher("");
 
     private final Map<String, SourceFileUnitIndex> unitIndexMap = new HashMap<>();
     private IModuleLoader moduleLoader;
@@ -26,7 +31,7 @@ public class ModuleCache {
         return this.unitIndexMap.get(uniquePath) != null;
     }
 
-    public Statement findExportedDeclaration(String uniquePath, String name) {
+    public Statement findExportedDeclaration(String uniquePath, Span name) {
         loadModule(uniquePath);
 
         var index = this.unitIndexMap.get(uniquePath);
@@ -36,8 +41,8 @@ public class ModuleCache {
         return index.findExportedDeclaration(name);
     }
 
-    public String toUniquePath(String relativeToUniquePath, String moduleName) {
-        return this.moduleLoader == null ? moduleName : this.moduleLoader.toUniquePath(relativeToUniquePath, moduleName);
+    public String toUniquePath(String relativeToUniquePath, Span moduleName) {
+        return this.moduleLoader == null ? moduleName.getText() : this.moduleLoader.toUniquePath(relativeToUniquePath, moduleName);
     }
 
     private void loadModule(String path) {
@@ -61,23 +66,27 @@ public class ModuleCache {
         return this.unitIndexMap.containsKey(path);
     }
 
-    public static boolean isValidModulePath(String path) {
-        return path != null && !path.isBlank() && path.matches("^((\\.{2}|/|[^/.]+?)/)*?[^/.]+$");
+    public static boolean isValidModulePath(Span path) {
+        if (path == null || path.length() < 1)
+            return false;
+
+        MODULE_PATH_MATCHER.reset(path);
+        return MODULE_PATH_MATCHER.matches();
     }
 
     private static class SourceFileUnitIndex {
 
-        private final Map<String, Statement> exportedStatementsMap;
+        private final Map<Span, Statement> exportedStatementsMap;
 
         public SourceFileUnitIndex(SourceFileUnit unit) {
             this.exportedStatementsMap = new HashMap<>(unit.getStatements().size());
             unit.getStatements().stream()
                     .filter(s -> s instanceof ITopLevelDeclaration && s instanceof IHasName)
-                    .filter(s -> ((IHasName) s).getNameExpr().getValue() != null)
-                    .forEach(s -> this.exportedStatementsMap.put(((IHasName) s).getNameExpr().getValue(), s));
+                    .filter(s -> ((IHasName) s).getNameExpr().getSpan() != null)
+                    .forEach(s -> this.exportedStatementsMap.put(((IHasName) s).getNameExpr().getSpan(), s));
         }
 
-        public Statement findExportedDeclaration(String name) {
+        public Statement findExportedDeclaration(Span name) {
             return this.exportedStatementsMap.get(name);
         }
     }

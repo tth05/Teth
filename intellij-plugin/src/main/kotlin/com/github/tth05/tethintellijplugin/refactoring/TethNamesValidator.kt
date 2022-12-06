@@ -1,6 +1,7 @@
 package com.github.tth05.tethintellijplugin.refactoring
 
 import com.github.tth05.teth.lang.lexer.Tokenizer
+import com.github.tth05.teth.lang.span.Span
 import com.intellij.lang.refactoring.NamesValidator
 import com.intellij.openapi.project.Project
 

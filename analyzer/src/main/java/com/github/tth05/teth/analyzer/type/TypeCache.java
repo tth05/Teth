@@ -90,9 +90,9 @@ public class TypeCache {
         // TODO: Switch preview disabled
         var declaration = getDeclaration(type);
         if (declaration instanceof StructDeclaration struct) {
-            name = struct.getNameExpr().getValue();
+            name = struct.getNameExpr().getSpan().getText();
         } else if (declaration instanceof GenericParameterDeclaration generic) {
-            name = generic.getNameExpr().getValue();
+            name = generic.getNameExpr().getSpan().getText();
         } else {
             throw new IllegalStateException();
         }

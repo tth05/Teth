@@ -3,6 +3,7 @@ package com.github.tth05.teth.analyzer;
 import com.github.tth05.teth.lang.parser.ast.FunctionDeclaration;
 import com.github.tth05.teth.lang.parser.ast.IHasName;
 import com.github.tth05.teth.lang.parser.ast.Statement;
+import com.github.tth05.teth.lang.span.Span;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -13,7 +14,7 @@ public class ScopeStack {
 
     private final Deque<Scope> stack = new ArrayDeque<>();
 
-    public Statement resolveIdentifier(String ident) {
+    public Statement resolveIdentifier(Span ident) {
         if (ident == null)
             return null;
 
@@ -30,7 +31,7 @@ public class ScopeStack {
             }
 
             var owner = scope.owner;
-            if (pastSubScope && owner instanceof IHasName named && ident.equals(named.getNameExpr().getValue()) && // Check name matches
+            if (pastSubScope && owner instanceof IHasName named && ident.equals(named.getNameExpr().getSpan()) && // Check name matches
                 (!(owner instanceof FunctionDeclaration func) || !func.isInstanceFunction())) // Filter instance functions
                 return owner;
         }
@@ -69,7 +70,7 @@ public class ScopeStack {
         return count;
     }
 
-    public void addDeclaration(String value, Statement declaration) {
+    public void addDeclaration(Span value, Statement declaration) {
         this.stack.getLast().declarations.put(value, declaration);
     }
 
@@ -90,7 +91,7 @@ public class ScopeStack {
 
     private static final class Scope {
 
-        private final Map<String, Statement> declarations = new HashMap<>();
+        private final Map<Span, Statement> declarations = new HashMap<>();
         private final Statement owner;
         private final boolean subScope;
 

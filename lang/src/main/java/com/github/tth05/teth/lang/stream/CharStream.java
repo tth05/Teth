@@ -1,6 +1,7 @@
 package com.github.tth05.teth.lang.stream;
 
 import com.github.tth05.teth.lang.source.ISource;
+import com.github.tth05.teth.lang.source.InMemorySource;
 import com.github.tth05.teth.lang.span.Span;
 import com.github.tth05.teth.lang.util.BoundedIntStack;
 
@@ -81,7 +82,7 @@ public class CharStream {
     }
 
     public static CharStream fromChars(char[] chars) {
-        return new CharStream(null, chars);
+        return new CharStream(new InMemorySource("tmp", chars), chars);
     }
 
     public static CharStream fromSource(ISource source) {

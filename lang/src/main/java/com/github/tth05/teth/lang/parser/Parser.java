@@ -11,6 +11,7 @@ import com.github.tth05.teth.lang.span.ArrayListWithSpan;
 import com.github.tth05.teth.lang.span.ListWithSpan;
 import com.github.tth05.teth.lang.span.Span;
 import com.github.tth05.teth.lang.stream.CharStream;
+import com.github.tth05.teth.lang.util.NumberUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -78,7 +79,7 @@ public class Parser {
             var part = expectIdentifier(AnchorSets.END_SET_USE_STATEMENT.union(AnchorSets.FIRST_SET_STATEMENT_EXPRESSIONLESS), () -> "Expected identifier");
             consumeLineBreaks();
             if (!part.isInvalid())
-                imports.add(new IdentifierExpression((lastSpan = part.span()), part.value()));
+                imports.add(new IdentifierExpression(lastSpan = part.span()));
 
             if (!this.stream.peek().is(TokenType.COMMA))
                 break;
@@ -275,7 +276,7 @@ public class Parser {
             lastSpan = initializer.getSpan();
         return new VariableDeclaration(
                 Span.of(firstSpan, lastSpan),
-                type, new IdentifierExpression(name.span(), name.value()), initializer
+                type, new IdentifierExpression(name.span()), initializer
         );
     }
 
@@ -293,7 +294,7 @@ public class Parser {
 
         var parameters = parseList(anchorSet.union(AnchorUnion.leaf(List.of(TokenType.COLON))), (a) -> {
             var nameToken = expectIdentifier(a, () -> "Expected parameter name");
-            if (instanceMethod && "self".equals(nameToken.value()))
+            if (instanceMethod && nameToken.textEquals("self"))
                 this.problems.add(new Problem(nameToken.span(), "Parameter name 'self' is not allowed for instance methods"));
 
             consumeLineBreaks();
@@ -303,7 +304,7 @@ public class Parser {
 
             var paramFirstSpan = nameToken.isInvalid() ? colonToken.isInvalid() ? type.getSpan() == null ? null : type.getSpan() : colonToken.span() : nameToken.span();
             var paramLastSpan = type.getSpan() == null ? colonToken.isInvalid() ? nameToken.isInvalid() ? null : nameToken.span() : colonToken.span() : type.getSpan();
-            return new FunctionDeclaration.ParameterDeclaration(paramFirstSpan == null ? null : Span.of(paramFirstSpan, paramLastSpan), type, new IdentifierExpression(nameToken.span(), nameToken.value()));
+            return new FunctionDeclaration.ParameterDeclaration(paramFirstSpan == null ? null : Span.of(paramFirstSpan, paramLastSpan), type, new IdentifierExpression(nameToken.span()));
         }, ArrayListWithSpan::new, TokenType.R_PAREN);
 
         expectToken(TokenType.R_PAREN, anchorSet.union(AnchorSets.FIRST_SET_STATEMENT), () -> "Expected closing ')'");
@@ -314,7 +315,7 @@ public class Parser {
         return new FunctionDeclaration(
                 Span.of(firstSpan, body.getSpan()),
                 this.currentUnit,
-                new IdentifierExpression(functionName.span(), functionName.value()),
+                new IdentifierExpression(functionName.span()),
                 genericParameters, parameters, returnType, body, instanceMethod
         );
     }
@@ -324,7 +325,7 @@ public class Parser {
             var listStartSpan = consume(false).span();
             var genericParameters = parseList(anchorSet, (a) -> {
                 var parameterName = expectIdentifier(a, () -> "Expected generic parameter name");
-                return new GenericParameterDeclaration(parameterName.span(), parameterName.value());
+                return new GenericParameterDeclaration(parameterName.span());
             }, () -> new ArrayListWithSpan<>(2), TokenType.GREATER);
             var greaterToken = expectToken(TokenType.GREATER, anchorSet, () -> "Expected '>'");
 
@@ -379,7 +380,7 @@ public class Parser {
             return new StructDeclaration(
                     Span.of(firstSpan, genericParameters.getSpanOrElse(structName.isInvalid() ? firstSpan : structName.span())),
                     this.currentUnit,
-                    new IdentifierExpression(structName.span(), structName.value()),
+                    new IdentifierExpression(structName.span()),
                     genericParameters, Collections.emptyList(), Collections.emptyList()
             );
         }
@@ -406,7 +407,7 @@ public class Parser {
                 if (type.getSpan() != null)
                     lastSpan = type.getSpan();
 
-                fields.add(new StructDeclaration.FieldDeclaration(Span.of(name.span(), lastSpan), type, new IdentifierExpression(name.span(), name.value()), fields.size()));
+                fields.add(new StructDeclaration.FieldDeclaration(Span.of(name.span(), lastSpan), type, new IdentifierExpression(name.span()), fields.size()));
             } else if (currentToken.is(TokenType.KEYWORD_FN)) {
                 var function = parseFunctionDeclaration(anchorSet, true);
 
@@ -426,7 +427,7 @@ public class Parser {
         return new StructDeclaration(
                 Span.of(firstSpan, endSpan),
                 this.currentUnit,
-                new IdentifierExpression(structName.span(), structName.value()),
+                new IdentifierExpression(structName.span()),
                 genericParameters,
                 fields,
                 functions
@@ -516,7 +517,7 @@ public class Parser {
 
         return new ObjectCreationExpression(
                 Span.of(firstSpan, lastSpan),
-                new IdentifierExpression(nameToken.span(), nameToken.value()),
+                new IdentifierExpression(nameToken.span()),
                 genericParameters, parameters
         );
     }
@@ -548,7 +549,7 @@ public class Parser {
         if (!name.isInvalid())
             lastSpan = name.span();
 
-        return new MemberAccessExpression(Span.of(target.getSpan(), lastSpan), new IdentifierExpression(name.span(), name.value()), target);
+        return new MemberAccessExpression(Span.of(target.getSpan(), lastSpan), new IdentifierExpression(name.span()), target);
     }
 
     private Expression parseFunctionInvocation(AnchorUnion anchorSet, Expression target) {
@@ -609,12 +610,15 @@ public class Parser {
         var span = token.span();
 
         return switch (token.type()) {
-            case LONG_LITERAL -> new LongLiteralExpression(span, Long.parseLong(consume(false).value()));
-            case DOUBLE_LITERAL -> new DoubleLiteralExpression(span, Double.parseDouble(consume(false).value()));
+            case LONG_LITERAL -> new LongLiteralExpression(span, NumberUtils.parseLong(consume(false).text(), 0));
+            case DOUBLE_LITERAL -> new DoubleLiteralExpression(span, NumberUtils.parseDouble(consume(false).text(), 0));
             case STRING_LITERAL -> parseStringLiteralExpression();
-            case BOOLEAN_LITERAL -> new BooleanLiteralExpression(span, Boolean.parseBoolean(consume(false).value()));
+            case BOOLEAN_LITERAL -> new BooleanLiteralExpression(span, Boolean.parseBoolean(consume(false).text()));
             case KEYWORD_NULL -> new NullLiteralExpression(consume(false).span());
-            case IDENTIFIER -> new IdentifierExpression(span, consume(false).value());
+            case IDENTIFIER -> {
+                consume(false);
+                yield new IdentifierExpression(span);
+            }
             case L_SQUARE_BRACKET -> {
                 consume(false);
                 var lastSpan = span;
@@ -640,7 +644,7 @@ public class Parser {
         var parts = new ArrayList<StringLiteralExpression.Part>(1);
         while (this.stream.peek().is(TokenType.STRING_LITERAL)) {
             var token = consume(false);
-            parts.add(StringLiteralExpression.stringPart(token.span(), token.value()));
+            parts.add(StringLiteralExpression.stringPart(token.span()));
 
             if (this.stream.peek().is(TokenType.STRING_LITERAL_CODE_START)) {
                 consume(false);
@@ -665,7 +669,7 @@ public class Parser {
         var firstSpan = this.stream.peek().span();
         var current = expectIdentifier(anchorSet, () -> "Expected a type name");
         if (current.isInvalid())
-            return new TypeExpression(zeroWidthSpan(firstSpan), new IdentifierExpression(null, null));
+            return new TypeExpression(zeroWidthSpan(firstSpan), new IdentifierExpression(null));
 
         firstSpan = current.span();
         var secondSpan = firstSpan;
@@ -690,7 +694,7 @@ public class Parser {
             genericParameters = ArrayListWithSpan.emptyList();
         }
 
-        return new TypeExpression(Span.of(firstSpan, secondSpan), new IdentifierExpression(current.span(), current.value()), genericParameters);
+        return new TypeExpression(Span.of(firstSpan, secondSpan), new IdentifierExpression(current.span()), genericParameters);
     }
 
     private Token expectIdentifier(AnchorUnion anchorSet, Supplier<String> messageSupplier) {

@@ -8,6 +8,7 @@ import com.github.tth05.teth.lang.parser.Parser;
 import com.github.tth05.teth.lang.parser.SourceFileUnit;
 import com.github.tth05.teth.lang.source.FileSource;
 import com.github.tth05.teth.lang.source.ISource;
+import com.github.tth05.teth.lang.span.Span;
 import picocli.CommandLine;
 
 import java.io.IOException;
@@ -47,10 +48,10 @@ public abstract class AbstractCompilerCommand implements Runnable {
             if (!this.disableModuleLoading) {
                 compiler.setModuleLoader(new IModuleLoader() {
                     @Override
-                    public String toUniquePath(String relativeToUniquePath, String path) {
+                    public String toUniquePath(String relativeToUniquePath, Span path) {
                         try {
                             var nioPath = Paths.get(relativeToUniquePath);
-                            return nioPath.getParent().resolve(path + ".teth").normalize().toAbsolutePath().toString().replace('\\', '/');
+                            return nioPath.getParent().resolve(path.getText() + ".teth").normalize().toAbsolutePath().toString().replace('\\', '/');
                         } catch (Throwable e) {
                             e.printStackTrace();
                             return "";

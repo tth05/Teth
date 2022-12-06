@@ -7,6 +7,7 @@ import com.github.tth05.teth.lang.parser.Parser
 import com.github.tth05.teth.lang.parser.ParserResult
 import com.github.tth05.teth.lang.parser.SourceFileUnit
 import com.github.tth05.teth.lang.source.InMemorySource
+import com.github.tth05.teth.lang.span.Span
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.vfs.LocalFileSystem
@@ -39,11 +40,11 @@ fun Project.findPsiFileByPath(path: String): PsiFile? {
 
 class IntellijModuleLoader(val project: Project) : IModuleLoader {
 
-    override fun toUniquePath(relativeToUniquePath: String, path: String): String {
+    override fun toUniquePath(relativeToUniquePath: String, path: Span): String {
         return try {
             val nioPath = Paths.get(relativeToUniquePath)
             FileUtil.toSystemIndependentName(
-                nioPath.parent.resolve("$path.teth").normalize().toAbsolutePath().toString()
+                nioPath.parent.resolve("${path.text}.teth").normalize().toAbsolutePath().toString()
             )
         } catch (e: Throwable) {
             e.printStackTrace()

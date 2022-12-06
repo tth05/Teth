@@ -2,7 +2,6 @@ package com.github.tth05.teth.lang.parser.ast;
 
 import com.github.tth05.teth.lang.parser.ASTVisitor;
 import com.github.tth05.teth.lang.span.Span;
-import com.github.tth05.teth.lang.span.Span;
 import com.github.tth05.teth.lang.util.ASTDumpBuilder;
 
 import java.util.Collections;
@@ -30,7 +29,24 @@ public final class StringLiteralExpression extends Expression implements IDeclar
         if (!isSingleString())
             throw new UnsupportedOperationException("Not a single string");
 
-        return this.parts.get(0).asString();
+        return asSingleStringSpan().getText();
+    }
+
+    public Span asSingleStringSpan() {
+        if (!isSingleString())
+            throw new UnsupportedOperationException("Not a single string");
+
+        var span = this.getSpan();
+        if (span.length() < 1)
+            return span;
+
+        var start = span.offset();
+        var end = span.offsetEnd();
+        if (span.charAt(0) == '"')
+            start++;
+        if (span.charAt(span.length() - 1) == '"')
+            end--;
+        return new Span(span.source(), start, end);
     }
 
     public List<Part> getParts() {
@@ -47,7 +63,7 @@ public final class StringLiteralExpression extends Expression implements IDeclar
         builder.append("\"");
         for (var part : this.parts) {
             switch (part.getType()) {
-                case STRING -> builder.append(part.asString());
+                case STRING -> builder.append(part.getSpan().getText());
                 case EXPRESSION -> {
                     builder.append("{");
                     part.asExpression().dump(builder);
@@ -80,8 +96,8 @@ public final class StringLiteralExpression extends Expression implements IDeclar
         return dumpToString();
     }
 
-    public static Part stringPart(Span span, String string) {
-        return new Part(span, PartType.STRING, string);
+    public static Part stringPart(Span span) {
+        return new Part(span, PartType.STRING);
     }
 
     public static Part expressionPart(Expression expression) {
@@ -99,7 +115,11 @@ public final class StringLiteralExpression extends Expression implements IDeclar
         private final PartType type;
         private final Object value;
 
-        public Part(Span span, PartType type, Object value) {
+        private Part(Span span, PartType type) {
+            this(span, type, null);
+        }
+
+        private Part(Span span, PartType type, Object value) {
             this.span = span;
             this.type = type;
             this.value = value;
@@ -116,7 +136,7 @@ public final class StringLiteralExpression extends Expression implements IDeclar
         public String asString() {
             if (this.type != PartType.STRING)
                 throw new UnsupportedOperationException();
-            return (String) this.value;
+            return this.getSpan().getText();
         }
 
         public Expression asExpression() {
@@ -136,7 +156,7 @@ public final class StringLiteralExpression extends Expression implements IDeclar
 
             if (this.type != part.type)
                 return false;
-            return this.value.equals(part.value);
+            return Objects.equals(this.value, part.value);
         }
 
         @Override

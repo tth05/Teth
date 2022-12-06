@@ -7,7 +7,7 @@ import java.util.ArrayDeque;
 
 public class TokenStream {
 
-    private static final Token EOF = new Token(null, "", TokenType.EOF);
+    private static final Token EOF = new Token(null, TokenType.EOF);
 
     private final ArrayDeque<Token> tokens;
     private final ISource source;

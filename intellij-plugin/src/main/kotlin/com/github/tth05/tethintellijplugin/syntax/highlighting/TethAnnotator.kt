@@ -66,7 +66,7 @@ private class AnnotatingVisitor(val analyzer: Analyzer, val holder: AnnotationHo
     override fun visit(declaration: StructDeclaration?) {
         super.visit(declaration)
 
-        if (declaration!!.nameExpr.value == null) return
+        if (declaration!!.nameExpr.span == null) return
 
         annotateWithColor(declaration.nameExpr.span, TethSyntaxHighlighter.TYPE)
     }
@@ -74,13 +74,13 @@ private class AnnotatingVisitor(val analyzer: Analyzer, val holder: AnnotationHo
     override fun visit(declaration: FunctionDeclaration?) {
         super.visit(declaration)
 
-        if (declaration!!.nameExpr.value == null) return
+        if (declaration!!.nameExpr.span == null) return
 
         annotateWithColor(declaration.nameExpr.span, TethSyntaxHighlighter.FUNCTION_CALL)
     }
 
     override fun visit(declaration: GenericParameterDeclaration?) {
-        if (declaration!!.nameExpr.value == null) return
+        if (declaration!!.nameExpr.span == null) return
 
         annotateWithColor(declaration.nameExpr.span, TethSyntaxHighlighter.TYPE_PARAMETER)
     }
@@ -88,7 +88,7 @@ private class AnnotatingVisitor(val analyzer: Analyzer, val holder: AnnotationHo
     override fun visit(declaration: FieldDeclaration?) {
         super.visit(declaration)
 
-        if (declaration!!.nameExpr.value == null) return
+        if (declaration!!.nameExpr.span == null) return
 
         annotateWithColor(declaration.nameExpr.span, TethSyntaxHighlighter.FIELD)
     }
@@ -96,7 +96,7 @@ private class AnnotatingVisitor(val analyzer: Analyzer, val holder: AnnotationHo
     override fun visit(parameter: ParameterDeclaration?) {
         super.visit(parameter)
 
-        if (parameter!!.nameExpr.value == null) return
+        if (parameter!!.nameExpr.span == null) return
 
         annotateWithColor(parameter.nameExpr.span, TethSyntaxHighlighter.PARAMETER)
     }
@@ -130,13 +130,13 @@ private class AnnotatingVisitor(val analyzer: Analyzer, val holder: AnnotationHo
     override fun visit(typeExpression: TypeExpression?) {
         super.visit(typeExpression)
 
-        if (typeExpression!!.nameExpr.value == null)
+        if (typeExpression!!.nameExpr.span == null)
             return
 
         val span = Span(
             typeExpression.span.source,
             typeExpression.span.offset,
-            typeExpression.span.offset + typeExpression.nameExpr.value.length
+            typeExpression.span.offset + typeExpression.nameExpr.span.length
         )
 
         when (analyzer.resolvedReference(typeExpression)) {

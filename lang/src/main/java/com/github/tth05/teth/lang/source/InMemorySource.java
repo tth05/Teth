@@ -6,8 +6,12 @@ public class InMemorySource implements ISource {
     private final char[] contents;
 
     public InMemorySource(String moduleName, String contents) {
+        this(moduleName, contents.toCharArray());
+    }
+
+    public InMemorySource(String moduleName, char[] contents) {
         this.moduleName = moduleName;
-        this.contents = contents.toCharArray();
+        this.contents = contents;
     }
 
     @Override

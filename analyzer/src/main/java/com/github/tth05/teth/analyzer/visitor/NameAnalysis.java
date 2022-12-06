@@ -6,6 +6,7 @@ import com.github.tth05.teth.analyzer.module.ModuleCache;
 import com.github.tth05.teth.analyzer.prelude.Prelude;
 import com.github.tth05.teth.lang.parser.SourceFileUnit;
 import com.github.tth05.teth.lang.parser.ast.*;
+import com.github.tth05.teth.lang.source.InMemorySource;
 import com.github.tth05.teth.lang.span.Span;
 import com.github.tth05.teth.lang.util.BiIterator;
 
@@ -14,9 +15,10 @@ import java.util.stream.Collectors;
 
 public class NameAnalysis extends AnalysisASTVisitor {
 
-    public static final FunctionDeclaration GLOBAL_FUNCTION = new FunctionDeclaration(null, null, new IdentifierExpression(null, null), List.of(), List.of(), null, null, false);
+    public static final FunctionDeclaration GLOBAL_FUNCTION = new FunctionDeclaration(null, null, new IdentifierExpression(null), List.of(), List.of(), null, null, false);
 
-    private static final HashSet<String> DUPLICATION_SET = new HashSet<>();
+    private static final HashSet<Span> DUPLICATION_SET = new HashSet<>();
+    private static final Span SELF_PARAMETER_NAME = new Span(new InMemorySource("a", "self"), 0, "self".length());
 
     private final ScopeStack scopeStack = new ScopeStack();
 
@@ -61,7 +63,7 @@ public class NameAnalysis extends AnalysisASTVisitor {
                     continue;
 
                 var name = ((IHasName) decl).getNameExpr();
-                if (!DUPLICATION_SET.add(name.getValue()))
+                if (!DUPLICATION_SET.add(name.getSpan()))
                     report(name.getSpan(), "Duplicate top level declaration");
             }
         }
@@ -96,7 +98,7 @@ public class NameAnalysis extends AnalysisASTVisitor {
     @Override
     public void visit(UseStatement useStatement) {
         var pathExpr = useStatement.getPathExpr();
-        var path = pathExpr != null ? pathExpr.asSingleString() : null;
+        var path = pathExpr != null ? pathExpr.asSingleStringSpan() : null;
 
         if (!ModuleCache.isValidModulePath(path)) {
             var span = pathExpr != null ? pathExpr.getSpan() : useStatement.getSpan();
@@ -116,9 +118,9 @@ public class NameAnalysis extends AnalysisASTVisitor {
         }
 
         for (var importNameExpr : useStatement.getImports()) {
-            var decl = this.analyzer.findExportedDeclaration(uniquePath, importNameExpr.getValue());
+            var decl = this.analyzer.findExportedDeclaration(uniquePath, importNameExpr.getSpan());
             if (decl == null) {
-                report(importNameExpr.getSpan(), "Type or function '" + importNameExpr.getValue() + "' not found in module '" + path + "'");
+                report(importNameExpr.getSpan(), "Type or function '" + importNameExpr.getSpan() + "' not found in module '" + path + "'");
                 continue;
             }
 
@@ -281,12 +283,13 @@ public class NameAnalysis extends AnalysisASTVisitor {
     @Override
     public void visit(TypeExpression typeExpression) {
         var span = typeExpression.getSpan();
-        var type = typeExpression.getNameExpr().getValue();
         var genericParameters = typeExpression.getGenericParameters();
         genericParameters.forEach(t -> t.accept(this));
 
-        if (type == null)
+        if (typeExpression.getNameExpr().getSpan() == null)
             return;
+
+        var type = typeExpression.getNameExpr().getSpan();
 
         Statement decl;
         if (Prelude.isBuiltInTypeName(type))
@@ -295,11 +298,11 @@ public class NameAnalysis extends AnalysisASTVisitor {
             decl = this.scopeStack.resolveIdentifier(type);
 
         if (decl == null) {
-            report(span, "Unknown type " + type);
+            report(span, "Unknown type " + type.getText());
             return;
         }
         if (!(decl instanceof StructDeclaration) && !(decl instanceof GenericParameterDeclaration)) {
-            report(span, "Type " + type + " is not a struct or builtin type");
+            report(span, "Type " + type.getText() + " is not a struct or builtin type");
             return;
         }
 
@@ -318,9 +321,9 @@ public class NameAnalysis extends AnalysisASTVisitor {
 
     @Override
     public void visit(IdentifierExpression identifierExpression) {
-        var decl = this.scopeStack.resolveIdentifier(identifierExpression.getValue());
+        var decl = this.scopeStack.resolveIdentifier(identifierExpression.getSpan());
         if (decl == null)
-            decl = Prelude.getGlobalFunction(identifierExpression.getValue());
+            decl = Prelude.getGlobalFunction(identifierExpression.getSpan());
         if (decl == null) {
             report(identifierExpression.getSpan(), "Unresolved identifier");
             return;
@@ -362,13 +365,13 @@ public class NameAnalysis extends AnalysisASTVisitor {
                             enclosingStruct.getNameExpr(),
                             enclosingStruct.getGenericParameters().stream()
                                     .map(p -> {
-                                        var typeExpr = new TypeExpression(null, new IdentifierExpression(null, p.getNameExpr().getValue()));
+                                        var typeExpr = new TypeExpression(null, new IdentifierExpression(p.getNameExpr().getSpan()));
                                         this.resolvedReferences.put(typeExpr, p);
                                         return typeExpr;
                                     })
                                     .collect(Collectors.toList())
                     ),
-                    new IdentifierExpression(null, "self")
+                    new IdentifierExpression(SELF_PARAMETER_NAME)
             );
             addDeclaration(selfParameter);
             this.resolvedReferences.put(selfParameter.getTypeExpr(), enclosingStruct);
@@ -386,22 +389,21 @@ public class NameAnalysis extends AnalysisASTVisitor {
 
         while (it.hasNext()) {
             var el = it.next();
-            if (!DUPLICATION_SET.add(el.getNameExpr().getValue()))
+            if (!DUPLICATION_SET.add(el.getNameExpr().getSpan()))
                 report(el.getNameExpr().getSpan(), message);
         }
     }
 
     private void validateNotAReservedName(IdentifierExpression expression) {
-        var name = expression.getValue();
-        if (Prelude.isBuiltInTypeName(name))
-            report(expression.getSpan(), "Reserved name '" + name + "'");
+        if (Prelude.isBuiltInTypeName(expression.getSpan()))
+            report(expression.getSpan(), "Reserved name '" + expression.getSpan().getText() + "'");
     }
 
     private void addDeclaration(Statement declaration) {
         if (!(declaration instanceof IHasName named))
             throw new IllegalArgumentException(declaration + "");
 
-        var name = named.getNameExpr().getValue();
+        var name = named.getNameExpr().getSpan();
         if (name == null)
             return;
 

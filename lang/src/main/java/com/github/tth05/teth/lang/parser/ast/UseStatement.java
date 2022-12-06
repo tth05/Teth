@@ -63,7 +63,7 @@ public final class UseStatement extends Statement implements ITopLevelDeclaratio
             this.path.dump(builder);
         else
             builder.append("<null>");
-        builder.newLine().appendAttribute("imports", this.imports.stream().map(IdentifierExpression::getValue).collect(Collectors.joining(", "))).newLine();
+        builder.newLine().appendAttribute("imports", this.imports.stream().map(i -> i.getSpan().getText()).collect(Collectors.joining(", "))).newLine();
         builder.endBlock().append("}");
     }
 

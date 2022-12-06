@@ -1,5 +1,6 @@
 package com.github.tth05.teth.analyzer.module;
 
+import com.github.tth05.teth.lang.span.Span;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -20,7 +21,7 @@ public class ModuleCacheTest {
         );
 
         for (var path : invalidPaths) {
-            assertFalse(ModuleCache.isValidModulePath(path));
+            assertFalse(ModuleCache.isValidModulePath(Span.fromString(path)));
         }
     }
 
@@ -33,7 +34,7 @@ public class ModuleCacheTest {
         );
 
         for (var path : validModulePaths) {
-            assertTrue(ModuleCache.isValidModulePath(path));
+            assertTrue(ModuleCache.isValidModulePath(Span.fromString(path)));
         }
     }
 }

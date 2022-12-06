@@ -1,6 +1,7 @@
 package com.github.tth05.teth.analyzer.prelude;
 
 import com.github.tth05.teth.lang.parser.ast.*;
+import com.github.tth05.teth.lang.span.Span;
 
 import java.util.Arrays;
 import java.util.List;
@@ -14,7 +15,7 @@ public class Prelude {
 
     public static final StructDeclaration LONG_STRUCT_DECLARATION = new StructDeclaration(
             null, null,
-            new IdentifierExpression(null, "long"),
+            new IdentifierExpression(Span.fromString("long")),
             List.of(),
             List.of(),
             List.of(
@@ -25,7 +26,7 @@ public class Prelude {
 
     public static final StructDeclaration DOUBLE_STRUCT_DECLARATION = new StructDeclaration(
             null, null,
-            new IdentifierExpression(null, "double"),
+            new IdentifierExpression(Span.fromString("double")),
             List.of(),
             List.of(),
             List.of(
@@ -35,7 +36,7 @@ public class Prelude {
     );
     public static final StructDeclaration BOOLEAN_STRUCT_DECLARATION = new StructDeclaration(
             null, null,
-            new IdentifierExpression(null, "bool"),
+            new IdentifierExpression(Span.fromString("bool")),
             List.of(),
             List.of(),
             List.of(),
@@ -43,7 +44,7 @@ public class Prelude {
     );
     public static final StructDeclaration STRING_STRUCT_DECLARATION = new StructDeclaration(
             null, null,
-            new IdentifierExpression(null, "string"),
+            new IdentifierExpression(Span.fromString("string")),
             List.of(),
             List.of(),
             List.of(
@@ -53,8 +54,8 @@ public class Prelude {
     );
     public static final StructDeclaration LIST_STRUCT_DECLARATION = new StructDeclaration(
             null, null,
-            new IdentifierExpression(null, "list"),
-            List.of(new GenericParameterDeclaration(null, "T")),
+            new IdentifierExpression(Span.fromString("list")),
+            List.of(new GenericParameterDeclaration(Span.fromString("T"))),
             List.of(),
             List.of(
                     createFakeFunctionDeclaration("size", true, type("long")),
@@ -67,7 +68,7 @@ public class Prelude {
 
     public static final StructDeclaration ANY_STRUCT_DECLARATION = new StructDeclaration(
             null, null,
-            new IdentifierExpression(null, "any"),
+            new IdentifierExpression(Span.fromString("any")),
             List.of(),
             List.of(),
             List.of(),
@@ -96,16 +97,18 @@ public class Prelude {
             type("long")
     );
 
-    public static FunctionDeclaration getGlobalFunction(String name) {
+    public static FunctionDeclaration getGlobalFunction(Span name) {
         if (name == null)
             return null;
 
-        return switch (name) {
-            case "print" -> PRINT_FUNCTION;
-            case "stringify" -> STRINGIFY_FUNCTION;
-            case "nanoTime" -> NANO_TIME_FUNCTION;
-            default -> null;
-        };
+        if (name.textEquals("print"))
+            return PRINT_FUNCTION;
+        else if (name.textEquals("stringify"))
+            return STRINGIFY_FUNCTION;
+        else if (name.textEquals("nanoTime"))
+            return NANO_TIME_FUNCTION;
+
+        return null;
     }
 
     public static FunctionDeclaration[] getGlobalFunctions() {
@@ -116,26 +119,32 @@ public class Prelude {
         };
     }
 
-    public static boolean isBuiltInTypeName(String name) {
+    public static boolean isBuiltInTypeName(Span name) {
         if (name == null)
             return false;
 
-        return switch (name) {
-            case "long", "double", "bool", "string", "list", "any" -> true;
-            default -> false;
-        };
+        return name.textEquals("long") || name.textEquals("double") || name.textEquals("bool") ||
+               name.textEquals("string") || name.textEquals("list") || name.textEquals("any");
     }
 
-    public static StructDeclaration getStructForTypeName(String name) {
-        return switch (name) {
-            case "long" -> LONG_STRUCT_DECLARATION;
-            case "double" -> DOUBLE_STRUCT_DECLARATION;
-            case "bool" -> BOOLEAN_STRUCT_DECLARATION;
-            case "string" -> STRING_STRUCT_DECLARATION;
-            case "list" -> LIST_STRUCT_DECLARATION;
-            case "any" -> ANY_STRUCT_DECLARATION;
-            default -> throw new IllegalArgumentException();
-        };
+    public static StructDeclaration getStructForTypeName(Span name) {
+        if (name == null)
+            throw new IllegalArgumentException();
+
+        if (name.textEquals("long"))
+            return LONG_STRUCT_DECLARATION;
+        else if (name.textEquals("double"))
+            return DOUBLE_STRUCT_DECLARATION;
+        else if (name.textEquals("bool"))
+            return BOOLEAN_STRUCT_DECLARATION;
+        else if (name.textEquals("string"))
+            return STRING_STRUCT_DECLARATION;
+        else if (name.textEquals("list"))
+            return LIST_STRUCT_DECLARATION;
+        else if (name.textEquals("any"))
+            return ANY_STRUCT_DECLARATION;
+
+        throw new IllegalArgumentException();
     }
 
     public static StructDeclaration[] getGlobalStructs() {
@@ -158,19 +167,19 @@ public class Prelude {
 
     private static TypeExpression type(String name, TypeExpression... params) {
         if (params.length == 0)
-            return new TypeExpression(null, new IdentifierExpression(null, name));
-        return new TypeExpression(null, new IdentifierExpression(null, name), Arrays.asList(params));
+            return new TypeExpression(null, new IdentifierExpression(Span.fromString(name)));
+        return new TypeExpression(null, new IdentifierExpression(Span.fromString(name)), Arrays.asList(params));
     }
 
     private static FunctionDeclaration createFakeFunctionDeclaration(String name, boolean instanceFunction, TypeExpression returnType, TypeExpression... parameters) {
         return new FunctionDeclaration(
                 null, null,
-                new IdentifierExpression(null, name),
+                new IdentifierExpression(Span.fromString(name)),
                 List.of(),
                 IntStream.range(0, parameters.length).mapToObj(i -> new FunctionDeclaration.ParameterDeclaration(
                         null,
                         parameters[i],
-                        new IdentifierExpression(null, "arg" + i)
+                        new IdentifierExpression(Span.fromString("arg" + i))
                 )).toList(),
                 returnType,
                 null,

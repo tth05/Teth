@@ -45,7 +45,7 @@ public class AutoCompletion {
             var second = stack.peek();
             stack.push(first);
 
-            var text = expr.getValue() == null ? "" : expr.getValue().substring(0, offset - expr.getSpan().offset());
+            var text = expr.getSpan() == null ? "" : expr.getSpan().getText().substring(0, offset - expr.getSpan().offset());
             if (second instanceof TypeExpression ||
                 (second instanceof ObjectCreationExpression objExpr && offset <= Optional.ofNullable(objExpr.getTargetNameExpr().getSpan()).map(Span::offsetEnd).orElse(offset))) { // Types
                 collectTypes(results, stack);
@@ -164,9 +164,10 @@ public class AutoCompletion {
         if (!(statement instanceof IHasName named))
             return;
 
-        var name = named.getNameExpr().getValue();
-        if (name == null)
+        if (named.getNameExpr().getSpan() == null)
             return;
+
+        var name = named.getNameExpr().getSpan().getText();
 
         for (int i = results.size() - 1; i >= 0; i--) {
             var item = results.get(i);
@@ -205,7 +206,7 @@ public class AutoCompletion {
             builder.append("(");
             for (int i = 0; i < func.getParameters().size(); i++) {
                 var parameter = func.getParameters().get(i);
-                builder.append(parameter.getNameExpr().getValue());
+                builder.append(parameter.getNameExpr().getSpan().getText());
                 builder.append(": ");
                 parameter.getTypeExpr().dump(builder);
                 if (i != func.getParameters().size() - 1)
@@ -218,7 +219,7 @@ public class AutoCompletion {
             builder.append("<");
             for (int i = 0; i < struct.getGenericParameters().size(); i++) {
                 var genericParameter = struct.getGenericParameters().get(i);
-                builder.append(genericParameter.getNameExpr().getValue());
+                builder.append(genericParameter.getNameExpr().getSpan().getText());
                 if (i != struct.getGenericParameters().size() - 1)
                     builder.append(", ");
             }

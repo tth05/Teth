@@ -85,7 +85,7 @@ public class TypeAnalysis extends AnalysisASTVisitor {
             var struct = (StructDeclaration) this.typeCache.getDeclaration(targetType);
             for (int i = 0; i < struct.getGenericParameters().size(); i++) {
                 var genericParameter = struct.getGenericParameters().get(i);
-                genericParameterInfo.bindGenericParameter(genericParameter.getNameExpr().getValue(), targetType.getGenericBounds().get(i));
+                genericParameterInfo.bindGenericParameter(genericParameter.getNameExpr().getSpan(), targetType.getGenericBounds().get(i));
             }
         }
 
@@ -125,7 +125,7 @@ public class TypeAnalysis extends AnalysisASTVisitor {
         var resolvedGenericParameters = structDeclaration.getGenericParameters().isEmpty() ?
                 null :
                 structDeclaration.getGenericParameters().stream().map(p -> {
-                    var bound = genericParameterInfo.getBoundGenericParameter(p.getNameExpr().getValue());
+                    var bound = genericParameterInfo.getBoundGenericParameter(p.getNameExpr().getSpan());
                     if (bound == null)
                         throw new IllegalStateException();
                     return bound;
@@ -202,10 +202,10 @@ public class TypeAnalysis extends AnalysisASTVisitor {
             return;
         }
 
-        var member = structDeclaration.getMember(expression.getMemberNameExpr().getValue());
+        var member = structDeclaration.getMember(expression.getMemberNameExpr().getSpan());
 
         if (member == null) {
-            report(expression.getMemberNameExpr().getSpan(), "Member " + expression.getMemberNameExpr().getValue() + " not found in type " + this.typeCache.toString(type));
+            report(expression.getMemberNameExpr().getSpan(), "Member " + expression.getMemberNameExpr().getSpan().getText() + " not found in type " + this.typeCache.toString(type));
             return;
         }
 
@@ -459,12 +459,12 @@ public class TypeAnalysis extends AnalysisASTVisitor {
     private SemanticType asTypeGeneric(GenericParameterInfo genericParameterInfo, TypeExpression typeExpr, SemanticType fallbackType) {
         SemanticType paramType;
         if (referencesGenericParameter(typeExpr)) {
-            var actualType = genericParameterInfo.getBoundGenericParameter(typeExpr.getNameExpr().getValue());
+            var actualType = genericParameterInfo.getBoundGenericParameter(typeExpr.getNameExpr().getSpan());
             if (actualType == null) {
                 if (fallbackType == null)
                     return null;
 
-                genericParameterInfo.bindGenericParameter(typeExpr.getNameExpr().getValue(), actualType = fallbackType);
+                genericParameterInfo.bindGenericParameter(typeExpr.getNameExpr().getSpan(), actualType = fallbackType);
             }
             paramType = actualType;
         } else {
@@ -522,7 +522,7 @@ public class TypeAnalysis extends AnalysisASTVisitor {
 
         // Explicit generic parameters have priority over inferred generic parameters
         for (var i = 0; i < explicitGenericParameters.size(); i++) {
-            genericParameterInfo.bindGenericParameter(genericParameterDeclarations.get(i).getNameExpr().getValue(), asType(explicitGenericParameters.get(i)));
+            genericParameterInfo.bindGenericParameter(genericParameterDeclarations.get(i).getNameExpr().getSpan(), asType(explicitGenericParameters.get(i)));
         }
 
         if (parameterDeclarations.size() != parameters.size()) {
@@ -552,7 +552,7 @@ public class TypeAnalysis extends AnalysisASTVisitor {
 
     private void ensureAllGenericParametersBound(Span span, GenericParameterInfo genericParameterInfo, List<GenericParameterDeclaration> genericParameterDeclarations) {
         for (var genericParameterDeclaration : genericParameterDeclarations) {
-            var name = genericParameterDeclaration.getNameExpr().getValue();
+            var name = genericParameterDeclaration.getNameExpr().getSpan();
             if (!genericParameterInfo.isGenericParameterBound(name)) {
                 report(span, "Generic parameter " + genericParameterDeclaration.getNameExpr() + " is not bound");
                 genericParameterInfo.bindGenericParameter(name, SemanticType.UNRESOLVED);
@@ -591,20 +591,20 @@ public class TypeAnalysis extends AnalysisASTVisitor {
 
     private static class GenericParameterInfo {
 
-        private Map<String, SemanticType> boundGenericParameters;
+        private Map<Span, SemanticType> boundGenericParameters;
 
-        public boolean isGenericParameterBound(String name) {
+        public boolean isGenericParameterBound(Span name) {
             return this.boundGenericParameters != null && this.boundGenericParameters.containsKey(name);
         }
 
-        public void bindGenericParameter(String name, SemanticType type) {
+        public void bindGenericParameter(Span name, SemanticType type) {
             if (this.boundGenericParameters == null)
                 this.boundGenericParameters = new HashMap<>(3);
 
             this.boundGenericParameters.put(name, type);
         }
 
-        public SemanticType getBoundGenericParameter(String name) {
+        public SemanticType getBoundGenericParameter(Span name) {
             if (this.boundGenericParameters == null)
                 return null;
 

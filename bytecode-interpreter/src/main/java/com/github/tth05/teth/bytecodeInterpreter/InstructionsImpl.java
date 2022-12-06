@@ -3,6 +3,7 @@ package com.github.tth05.teth.bytecodeInterpreter;
 import com.github.tth05.teth.analyzer.prelude.Prelude;
 import com.github.tth05.teth.bytecode.op.*;
 import com.github.tth05.teth.lang.parser.ast.FunctionDeclaration;
+import com.github.tth05.teth.lang.span.Span;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -18,15 +19,15 @@ public class InstructionsImpl {
     private static final Object[] ARGS_ARRAY = new Object[32];
     private static final Map<FunctionDeclaration, UncheckedBiConsumer<Interpreter, Object[]>> INTRINSICS = new HashMap<>();
     static {
-        INTRINSICS.put(Prelude.getGlobalFunction("print"), (interpreter, args) -> {
+        INTRINSICS.put(Prelude.getGlobalFunction(Span.fromString("print")), (interpreter, args) -> {
             var arg = args[0];
             interpreter.getOutStream().write(intrinsicToString(interpreter, arg).getBytes(StandardCharsets.UTF_8));
             interpreter.getOutStream().write(NEW_LINE_BYTES);
         });
-        INTRINSICS.put(Prelude.getGlobalFunction("stringify"), (interpreter, args) -> {
+        INTRINSICS.put(Prelude.getGlobalFunction(Span.fromString("stringify")), (interpreter, args) -> {
             interpreter.push(intrinsicToString(interpreter, args[0]));
         });
-        INTRINSICS.put(Prelude.getGlobalFunction("nanoTime"), (interpreter, args) -> {
+        INTRINSICS.put(Prelude.getGlobalFunction(Span.fromString("nanoTime")), (interpreter, args) -> {
             interpreter.push(System.nanoTime());
         });
         INTRINSICS.put(prelude("string", "concat"), (interpreter, args) -> {
@@ -323,7 +324,7 @@ public class InstructionsImpl {
     }
 
     private static FunctionDeclaration prelude(String struct, String function) {
-        return (FunctionDeclaration) Prelude.getStructForTypeName(struct).getMember(function);
+        return (FunctionDeclaration) Prelude.getStructForTypeName(Span.fromString(struct)).getMember(Span.fromString(function));
     }
 
     private static String intrinsicToString(Interpreter interpreter, Object o) {

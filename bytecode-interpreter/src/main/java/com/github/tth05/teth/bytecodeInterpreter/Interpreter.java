@@ -46,10 +46,10 @@ public class Interpreter {
         initStreams();
 
         // These locals exist for micro-optimization
-        var cachedOpCodes = new byte[this.program.getInstructions().length];
-        for (int i = 0; i < this.program.getInstructions().length; i++)
-            cachedOpCodes[i] = this.program.getInstructions()[i].getOpCode();
         var instructions = this.program.getInstructions();
+        var cachedOpCodes = new byte[instructions.length];
+        for (int i = 0; i < instructions.length; i++)
+            cachedOpCodes[i] = instructions[i].getOpCode();
 
         var pc = 0;
         while ((pc = this.programCounter) != -1 && !this.killed) {

@@ -1,6 +1,7 @@
 package com.github.tth05.teth.analyzer.module;
 
 import com.github.tth05.teth.lang.parser.SourceFileUnit;
+import com.github.tth05.teth.lang.span.Span;
 
 public class DelegateModuleLoader implements IModuleLoader {
 
@@ -11,7 +12,7 @@ public class DelegateModuleLoader implements IModuleLoader {
     }
 
     @Override
-    public String toUniquePath(String relativeToUniquePath, String path) {
+    public String toUniquePath(String relativeToUniquePath, Span path) {
         return this.delegate.toUniquePath(relativeToUniquePath, path);
     }
 

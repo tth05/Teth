@@ -5,6 +5,7 @@ import com.github.tth05.teth.lang.parser.ASTUtil
 import com.github.tth05.teth.lang.parser.ast.IDeclarationReference
 import com.github.tth05.teth.lang.parser.ast.ITopLevelDeclaration
 import com.github.tth05.teth.lang.parser.ast.Statement
+import com.github.tth05.teth.lang.span.Span
 import com.github.tth05.tethintellijplugin.psi.api.*
 import com.github.tth05.tethintellijplugin.psi.caching.tethCache
 import com.github.tth05.tethintellijplugin.psi.reference.TethReference
@@ -34,7 +35,7 @@ class TethStringLiteralExpressionImpl(node: ASTNode) : ASTWrapperPsiElement(node
 
         return tethCache().resolveWithCaching(this) {
             if (parent !is TethUseStatement) return@resolveWithCaching TethReference.UNRESOLVED
-            val path = text.removeSurrounding("\"")
+            val path = Span.fromString(text.removeSurrounding("\""))
             if (!ModuleCache.isValidModulePath(path)) return@resolveWithCaching TethReference.UNRESOLVED
 
             return@resolveWithCaching resolvedRefTo(

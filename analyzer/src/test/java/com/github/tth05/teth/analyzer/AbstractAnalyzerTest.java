@@ -7,6 +7,7 @@ import com.github.tth05.teth.lang.lexer.Tokenizer;
 import com.github.tth05.teth.lang.parser.Parser;
 import com.github.tth05.teth.lang.parser.SourceFileUnit;
 import com.github.tth05.teth.lang.source.InMemorySource;
+import com.github.tth05.teth.lang.span.Span;
 import com.github.tth05.teth.lang.stream.CharStream;
 
 import java.util.Arrays;
@@ -33,8 +34,8 @@ public abstract class AbstractAnalyzerTest {
         this.analyzer = new Analyzer(this.asts.stream().filter(u -> u.unit.getUniquePath().equals("main")).findFirst().get().unit);
         this.analyzer.setModuleLoader(new IModuleLoader() {
             @Override
-            public String toUniquePath(String relativeToUniquePath, String path) {
-                return path;
+            public String toUniquePath(String relativeToUniquePath, Span path) {
+                return path != null ? path.getText() : null;
             }
 
             @Override

@@ -3,6 +3,7 @@ package com.github.tth05.teth.lang.parser;
 import com.github.tth05.teth.lang.AbstractParserTest;
 import com.github.tth05.teth.lang.parser.ast.*;
 import com.github.tth05.teth.lang.source.InMemorySource;
+import com.github.tth05.teth.lang.span.Span;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
@@ -18,7 +19,7 @@ public class ParserTest extends AbstractParserTest {
         createAST("\"A string!\"");
         assertEquals(new SourceFileUnit(
                 "main", StatementList.of(
-                new StringLiteralExpression(null, List.of(StringLiteralExpression.stringPart(null, "A string!")))
+                new StringLiteralExpression(null, List.of(StringLiteralExpression.stringPart(Span.fromString("A string!"))))
         )
         ), this.unit);
 
@@ -28,12 +29,12 @@ public class ParserTest extends AbstractParserTest {
         assertEquals(new SourceFileUnit(
                 "main", StatementList.of(
                 new StringLiteralExpression(null, List.of(
-                        StringLiteralExpression.stringPart(null, "5+"),
+                        StringLiteralExpression.stringPart(Span.fromString("5+")),
                         StringLiteralExpression.expressionPart(new LongLiteralExpression(null, 5)),
-                        StringLiteralExpression.stringPart(null, " is equal to {=}"),
+                        StringLiteralExpression.stringPart(Span.fromString(" is equal to {=}")),
                         StringLiteralExpression.expressionPart(new FunctionInvocationExpression(
                                         null,
-                                        new IdentifierExpression(null, "calc"),
+                                        new IdentifierExpression(Span.fromString("calc")),
                                         List.of(),
                                         ExpressionList.of(
                                                 new BinaryExpression(
@@ -45,7 +46,7 @@ public class ParserTest extends AbstractParserTest {
                                         )
                                 )
                         ),
-                        StringLiteralExpression.stringPart(null, "")
+                        StringLiteralExpression.stringPart(Span.fromString(""))
                 ))
         )
         ), this.unit);
@@ -57,9 +58,9 @@ public class ParserTest extends AbstractParserTest {
                 new SourceFileUnit(
                         "main",
                         StatementList.of(
-                                new StringLiteralExpression(null, List.of(StringLiteralExpression.stringPart(null, "a"))),
-                                new StringLiteralExpression(null, List.of(StringLiteralExpression.stringPart(null, "b"))),
-                                new StringLiteralExpression(null, List.of(StringLiteralExpression.stringPart(null, "c")))
+                                new StringLiteralExpression(null, List.of(StringLiteralExpression.stringPart(Span.fromString("a")))),
+                                new StringLiteralExpression(null, List.of(StringLiteralExpression.stringPart(Span.fromString("b")))),
+                                new StringLiteralExpression(null, List.of(StringLiteralExpression.stringPart(Span.fromString("c"))))
                         )
                 ),
                 this.unit
@@ -115,55 +116,55 @@ public class ParserTest extends AbstractParserTest {
                 "main", StatementList.of(
                 new VariableDeclaration(
                         null,
-                        new TypeExpression(null, new IdentifierExpression(null, "long")),
-                        new IdentifierExpression(null, "l"),
+                        new TypeExpression(null, new IdentifierExpression(Span.fromString("long"))),
+                        new IdentifierExpression(Span.fromString("l")),
                         new LongLiteralExpression(null, 5)
                 ),
                 new VariableDeclaration(
                         null,
-                        new TypeExpression(null, new IdentifierExpression(null, "double")),
-                        new IdentifierExpression(null, "l"),
+                        new TypeExpression(null, new IdentifierExpression(Span.fromString("double"))),
+                        new IdentifierExpression(Span.fromString("l")),
                         new LongLiteralExpression(null, 5)
                 ),
                 new VariableDeclaration(
                         null,
-                        new TypeExpression(null, new IdentifierExpression(null, "string")),
-                        new IdentifierExpression(null, "l"),
+                        new TypeExpression(null, new IdentifierExpression(Span.fromString("string"))),
+                        new IdentifierExpression(Span.fromString("l")),
                         new LongLiteralExpression(null, 5)
                 ),
                 new VariableDeclaration(
                         null,
-                        new TypeExpression(null, new IdentifierExpression(null, "boolean")),
-                        new IdentifierExpression(null, "l"),
+                        new TypeExpression(null, new IdentifierExpression(Span.fromString("boolean"))),
+                        new IdentifierExpression(Span.fromString("l")),
                         new LongLiteralExpression(null, 5)
                 ),
                 new VariableDeclaration(
                         null,
-                        new TypeExpression(null, new IdentifierExpression(null, "any")),
-                        new IdentifierExpression(null, "l"),
+                        new TypeExpression(null, new IdentifierExpression(Span.fromString("any"))),
+                        new IdentifierExpression(Span.fromString("l")),
                         new LongLiteralExpression(null, 5)
                 ),
                 new VariableDeclaration(
                         null,
-                        new TypeExpression(null, new IdentifierExpression(null, "function")),
-                        new IdentifierExpression(null, "l"),
+                        new TypeExpression(null, new IdentifierExpression(Span.fromString("function"))),
+                        new IdentifierExpression(Span.fromString("l")),
                         new LongLiteralExpression(null, 5)
                 ),
                 new VariableDeclaration(
                         null,
                         new TypeExpression(null,
-                                new IdentifierExpression(null, "list"),
+                                new IdentifierExpression(Span.fromString("list")),
                                 List.of(
                                         new TypeExpression(null,
-                                                new IdentifierExpression(null, "list"),
+                                                new IdentifierExpression(Span.fromString("list")),
                                                 List.of(
-                                                        new TypeExpression(null, new IdentifierExpression(null, "long")),
-                                                        new TypeExpression(null, new IdentifierExpression(null, "double"), List.of(new TypeExpression(null, new IdentifierExpression(null, "long"))))
+                                                        new TypeExpression(null, new IdentifierExpression(Span.fromString("long"))),
+                                                        new TypeExpression(null, new IdentifierExpression(Span.fromString("double")), List.of(new TypeExpression(null, new IdentifierExpression(Span.fromString("long")))))
                                                 )
                                         )
                                 )
                         ),
-                        new IdentifierExpression(null, "l"),
+                        new IdentifierExpression(Span.fromString("l")),
                         new LongLiteralExpression(null, 5)
                 )
         )
@@ -199,7 +200,7 @@ public class ParserTest extends AbstractParserTest {
                         ),
                         new UnaryExpression(
                                 null,
-                                new IdentifierExpression(null, "a"),
+                                new IdentifierExpression(Span.fromString("a")),
                                 UnaryExpression.Operator.OP_NOT
                         ),
                         BinaryExpression.Operator.OP_ADD
@@ -264,7 +265,7 @@ public class ParserTest extends AbstractParserTest {
                                                         null,
                                                         new BinaryExpression(
                                                                 null,
-                                                                new IdentifierExpression(null, "a"),
+                                                                new IdentifierExpression(Span.fromString("a")),
                                                                 new LongLiteralExpression(null, 1),
                                                                 BinaryExpression.Operator.OP_ASSIGN
                                                         )
@@ -287,14 +288,14 @@ public class ParserTest extends AbstractParserTest {
                         null,
                         new BinaryExpression(
                                 null,
-                                new IdentifierExpression(null, "a"),
-                                new IdentifierExpression(null, "b"),
+                                new IdentifierExpression(Span.fromString("a")),
+                                new IdentifierExpression(Span.fromString("b")),
                                 BinaryExpression.Operator.OP_AND
                         ),
                         new BinaryExpression(
                                 null,
-                                new IdentifierExpression(null, "c"),
-                                new IdentifierExpression(null, "d"),
+                                new IdentifierExpression(Span.fromString("c")),
+                                new IdentifierExpression(Span.fromString("d")),
                                 BinaryExpression.Operator.OP_AND
                         ),
                         BinaryExpression.Operator.OP_OR
@@ -394,13 +395,13 @@ public class ParserTest extends AbstractParserTest {
                                         StatementList.of(
                                                 new IfStatement(
                                                         null,
-                                                        new IdentifierExpression(null, "b"),
+                                                        new IdentifierExpression(Span.fromString("b")),
                                                         new BlockStatement(
                                                                 null,
                                                                 StatementList.of(
                                                                         new BinaryExpression(
                                                                                 null,
-                                                                                new IdentifierExpression(null, "c"),
+                                                                                new IdentifierExpression(Span.fromString("c")),
                                                                                 new LongLiteralExpression(null, 2),
                                                                                 BinaryExpression.Operator.OP_ASSIGN
                                                                         )
@@ -411,7 +412,7 @@ public class ParserTest extends AbstractParserTest {
                                                                 StatementList.of(
                                                                         new BinaryExpression(
                                                                                 null,
-                                                                                new IdentifierExpression(null, "c"),
+                                                                                new IdentifierExpression(Span.fromString("c")),
                                                                                 new LongLiteralExpression(null, 5),
                                                                                 BinaryExpression.Operator.OP_ASSIGN
                                                                         )
@@ -425,14 +426,14 @@ public class ParserTest extends AbstractParserTest {
                                 null,
                                 new BinaryExpression(
                                         null,
-                                        new IdentifierExpression(null, "c"),
+                                        new IdentifierExpression(Span.fromString("c")),
                                         new NullLiteralExpression(null),
                                         BinaryExpression.Operator.OP_NOT_EQUAL
                                 ),
                                 new BlockStatement(
                                         null,
                                         StatementList.of(
-                                                new StringLiteralExpression(null, List.of(StringLiteralExpression.stringPart(null, "true")))
+                                                new StringLiteralExpression(null, List.of(StringLiteralExpression.stringPart(Span.fromString("true"))))
                                         )
                                 ),
                                 null
@@ -466,10 +467,10 @@ public class ParserTest extends AbstractParserTest {
                                 new BlockStatement(null, StatementList.of(
                                         new BinaryExpression(
                                                 null,
-                                                new IdentifierExpression(null, "a"),
+                                                new IdentifierExpression(Span.fromString("a")),
                                                 new BinaryExpression(
                                                         null,
-                                                        new IdentifierExpression(null, "a"),
+                                                        new IdentifierExpression(Span.fromString("a")),
                                                         new LongLiteralExpression(null, 5),
                                                         BinaryExpression.Operator.OP_ADD
                                                 ),
@@ -482,7 +483,7 @@ public class ParserTest extends AbstractParserTest {
                                 null, Collections.emptyList(),
                                 new BinaryExpression(
                                         null,
-                                        new IdentifierExpression(null, "i"),
+                                        new IdentifierExpression(Span.fromString("i")),
                                         new LongLiteralExpression(null, 5),
                                         BinaryExpression.Operator.OP_LESS
                                 ),
@@ -492,17 +493,17 @@ public class ParserTest extends AbstractParserTest {
                                 null, Collections.emptyList(),
                                 new BinaryExpression(
                                         null,
-                                        new IdentifierExpression(null, "i"),
+                                        new IdentifierExpression(Span.fromString("i")),
                                         new LongLiteralExpression(null, 5),
                                         BinaryExpression.Operator.OP_LESS
                                 ),
                                 new BlockStatement(null, StatementList.of()),
                                 new BinaryExpression(
                                         null,
-                                        new IdentifierExpression(null, "i"),
+                                        new IdentifierExpression(Span.fromString("i")),
                                         new BinaryExpression(
                                                 null,
-                                                new IdentifierExpression(null, "i"),
+                                                new IdentifierExpression(Span.fromString("i")),
                                                 new LongLiteralExpression(null, 1),
                                                 BinaryExpression.Operator.OP_ADD
                                         ),
@@ -515,13 +516,13 @@ public class ParserTest extends AbstractParserTest {
                                         new VariableDeclaration(
                                                 null,
                                                 null,
-                                                new IdentifierExpression(null, "a"),
+                                                new IdentifierExpression(Span.fromString("a")),
                                                 new LongLiteralExpression(null, 5)
                                         ),
                                         new VariableDeclaration(
                                                 null,
                                                 null,
-                                                new IdentifierExpression(null, "b"),
+                                                new IdentifierExpression(Span.fromString("b")),
                                                 new LongLiteralExpression(null, 3)
                                         )
                                 ),
@@ -535,18 +536,18 @@ public class ParserTest extends AbstractParserTest {
                                         new VariableDeclaration(
                                                 null,
                                                 null,
-                                                new IdentifierExpression(null, "a"),
+                                                new IdentifierExpression(Span.fromString("a")),
                                                 new LongLiteralExpression(null, 5)
                                         )
                                 ),
-                                new IdentifierExpression(null, "a"),
+                                new IdentifierExpression(Span.fromString("a")),
                                 new BlockStatement(null, StatementList.of()),
                                 new FunctionInvocationExpression(
                                         null,
-                                        new IdentifierExpression(null, "print"),
+                                        new IdentifierExpression(Span.fromString("print")),
                                         List.of(),
                                         ExpressionList.of(
-                                                new ListLiteralExpression(null, ExpressionList.of(new IdentifierExpression(null, "a")))
+                                                new ListLiteralExpression(null, ExpressionList.of(new IdentifierExpression(Span.fromString("a"))))
                                         )
                                 )
                         ),
@@ -579,8 +580,8 @@ public class ParserTest extends AbstractParserTest {
                         "main", StatementList.of(
                         new VariableDeclaration(
                                 null,
-                                new TypeExpression(null, new IdentifierExpression(null, "double")),
-                                new IdentifierExpression(null, "d"),
+                                new TypeExpression(null, new IdentifierExpression(Span.fromString("double"))),
+                                new IdentifierExpression(Span.fromString("d")),
                                 new LongLiteralExpression(null, 25)
                         )
                 )
@@ -600,7 +601,7 @@ public class ParserTest extends AbstractParserTest {
                         "main", StatementList.of(
                         new BinaryExpression(
                                 null,
-                                new IdentifierExpression(null, "d"),
+                                new IdentifierExpression(Span.fromString("d")),
                                 new LongLiteralExpression(null, 25),
                                 BinaryExpression.Operator.OP_ASSIGN
                         ),
@@ -608,19 +609,19 @@ public class ParserTest extends AbstractParserTest {
                                 null,
                                 new MemberAccessExpression(
                                         null,
-                                        new IdentifierExpression(null, "a"),
+                                        new IdentifierExpression(Span.fromString("a")),
                                         new FunctionInvocationExpression(
                                                 null,
                                                 new MemberAccessExpression(
                                                         null,
-                                                        new IdentifierExpression(null, "b"),
+                                                        new IdentifierExpression(Span.fromString("b")),
                                                         new MemberAccessExpression(
                                                                 null,
-                                                                new IdentifierExpression(null, "c"),
+                                                                new IdentifierExpression(Span.fromString("c")),
                                                                 new MemberAccessExpression(
                                                                         null,
-                                                                        new IdentifierExpression(null, "a"),
-                                                                        new IdentifierExpression(null, "d")
+                                                                        new IdentifierExpression(Span.fromString("a")),
+                                                                        new IdentifierExpression(Span.fromString("d"))
                                                                 )
                                                         )
                                                 ),
@@ -658,26 +659,26 @@ public class ParserTest extends AbstractParserTest {
                         "main", StatementList.of(
                         new FunctionDeclaration(
                                 null, null,
-                                new IdentifierExpression(null, "foo"),
+                                new IdentifierExpression(Span.fromString("foo")),
                                 List.of(
-                                        new GenericParameterDeclaration(null, "T"),
-                                        new GenericParameterDeclaration(null, "Z")
+                                        new GenericParameterDeclaration(Span.fromString("T")),
+                                        new GenericParameterDeclaration(Span.fromString("Z"))
                                 ),
                                 List.of(
-                                        new FunctionDeclaration.ParameterDeclaration(null, new TypeExpression(null, new IdentifierExpression(null, "type")), new IdentifierExpression(null, "self")),
-                                        new FunctionDeclaration.ParameterDeclaration(null, new TypeExpression(null, new IdentifierExpression(null, "long")), new IdentifierExpression(null, "b"))
+                                        new FunctionDeclaration.ParameterDeclaration(null, new TypeExpression(null, new IdentifierExpression(Span.fromString("type"))), new IdentifierExpression(Span.fromString("self"))),
+                                        new FunctionDeclaration.ParameterDeclaration(null, new TypeExpression(null, new IdentifierExpression(Span.fromString("long"))), new IdentifierExpression(Span.fromString("b")))
                                 ), null,
                                 new BlockStatement(
                                         null,
                                         StatementList.of(
                                                 new FunctionDeclaration(
                                                         null, null,
-                                                        new IdentifierExpression(null, "bar"),
-                                                        List.of(), List.of(), new TypeExpression(null, new IdentifierExpression(null, "string")),
+                                                        new IdentifierExpression(Span.fromString("bar")),
+                                                        List.of(), List.of(), new TypeExpression(null, new IdentifierExpression(Span.fromString("string"))),
                                                         new BlockStatement(
                                                                 null,
                                                                 StatementList.of(
-                                                                        new ReturnStatement(null, new StringLiteralExpression(null, List.of(StringLiteralExpression.stringPart(null, "hello"))))
+                                                                        new ReturnStatement(null, new StringLiteralExpression(null, List.of(StringLiteralExpression.stringPart(Span.fromString("hello")))))
                                                                 )
                                                         ),
                                                         false
@@ -711,7 +712,7 @@ public class ParserTest extends AbstractParserTest {
                                                 null,
                                                 new FunctionInvocationExpression(
                                                         null,
-                                                        new IdentifierExpression(null, "foo"),
+                                                        new IdentifierExpression(Span.fromString("foo")),
                                                         List.of(),
                                                         ExpressionList.of(
                                                                 new LongLiteralExpression(null, 1),
@@ -721,7 +722,7 @@ public class ParserTest extends AbstractParserTest {
                                         ),
                                         List.of(),
                                         ExpressionList.of(
-                                                new StringLiteralExpression(null, List.of(StringLiteralExpression.stringPart(null, "hello world")))
+                                                new StringLiteralExpression(null, List.of(StringLiteralExpression.stringPart(Span.fromString("hello world"))))
                                         )
                                 ),
                                 BinaryExpression.Operator.OP_ADD
@@ -730,10 +731,10 @@ public class ParserTest extends AbstractParserTest {
                                 null,
                                 new FunctionInvocationExpression(
                                         null,
-                                        new IdentifierExpression(null, "bar"),
+                                        new IdentifierExpression(Span.fromString("bar")),
                                         List.of(
-                                                new TypeExpression(null, new IdentifierExpression(null, "list"), List.of(new TypeExpression(null, new IdentifierExpression(null, "long")))),
-                                                new TypeExpression(null, new IdentifierExpression(null, "long"))
+                                                new TypeExpression(null, new IdentifierExpression(Span.fromString("list")), List.of(new TypeExpression(null, new IdentifierExpression(Span.fromString("long"))))),
+                                                new TypeExpression(null, new IdentifierExpression(Span.fromString("long")))
                                         ),
                                         ExpressionList.of()
                                 ),
@@ -762,34 +763,34 @@ public class ParserTest extends AbstractParserTest {
                         "main", StatementList.of(
                         new StructDeclaration(
                                 null, null,
-                                new IdentifierExpression(null, "Foo"),
+                                new IdentifierExpression(Span.fromString("Foo")),
                                 List.of(
-                                        new GenericParameterDeclaration(null, "T"),
-                                        new GenericParameterDeclaration(null, "A"),
-                                        new GenericParameterDeclaration(null, "B")
+                                        new GenericParameterDeclaration(Span.fromString("T")),
+                                        new GenericParameterDeclaration(Span.fromString("A")),
+                                        new GenericParameterDeclaration(Span.fromString("B"))
                                 ),
                                 List.of(
                                         new StructDeclaration.FieldDeclaration(
                                                 null,
-                                                new TypeExpression(null, new IdentifierExpression(null, "long")),
-                                                new IdentifierExpression(null, "a"),
+                                                new TypeExpression(null, new IdentifierExpression(Span.fromString("long"))),
+                                                new IdentifierExpression(Span.fromString("a")),
                                                 0
                                         ),
                                         new StructDeclaration.FieldDeclaration(
                                                 null,
-                                                new TypeExpression(null, new IdentifierExpression(null, "double")),
-                                                new IdentifierExpression(null, "c"),
+                                                new TypeExpression(null, new IdentifierExpression(Span.fromString("double"))),
+                                                new IdentifierExpression(Span.fromString("c")),
                                                 1
                                         )
                                 ),
                                 List.of(
                                         new FunctionDeclaration(
                                                 null, null,
-                                                new IdentifierExpression(null, "bar"),
+                                                new IdentifierExpression(Span.fromString("bar")),
                                                 List.of(),
                                                 List.of(
-                                                        new FunctionDeclaration.ParameterDeclaration(null, new TypeExpression(null, new IdentifierExpression(null, "string")), new IdentifierExpression(null, "b"))
-                                                ), new TypeExpression(null, new IdentifierExpression(null, "string")),
+                                                        new FunctionDeclaration.ParameterDeclaration(null, new TypeExpression(null, new IdentifierExpression(Span.fromString("string"))), new IdentifierExpression(Span.fromString("b")))
+                                                ), new TypeExpression(null, new IdentifierExpression(Span.fromString("string"))),
                                                 new BlockStatement(
                                                         null,
                                                         StatementList.of(
@@ -830,7 +831,7 @@ public class ParserTest extends AbstractParserTest {
                         "main", StatementList.of(
                         new ObjectCreationExpression(
                                 null,
-                                new IdentifierExpression(null, "Foo"),
+                                new IdentifierExpression(Span.fromString("Foo")),
                                 List.of(), ExpressionList.of(
                                 new LongLiteralExpression(null, 1),
                                 new LongLiteralExpression(null, 2),
@@ -853,18 +854,18 @@ public class ParserTest extends AbstractParserTest {
                         "main", StatementList.of(
                         new MemberAccessExpression(
                                 null,
-                                new IdentifierExpression(null, "d"),
+                                new IdentifierExpression(Span.fromString("d")),
                                 new FunctionInvocationExpression(
                                         null,
                                         new MemberAccessExpression(
                                                 null,
-                                                new IdentifierExpression(null, "c"),
+                                                new IdentifierExpression(Span.fromString("c")),
                                                 new FunctionInvocationExpression(
                                                         null,
                                                         new MemberAccessExpression(
                                                                 null,
-                                                                new IdentifierExpression(null, "b"),
-                                                                new IdentifierExpression(null, "a")
+                                                                new IdentifierExpression(Span.fromString("b")),
+                                                                new IdentifierExpression(Span.fromString("a"))
                                                         ),
                                                         List.of(),
                                                         ExpressionList.of()
@@ -896,13 +897,13 @@ public class ParserTest extends AbstractParserTest {
                         "main", StatementList.of(
                         new UseStatement(
                                 null,
-                                new StringLiteralExpression(null, List.of(StringLiteralExpression.stringPart(null, "foo/bar"))),
-                                List.of(new IdentifierExpression(null, "Test"))
+                                new StringLiteralExpression(null, List.of(StringLiteralExpression.stringPart(Span.fromString("foo/bar")))),
+                                List.of(new IdentifierExpression(Span.fromString("Test")))
                         ),
                         new UseStatement(
                                 null,
-                                new StringLiteralExpression(null, List.of(StringLiteralExpression.stringPart(null, "test"))),
-                                List.of(new IdentifierExpression(null, "thing"), new IdentifierExpression(null, "otherThing"))
+                                new StringLiteralExpression(null, List.of(StringLiteralExpression.stringPart(Span.fromString("test")))),
+                                List.of(new IdentifierExpression(Span.fromString("thing")), new IdentifierExpression(Span.fromString("otherThing")))
                         ),
                         new IfStatement(
                                 null,
@@ -912,8 +913,8 @@ public class ParserTest extends AbstractParserTest {
                                         StatementList.of(
                                                 new UseStatement(
                                                         null,
-                                                        new StringLiteralExpression(null, List.of(StringLiteralExpression.stringPart(null, "../foo/../bar"))),
-                                                        List.of(new IdentifierExpression(null, "Test2"))
+                                                        new StringLiteralExpression(null, List.of(StringLiteralExpression.stringPart(Span.fromString("../foo/../bar")))),
+                                                        List.of(new IdentifierExpression(Span.fromString("Test2")))
                                                 )
                                         )
                                 ),
@@ -956,7 +957,7 @@ public class ParserTest extends AbstractParserTest {
                             new VariableDeclaration(
                                     null,
                                     null,
-                                    new IdentifierExpression(null, "a"),
+                                    new IdentifierExpression(Span.fromString("a")),
                                     new LongLiteralExpression(null, Long.parseLong(result.getSource().getModuleName().substring(4)))
                             )
                     )
@@ -1026,5 +1027,9 @@ public class ParserTest extends AbstractParserTest {
                 {
                 }
                 """);
+    }
+
+    private static Span Span.fromString(String text) {
+        return new Span(new InMemorySource("a", text), 0, text.length());
     }
 }

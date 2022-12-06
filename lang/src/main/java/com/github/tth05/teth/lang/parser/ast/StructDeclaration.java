@@ -59,18 +59,18 @@ public final class StructDeclaration extends Statement implements ITopLevelDecla
         return this.intrinsic;
     }
 
-    public Statement getMember(String name) {
+    public Statement getMember(Span name) {
         if (name == null)
             return null;
 
         return this.fields.stream()
-                .filter(f -> Objects.nonNull(f.getNameExpr().getValue()))
-                .filter(f -> f.getNameExpr().getValue().equals(name))
+                .filter(f -> Objects.nonNull(f.getNameExpr().getSpan()))
+                .filter(f -> f.getNameExpr().getSpan().textEquals(name))
                 .map(Statement.class::cast)
                 .findFirst()
                 .orElse(this.functions.stream()
-                        .filter(f -> Objects.nonNull(f.getNameExpr().getValue()))
-                        .filter(f -> f.getNameExpr().getValue().equals(name))
+                        .filter(f -> Objects.nonNull(f.getNameExpr().getSpan()))
+                        .filter(f -> f.getNameExpr().getSpan().textEquals(name))
                         .findFirst()
                         .orElse(null));
     }

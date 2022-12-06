@@ -15,6 +15,7 @@ import com.github.tth05.teth.lang.parser.ast.Expression;
 import com.github.tth05.teth.lang.parser.ast.FunctionDeclaration;
 import com.github.tth05.teth.lang.parser.ast.IDeclarationReference;
 import com.github.tth05.teth.lang.parser.ast.Statement;
+import com.github.tth05.teth.lang.span.Span;
 
 import java.util.*;
 
@@ -128,11 +129,11 @@ public class Analyzer {
         return this.moduleCache.hasModule(name);
     }
 
-    public String toUniquePath(String relativeToUniquePath, String path) {
+    public String toUniquePath(String relativeToUniquePath, Span path) {
         return this.moduleCache.toUniquePath(relativeToUniquePath, path);
     }
 
-    public Statement findExportedDeclaration(String uniquePath, String name) {
+    public Statement findExportedDeclaration(String uniquePath, Span name) {
         return this.moduleCache.findExportedDeclaration(uniquePath, name);
     }
 

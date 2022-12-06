@@ -11,9 +11,9 @@ public final class GenericParameterDeclaration extends Statement implements IHas
 
     private final IdentifierExpression nameExpr;
 
-    public GenericParameterDeclaration(Span span, String name) {
+    public GenericParameterDeclaration(Span span) {
         super(span);
-        this.nameExpr = new IdentifierExpression(span, name);
+        this.nameExpr = new IdentifierExpression(span);
     }
 
     @Override
