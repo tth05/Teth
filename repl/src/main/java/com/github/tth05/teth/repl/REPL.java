@@ -4,11 +4,13 @@ import com.github.tth05.teth.analyzer.Analyzer;
 import com.github.tth05.teth.analyzer.type.SemanticType;
 import com.github.tth05.teth.bytecode.compiler.Compiler;
 import com.github.tth05.teth.bytecode.op.IInstrunction;
+import com.github.tth05.teth.bytecode.op.INVOKE_Insn;
 import com.github.tth05.teth.bytecode.program.TethProgram;
 import com.github.tth05.teth.bytecodeInterpreter.Interpreter;
 import com.github.tth05.teth.lang.parser.*;
 import com.github.tth05.teth.lang.parser.ast.*;
 import com.github.tth05.teth.lang.source.InMemorySource;
+import com.github.tth05.teth.lang.span.Span;
 import org.fusesource.jansi.Ansi;
 
 import java.io.*;
@@ -61,6 +63,9 @@ public class REPL implements Runnable {
                     continue;
                 }
 
+                if (parserResult.getUnit().getStatements().isEmpty())
+                    continue;
+
                 // Compile
                 var compiler = new Compiler();
                 compiler.setEntryPoint(new SourceFileUnit("repl", createStatementList(parserResult)));
@@ -89,7 +94,7 @@ public class REPL implements Runnable {
                                 else
                                     type = semanticTypeToExpression(compilerResult.getAnalyzer(), compilerResult.getAnalyzer().resolvedExpressionType(var.getInitializerExpr()));
 
-                                this.cachedLocalVariables.add(new CachedLocalVariable(var.getNameExpr().getValue(), type));
+                                this.cachedLocalVariables.add(new CachedLocalVariable(var.getNameExpr().getSpan().getText(), type));
                             } else {
                                 this.persistentStatements.add(s);
                             }
@@ -110,16 +115,17 @@ public class REPL implements Runnable {
 
     private StatementList createStatementList(ParserResult parserResult) {
         var statements = new StatementList(this.persistentStatements);
-        this.cachedLocalVariables.forEach((v) -> statements.add(new VariableDeclaration(null, v.type, new IdentifierExpression(null, v.name), v.createInitializerExpression())));
-        var parsedStatements = parserResult.getUnit().getStatements();
+        this.cachedLocalVariables.forEach((v) -> statements.add(new VariableDeclaration(null, v.type, new IdentifierExpression(Span.fromString(v.name)), v.createInitializerExpression())));
+        statements.addAll(parserResult.getUnit().getStatements());
 
         // Convert last expression to print statement
-        var last = parsedStatements.get(parsedStatements.size() - 1);
+        var last = statements.get(statements.size() - 1);
         if (last instanceof Expression expr) {
             var shouldAddPrint = true;
             if (expr instanceof FunctionInvocationExpression invo) {
-                var analyzer = new Analyzer(parserResult.getUnit());
-                if (analyzer.analyze().get(0).hasProblems()) {
+                var analyzer = new Analyzer(new SourceFileUnit("repl", statements));
+                var res = analyzer.analyze();
+                if (res.get(0).hasProblems()) {
                     shouldAddPrint = false;
                 } else {
                     // Functions that don't return anything should not be printed
@@ -129,16 +135,28 @@ public class REPL implements Runnable {
             }
 
             if (shouldAddPrint)
-                parsedStatements.set(parsedStatements.size() - 1, new FunctionInvocationExpression(null, new IdentifierExpression(null, "print"), List.of(), ExpressionList.of(expr)));
+                statements.set(statements.size() - 1, new FunctionInvocationExpression(null, new IdentifierExpression(Span.fromString("print")), List.of(), ExpressionList.of(expr)));
         }
 
-        statements.addAll(parsedStatements);
         return statements;
     }
 
     private TethProgram injectRestoreLocalsInsn(TethProgram program) {
         var insns = new ArrayList<>(List.of(program.getInstructions()));
-        insns.add(/* INVOKE */ 1 + /* PUSH + STORE_LOCAL */ this.cachedLocalVariables.size() * 2, new RestoreLocalsInsn());
+        var targetIndex = /* Global INVOKE */ 1 + /* Pairs of PUSH, STORE_LOCAL */ this.cachedLocalVariables.size() * 2;
+        insns.add(targetIndex, new RestoreLocalsInsn());
+        // Fix jump addresses for invoke instructions
+        for (int i = 0; i < insns.size(); i++) {
+            var insn = insns.get(i);
+            if (!(insn instanceof INVOKE_Insn invokeInsn) || invokeInsn.getAbsoluteJumpAddress() < targetIndex)
+                continue;
+
+            insns.set(i, new INVOKE_Insn(
+                    invokeInsn.isInstanceFunction(), invokeInsn.getParamCount(),
+                    invokeInsn.getLocalsCount(), invokeInsn.returnsValue(),
+                    invokeInsn.getAbsoluteJumpAddress() + 1
+            ));
+        }
         return new TethProgram(insns.toArray(IInstrunction[]::new), program.getStructData());
     }
 
@@ -156,16 +174,16 @@ public class REPL implements Runnable {
 
     private static TypeExpression semanticTypeToExpression(Analyzer analyzer, SemanticType type) {
         if (!type.hasGenericBounds())
-            return new TypeExpression(null, new IdentifierExpression(null, semanticTypeToName(analyzer, type)));
+            return new TypeExpression(null, new IdentifierExpression(Span.fromString(semanticTypeToName(analyzer, type))));
         return new TypeExpression(
                 null,
-                new IdentifierExpression(null, semanticTypeToName(analyzer, type)),
+                new IdentifierExpression(Span.fromString(semanticTypeToName(analyzer, type))),
                 type.getGenericBounds().stream().map(t -> semanticTypeToExpression(analyzer, t)).toList()
         );
     }
 
     private static String semanticTypeToName(Analyzer analyzer, SemanticType type) {
-        return ((StructDeclaration) analyzer.getTypeCache().getDeclaration(type)).getNameExpr().getValue();
+        return ((StructDeclaration) analyzer.getTypeCache().getDeclaration(type)).getNameExpr().getSpan().getText();
     }
 
     private static class CachedLocalVariable {
@@ -180,7 +198,7 @@ public class REPL implements Runnable {
         }
 
         public Expression createInitializerExpression() {
-            var typeName = this.type.getNameExpr().getValue();
+            var typeName = this.type.getNameExpr().getSpan().getText();
             return switch (typeName) {
                 case "long" -> new LongLiteralExpression(null, 0);
                 case "double" -> new DoubleLiteralExpression(null, 0);
