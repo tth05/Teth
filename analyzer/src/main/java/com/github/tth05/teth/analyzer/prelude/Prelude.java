@@ -1,189 +1,135 @@
 package com.github.tth05.teth.analyzer.prelude;
 
-import com.github.tth05.teth.lang.parser.ast.*;
+import com.github.tth05.teth.lang.parser.Parser;
+import com.github.tth05.teth.lang.parser.ast.FunctionDeclaration;
+import com.github.tth05.teth.lang.parser.ast.IHasName;
+import com.github.tth05.teth.lang.parser.ast.Statement;
+import com.github.tth05.teth.lang.parser.ast.StructDeclaration;
+import com.github.tth05.teth.lang.source.InMemorySource;
 import com.github.tth05.teth.lang.span.Span;
 
-import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
-import java.util.stream.IntStream;
+import java.util.Map;
+import java.util.Objects;
 
 public class Prelude {
 
-    /**
-     * Structs
-     */
+    private static final String PRELUDE_TEXT = """
+            struct intrinsic long {
+                fn intrinsic toString() string
+            }
+            struct intrinsic double {
+                fn intrinsic toLong() long
+            }
+            struct intrinsic bool {}
+            struct intrinsic string {
+                fn intrinsic concat(other: string) string
+            }
+            struct intrinsic list<T> {
+                fn intrinsic get(index: long) T
+                fn intrinsic set(index: long, value: T)
+                fn intrinsic add(value: T)
+                fn intrinsic size() long
+            }
+            struct intrinsic any {}
+                        
+            fn intrinsic print(arg: any)
+            fn intrinsic stringify(arg: any) string
+            fn intrinsic nanoTime() long
+            """;
+    private static final Map<Span, StructDeclaration> PRELUDE_STRUCTS = new HashMap<>();
+    private static final Map<Span, FunctionDeclaration> PRELUDE_FUNCTIONS = new HashMap<>();
+    static {
+        var result = Parser.parse(new InMemorySource("prelude", PRELUDE_TEXT), true);
+        if (result.hasProblems())
+            throw new RuntimeException("Failed to parse prelude\n" + result.getProblems().prettyPrint(false));
 
-    public static final StructDeclaration LONG_STRUCT_DECLARATION = new StructDeclaration(
-            null, null,
-            new IdentifierExpression(Span.fromString("long")),
-            List.of(),
-            List.of(),
-            List.of(
-                    createFakeFunctionDeclaration("toString", true, type("string"))
-            ),
-            true
-    );
-
-    public static final StructDeclaration DOUBLE_STRUCT_DECLARATION = new StructDeclaration(
-            null, null,
-            new IdentifierExpression(Span.fromString("double")),
-            List.of(),
-            List.of(),
-            List.of(
-                    createFakeFunctionDeclaration("toLong", true, type("long"))
-            ),
-            true
-    );
-    public static final StructDeclaration BOOLEAN_STRUCT_DECLARATION = new StructDeclaration(
-            null, null,
-            new IdentifierExpression(Span.fromString("bool")),
-            List.of(),
-            List.of(),
-            List.of(),
-            true
-    );
-    public static final StructDeclaration STRING_STRUCT_DECLARATION = new StructDeclaration(
-            null, null,
-            new IdentifierExpression(Span.fromString("string")),
-            List.of(),
-            List.of(),
-            List.of(
-                    createFakeFunctionDeclaration("concat", true, type("string"), type("string"))
-            ),
-            true
-    );
-    public static final StructDeclaration LIST_STRUCT_DECLARATION = new StructDeclaration(
-            null, null,
-            new IdentifierExpression(Span.fromString("list")),
-            List.of(new GenericParameterDeclaration(Span.fromString("T"))),
-            List.of(),
-            List.of(
-                    createFakeFunctionDeclaration("size", true, type("long")),
-                    createFakeFunctionDeclaration("get", true, type("T"), type("long")),
-                    createFakeFunctionDeclaration("set", true, null, type("long"), type("T")),
-                    createFakeFunctionDeclaration("add", true, null, type("T"))
-            ),
-            true
-    );
-
-    public static final StructDeclaration ANY_STRUCT_DECLARATION = new StructDeclaration(
-            null, null,
-            new IdentifierExpression(Span.fromString("any")),
-            List.of(),
-            List.of(),
-            List.of(),
-            true
-    );
-
-    /**
-     * Functions
-     */
-
-    private static final FunctionDeclaration PRINT_FUNCTION = createFakeFunctionDeclaration(
-            "print",
-            false,
-            null,
-            type("any")
-    );
-    private static final FunctionDeclaration STRINGIFY_FUNCTION = createFakeFunctionDeclaration(
-            "stringify",
-            false,
-            type("string"),
-            type("any")
-    );
-    private static final FunctionDeclaration NANO_TIME_FUNCTION = createFakeFunctionDeclaration(
-            "nanoTime",
-            false,
-            type("long")
-    );
+        for (var statement : result.getUnit().getStatements()) {
+            if (statement instanceof StructDeclaration structDeclaration)
+                PRELUDE_STRUCTS.put(((IHasName) statement).getNameExpr().getSpan(), structDeclaration);
+            else if (statement instanceof FunctionDeclaration functionDeclaration)
+                PRELUDE_FUNCTIONS.put(((IHasName) statement).getNameExpr().getSpan(), functionDeclaration);
+            else
+                throw new RuntimeException();
+        }
+    }
 
     public static FunctionDeclaration getGlobalFunction(Span name) {
         if (name == null)
             return null;
 
-        if (name.textEquals("print"))
-            return PRINT_FUNCTION;
-        else if (name.textEquals("stringify"))
-            return STRINGIFY_FUNCTION;
-        else if (name.textEquals("nanoTime"))
-            return NANO_TIME_FUNCTION;
-
-        return null;
+        return PRELUDE_FUNCTIONS.get(name);
     }
 
     public static FunctionDeclaration[] getGlobalFunctions() {
-        return new FunctionDeclaration[]{
-                PRINT_FUNCTION,
-                STRINGIFY_FUNCTION,
-                NANO_TIME_FUNCTION
-        };
-    }
-
-    public static boolean isBuiltInTypeName(Span name) {
-        if (name == null)
-            return false;
-
-        return name.textEquals("long") || name.textEquals("double") || name.textEquals("bool") ||
-               name.textEquals("string") || name.textEquals("list") || name.textEquals("any");
+        return PRELUDE_FUNCTIONS.values().toArray(new FunctionDeclaration[0]);
     }
 
     public static StructDeclaration getStructForTypeName(Span name) {
         if (name == null)
             throw new IllegalArgumentException();
 
-        if (name.textEquals("long"))
-            return LONG_STRUCT_DECLARATION;
-        else if (name.textEquals("double"))
-            return DOUBLE_STRUCT_DECLARATION;
-        else if (name.textEquals("bool"))
-            return BOOLEAN_STRUCT_DECLARATION;
-        else if (name.textEquals("string"))
-            return STRING_STRUCT_DECLARATION;
-        else if (name.textEquals("list"))
-            return LIST_STRUCT_DECLARATION;
-        else if (name.textEquals("any"))
-            return ANY_STRUCT_DECLARATION;
+        var struct = PRELUDE_STRUCTS.get(name);
+        if (struct == null)
+            throw new IllegalArgumentException();
 
-        throw new IllegalArgumentException();
+        return struct;
     }
 
     public static StructDeclaration[] getGlobalStructs() {
-        return new StructDeclaration[]{
-                LONG_STRUCT_DECLARATION,
-                DOUBLE_STRUCT_DECLARATION,
-                BOOLEAN_STRUCT_DECLARATION,
-                STRING_STRUCT_DECLARATION,
-                LIST_STRUCT_DECLARATION,
-                ANY_STRUCT_DECLARATION
-        };
+        return PRELUDE_STRUCTS.values().toArray(new StructDeclaration[0]);
     }
 
     public static void injectStatements(List<Statement> statements) {
-        for (var function : getGlobalFunctions())
+        for (var function : PRELUDE_FUNCTIONS.values())
             statements.add(0, function);
-        for (var struct : getGlobalStructs())
+        for (var struct : PRELUDE_STRUCTS.values())
             statements.add(0, struct);
     }
 
-    private static TypeExpression type(String name, TypeExpression... params) {
-        if (params.length == 0)
-            return new TypeExpression(null, new IdentifierExpression(Span.fromString(name)));
-        return new TypeExpression(null, new IdentifierExpression(Span.fromString(name)), Arrays.asList(params));
+    /**
+     * Quick accessors
+     */
+    private static StructDeclaration LONG_STRUCT;
+    public static StructDeclaration getLongStruct() {
+        if (LONG_STRUCT == null)
+            LONG_STRUCT = Objects.requireNonNull(getStructForTypeName(Span.fromString("long")));
+        return LONG_STRUCT;
     }
 
-    private static FunctionDeclaration createFakeFunctionDeclaration(String name, boolean instanceFunction, TypeExpression returnType, TypeExpression... parameters) {
-        return new FunctionDeclaration(
-                null, null,
-                new IdentifierExpression(Span.fromString(name)),
-                List.of(),
-                IntStream.range(0, parameters.length).mapToObj(i -> new FunctionDeclaration.ParameterDeclaration(
-                        null,
-                        parameters[i],
-                        new IdentifierExpression(Span.fromString("arg" + i))
-                )).toList(),
-                returnType,
-                null,
-                instanceFunction, true
-        );
+    private static StructDeclaration DOUBLE_STRUCT;
+    public static StructDeclaration getDoubleStruct() {
+        if (DOUBLE_STRUCT == null)
+            DOUBLE_STRUCT = Objects.requireNonNull(getStructForTypeName(Span.fromString("double")));
+        return DOUBLE_STRUCT;
+    }
+
+    private static StructDeclaration BOOL_STRUCT;
+    public static StructDeclaration getBoolStruct() {
+        if (BOOL_STRUCT == null)
+            BOOL_STRUCT = Objects.requireNonNull(getStructForTypeName(Span.fromString("bool")));
+        return BOOL_STRUCT;
+    }
+
+    private static StructDeclaration STRING_STRUCT;
+    public static StructDeclaration getStringStruct() {
+        if (STRING_STRUCT == null)
+            STRING_STRUCT = Objects.requireNonNull(getStructForTypeName(Span.fromString("string")));
+        return STRING_STRUCT;
+    }
+
+    private static StructDeclaration LIST_STRUCT;
+    public static StructDeclaration getListStruct() {
+        if (LIST_STRUCT == null)
+            LIST_STRUCT = Objects.requireNonNull(getStructForTypeName(Span.fromString("list")));
+        return LIST_STRUCT;
+    }
+
+    private static StructDeclaration ANY_STRUCT;
+    public static StructDeclaration getAnyStruct() {
+        if (ANY_STRUCT == null)
+            ANY_STRUCT = Objects.requireNonNull(getStructForTypeName(Span.fromString("any")));
+        return ANY_STRUCT;
     }
 }

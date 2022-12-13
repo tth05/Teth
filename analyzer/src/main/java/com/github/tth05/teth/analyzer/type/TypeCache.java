@@ -41,7 +41,7 @@ public class TypeCache {
     }
 
     public boolean isNumber(SemanticType type) {
-        return type == getType(Prelude.LONG_STRUCT_DECLARATION) || type == getType(Prelude.DOUBLE_STRUCT_DECLARATION);
+        return type == getType(Prelude.getLongStruct()) || type == getType(Prelude.getDoubleStruct());
     }
 
     public SemanticType voidType() {
@@ -56,9 +56,9 @@ public class TypeCache {
         if (type == SemanticType.NULL)
             return false;
         if (subType == SemanticType.NULL)
-            return type != getType(Prelude.LONG_STRUCT_DECLARATION) && type != getType(Prelude.DOUBLE_STRUCT_DECLARATION) && type != getType(Prelude.BOOLEAN_STRUCT_DECLARATION);
+            return type != getType(Prelude.getLongStruct()) && type != getType(Prelude.getDoubleStruct()) && type != getType(Prelude.getBoolStruct());
 
-        var ANY = getType(Prelude.ANY_STRUCT_DECLARATION);
+        var ANY = getType(Prelude.getAnyStruct());
         if (subType == type)
             return true;
         if (type == ANY) // long, double etc. are subtypes of any

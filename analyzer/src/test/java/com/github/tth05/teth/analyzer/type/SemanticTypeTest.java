@@ -13,13 +13,13 @@ public class SemanticTypeTest {
 
     @Test
     public void testIsSubTypeOfAnyAndVoid() {
-        var ANY = this.typeCache.getType(Prelude.ANY_STRUCT_DECLARATION);
+        var ANY = this.typeCache.getType(Prelude.getAnyStruct());
         var anySubTypes = List.of(
-                this.typeCache.getType(Prelude.BOOLEAN_STRUCT_DECLARATION),
-                this.typeCache.getType(Prelude.DOUBLE_STRUCT_DECLARATION),
-                this.typeCache.getType(Prelude.LONG_STRUCT_DECLARATION),
+                this.typeCache.getType(Prelude.getBoolStruct()),
+                this.typeCache.getType(Prelude.getDoubleStruct()),
+                this.typeCache.getType(Prelude.getLongStruct()),
                 ANY,
-                this.typeCache.getType(Prelude.STRING_STRUCT_DECLARATION),
+                this.typeCache.getType(Prelude.getStringStruct()),
                 new SemanticType(56),
                 new SemanticType(78, List.of(new SemanticType(7999)))
         );
@@ -44,7 +44,7 @@ public class SemanticTypeTest {
     public void testIsSubTypeOfNull() {
         var nullType = SemanticType.NULL;
         var nullSuperTypes = List.of(
-                this.typeCache.getType(Prelude.STRING_STRUCT_DECLARATION),
+                this.typeCache.getType(Prelude.getStringStruct()),
                 new SemanticType(56),
                 new SemanticType(78, List.of(new SemanticType(7999)))
         );
@@ -55,9 +55,9 @@ public class SemanticTypeTest {
         }
 
         var nonNullableTypes = List.of(
-                this.typeCache.getType(Prelude.BOOLEAN_STRUCT_DECLARATION),
-                this.typeCache.getType(Prelude.DOUBLE_STRUCT_DECLARATION),
-                this.typeCache.getType(Prelude.LONG_STRUCT_DECLARATION)
+                this.typeCache.getType(Prelude.getBoolStruct()),
+                this.typeCache.getType(Prelude.getDoubleStruct()),
+                this.typeCache.getType(Prelude.getLongStruct())
         );
 
         for (var t : nonNullableTypes) {
@@ -68,9 +68,9 @@ public class SemanticTypeTest {
 
     @Test
     public void testIsSubTypeOfGenerics() {
-        var LONG = this.typeCache.getType(Prelude.LONG_STRUCT_DECLARATION);
-        var ANY = this.typeCache.getType(Prelude.ANY_STRUCT_DECLARATION);
-        var DOUBLE = this.typeCache.getType(Prelude.DOUBLE_STRUCT_DECLARATION);
+        var LONG = this.typeCache.getType(Prelude.getLongStruct());
+        var ANY = this.typeCache.getType(Prelude.getAnyStruct());
+        var DOUBLE = this.typeCache.getType(Prelude.getDoubleStruct());
 
         assertFalse(this.typeCache.isSubtypeOf(new SemanticType(5, List.of(LONG)), new SemanticType(5, List.of(DOUBLE))));
         assertTrue(this.typeCache.isSubtypeOf(new SemanticType(5, List.of(LONG)), new SemanticType(5, List.of(LONG))));

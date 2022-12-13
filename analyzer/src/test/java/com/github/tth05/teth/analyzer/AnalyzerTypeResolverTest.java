@@ -148,6 +148,13 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
     }
 
     @Test
+    public void testVariableRedefinition() {
+        var problems = analyze("let a = 5\n let a = true \n if(a) {}");
+
+        assertTrue(problems.isEmpty());
+    }
+
+    @Test
     public void testVariableDeclarationUnknownType() {
         var problems = analyze("struct a {b:list<list<longg>>}");
 

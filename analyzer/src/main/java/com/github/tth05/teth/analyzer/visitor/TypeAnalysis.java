@@ -1,5 +1,6 @@
 package com.github.tth05.teth.analyzer.visitor;
 
+import com.github.tth05.teth.analyzer.prelude.Prelude;
 import com.github.tth05.teth.analyzer.type.SemanticType;
 import com.github.tth05.teth.analyzer.type.TypeCache;
 import com.github.tth05.teth.lang.parser.ExpressionList;
@@ -7,8 +8,6 @@ import com.github.tth05.teth.lang.parser.ast.*;
 import com.github.tth05.teth.lang.span.Span;
 
 import java.util.*;
-
-import static com.github.tth05.teth.analyzer.prelude.Prelude.*;
 
 public class TypeAnalysis extends AnalysisASTVisitor {
 
@@ -26,9 +25,9 @@ public class TypeAnalysis extends AnalysisASTVisitor {
         this.resolvedExpressionTypes = resolvedExpressionTypes;
 
         var all = BinaryExpression.Operator.values();
-        this.binaryOperatorsAllowedTypes.put(this.typeCache.internalizeType(LONG_STRUCT_DECLARATION), all);
-        this.binaryOperatorsAllowedTypes.put(this.typeCache.internalizeType(DOUBLE_STRUCT_DECLARATION), all);
-        this.binaryOperatorsAllowedTypes.put(this.typeCache.internalizeType(BOOLEAN_STRUCT_DECLARATION), new BinaryExpression.Operator[]{
+        this.binaryOperatorsAllowedTypes.put(this.typeCache.internalizeType(Prelude.getLongStruct()), all);
+        this.binaryOperatorsAllowedTypes.put(this.typeCache.internalizeType(Prelude.getDoubleStruct()), all);
+        this.binaryOperatorsAllowedTypes.put(this.typeCache.internalizeType(Prelude.getBoolStruct()), new BinaryExpression.Operator[]{
                 BinaryExpression.Operator.OP_EQUAL, BinaryExpression.Operator.OP_NOT_EQUAL,
                 BinaryExpression.Operator.OP_AND, BinaryExpression.Operator.OP_OR
         });
@@ -234,7 +233,7 @@ public class TypeAnalysis extends AnalysisASTVisitor {
     public void visit(IfStatement statement) {
         super.visit(statement);
 
-        if (!this.typeCache.getType(BOOLEAN_STRUCT_DECLARATION).equals(this.resolvedExpressionTypes.get(statement.getCondition())))
+        if (!this.typeCache.getType(Prelude.getBoolStruct()).equals(this.resolvedExpressionTypes.get(statement.getCondition())))
             report(statement.getCondition().getSpan(), "Condition of if statement must be a bool");
     }
 
@@ -242,7 +241,7 @@ public class TypeAnalysis extends AnalysisASTVisitor {
     public void visit(LoopStatement statement) {
         super.visit(statement);
 
-        if (statement.getCondition() != null && !this.typeCache.getType(BOOLEAN_STRUCT_DECLARATION).equals(this.resolvedExpressionTypes.get(statement.getCondition())))
+        if (statement.getCondition() != null && !this.typeCache.getType(Prelude.getBoolStruct()).equals(this.resolvedExpressionTypes.get(statement.getCondition())))
             report(statement.getCondition().getSpan(), "Condition of loop statement must be a bool");
     }
 
@@ -267,7 +266,7 @@ public class TypeAnalysis extends AnalysisASTVisitor {
 
         var operator = expression.getOperator();
         if ((operator == UnaryExpression.Operator.OP_NEGATE && !this.typeCache.isNumber(type)) ||
-            (operator == UnaryExpression.Operator.OP_NOT && type != this.typeCache.getType(BOOLEAN_STRUCT_DECLARATION))) {
+            (operator == UnaryExpression.Operator.OP_NOT && type != this.typeCache.getType(Prelude.getBoolStruct()))) {
             report(expression.getExpression().getSpan(), "Unary operator " + operator.asString() + " cannot be applied to " + this.typeCache.toString(type));
             return;
         }
@@ -315,7 +314,7 @@ public class TypeAnalysis extends AnalysisASTVisitor {
 
             // Disallow null comparisons for non-nullable types
             var nonNullType = leftType == SemanticType.NULL ? rightType : leftType;
-            if (nonNullType == this.typeCache.getType(LONG_STRUCT_DECLARATION) || nonNullType == this.typeCache.getType(DOUBLE_STRUCT_DECLARATION) || nonNullType == this.typeCache.getType(BOOLEAN_STRUCT_DECLARATION)) {
+            if (nonNullType == this.typeCache.getType(Prelude.getLongStruct()) || nonNullType == this.typeCache.getType(Prelude.getDoubleStruct()) || nonNullType == this.typeCache.getType(Prelude.getBoolStruct())) {
                 report(expression.getSpan(), "Operator " + expression.getOperator().asString() + " cannot be applied to " + this.typeCache.toString(leftType) + " and " + this.typeCache.toString(rightType));
                 return;
             }
@@ -329,10 +328,10 @@ public class TypeAnalysis extends AnalysisASTVisitor {
         // Compute output type
         SemanticType binaryType;
         if (expression.getOperator().producesBoolean()) {
-            binaryType = this.typeCache.getType(BOOLEAN_STRUCT_DECLARATION);
+            binaryType = this.typeCache.getType(Prelude.getBoolStruct());
         } else if (anyNumber) {
-            var doubleType = this.typeCache.getType(DOUBLE_STRUCT_DECLARATION);
-            var longType = this.typeCache.getType(LONG_STRUCT_DECLARATION);
+            var doubleType = this.typeCache.getType(Prelude.getDoubleStruct());
+            var longType = this.typeCache.getType(Prelude.getLongStruct());
             binaryType = leftType == doubleType || rightType == doubleType ? doubleType : longType;
         } else {
             binaryType = leftType;
@@ -370,7 +369,7 @@ public class TypeAnalysis extends AnalysisASTVisitor {
         super.visit(listLiteralExpression);
 
         if (listLiteralExpression.getInitializers().isEmpty()) {
-            this.resolvedExpressionTypes.put(listLiteralExpression, new SemanticType(this.typeCache.internalizeType(LIST_STRUCT_DECLARATION), List.of(this.typeCache.getType(ANY_STRUCT_DECLARATION))));
+            this.resolvedExpressionTypes.put(listLiteralExpression, new SemanticType(this.typeCache.internalizeType(Prelude.getListStruct()), List.of(this.typeCache.getType(Prelude.getAnyStruct()))));
             return;
         }
 
@@ -387,12 +386,12 @@ public class TypeAnalysis extends AnalysisASTVisitor {
                 report(initializer.getSpan(), "List element type mismatch");
         }
 
-        this.resolvedExpressionTypes.put(listLiteralExpression, new SemanticType(this.typeCache.internalizeType(LIST_STRUCT_DECLARATION), List.of(elementType)));
+        this.resolvedExpressionTypes.put(listLiteralExpression, new SemanticType(this.typeCache.internalizeType(Prelude.getListStruct()), List.of(elementType)));
     }
 
     @Override
     public void visit(BooleanLiteralExpression booleanLiteralExpression) {
-        this.resolvedExpressionTypes.put(booleanLiteralExpression, this.typeCache.getType(BOOLEAN_STRUCT_DECLARATION));
+        this.resolvedExpressionTypes.put(booleanLiteralExpression, this.typeCache.getType(Prelude.getBoolStruct()));
     }
 
     @Override
@@ -409,21 +408,21 @@ public class TypeAnalysis extends AnalysisASTVisitor {
                 continue;
 
             var type = this.resolvedExpressionTypes.get(part.asExpression());
-            if (!this.typeCache.getType(STRING_STRUCT_DECLARATION).equals(type))
+            if (!this.typeCache.getType(Prelude.getStringStruct()).equals(type))
                 report(part.asExpression().getSpan(), "String literal part must be a string");
         }
 
-        this.resolvedExpressionTypes.put(stringLiteralExpression, this.typeCache.getType(STRING_STRUCT_DECLARATION));
+        this.resolvedExpressionTypes.put(stringLiteralExpression, this.typeCache.getType(Prelude.getStringStruct()));
     }
 
     @Override
     public void visit(DoubleLiteralExpression doubleLiteralExpression) {
-        this.resolvedExpressionTypes.put(doubleLiteralExpression, this.typeCache.getType(DOUBLE_STRUCT_DECLARATION));
+        this.resolvedExpressionTypes.put(doubleLiteralExpression, this.typeCache.getType(Prelude.getDoubleStruct()));
     }
 
     @Override
     public void visit(LongLiteralExpression longLiteralExpression) {
-        this.resolvedExpressionTypes.put(longLiteralExpression, this.typeCache.getType(LONG_STRUCT_DECLARATION));
+        this.resolvedExpressionTypes.put(longLiteralExpression, this.typeCache.getType(Prelude.getLongStruct()));
     }
 
     @Override
