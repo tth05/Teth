@@ -109,36 +109,37 @@ public class StackCleaningOptimizer implements IOptimizer, OpCodes {
             var instruction = value.instruction();
 
             var opCode = instruction.getOpCode();
+            // If the bytecode was
+            //  LOAD_LOCAL
+            //  DUP
+            //  STORE_LOCAL
+            // then the DUP instruction is the one that should be removed, but the unused value list will
+            // contain the LOAD_LOCAL instruction
+            if (i < instructions.size() - 1 && instructions.get(i + 1).getOpCode() == DUP) {
+                instructions.remove(i + 1);
+                fixJumps(instructions, i + 1, true);
+                continue;
+            }
+
             if (!isRemovable(opCode)) {
                 instructions.add(i + 1, new POP_Insn());
                 fixJumps(instructions, i, false);
             } else {
+                // Mark dependencies for removal as well, if they are removable.
                 // If the bytecode was
-                //  LOAD_LOCAL
-                //  DUP
-                //  STORE_LOCAL
-                // then the DUP instruction is the one that should be removed, but the unused value list will
-                // contain the LOAD_LOCAL instruction
-                if (i < instructions.size() - 1 && instructions.get(i + 1).getOpCode() == DUP) {
-                    instructions.remove(i + 1);
-                    fixJumps(instructions, i + 1, true);
-                } else {
-                    // Mark dependencies for removal as well, if they are removable.
-                    // If the bytecode was
-                    //  L_CONST
-                    //  L_CONST
-                    //  LD_ADD
-                    // then it makes sense to also remove both L_CONST instructions to properly clean the stack
-                    var dependencies = getDependencies(instructions, i);
-                    if (dependencies != null) {
-                        for (int k = dependencies.length - 1; k >= 0; k--)
-                            unusedStackValues.push(dependencies[k]);
-                    }
-
-                    // Remove the instruction
-                    instructions.remove(i);
-                    fixJumps(instructions, i, true);
+                //  L_CONST
+                //  L_CONST
+                //  LD_ADD
+                // then it makes sense to also remove both L_CONST instructions to properly clean the stack
+                var dependencies = getDependencies(instructions, i);
+                if (dependencies != null) {
+                    for (int k = dependencies.length - 1; k >= 0; k--)
+                        unusedStackValues.push(dependencies[k]);
                 }
+
+                // Remove the instruction
+                instructions.remove(i);
+                fixJumps(instructions, i, true);
             }
         }
     }
