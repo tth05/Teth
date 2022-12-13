@@ -39,19 +39,19 @@ public class AnchorSets {
     public static final AnchorUnion FIRST_SET_STATEMENT = FIRST_SET_BLOCK.union(FIRST_SET_KEYWORD_STATEMENT).union(FIRST_SET_EXPRESSION);
     public static final AnchorUnion FIRST_SET_STATEMENT_EXPRESSIONLESS = FIRST_SET_BLOCK.union(FIRST_SET_KEYWORD_STATEMENT);
 
-    public static final AnchorUnion FIRST_SET_LIST = AnchorUnion.leaf(List.of(TokenType.COMMA));
-    public static final AnchorUnion END_SET_PARENTHESISED_LIST = FIRST_SET_LIST.union(END_SET_PARENTHESISED_EXPRESSION);
+    public static final AnchorUnion LIST_SEPARATORS = AnchorUnion.leaf(List.of(TokenType.COMMA));
+    public static final AnchorUnion PARENTHESISED_LIST = LIST_SEPARATORS.union(END_SET_PARENTHESISED_EXPRESSION);
 
-    public static final AnchorUnion FIRST_SET_USE_STATEMENT = FIRST_SET_BLOCK.union(AnchorUnion.leaf(List.of(TokenType.SLASH)));
-    public static final AnchorUnion END_SET_USE_STATEMENT = END_SET_BLOCK.union(FIRST_SET_LIST);
+    public static final AnchorUnion FIRST_SET_USE_STATEMENT_IMPORTS = FIRST_SET_BLOCK;
+    public static final AnchorUnion END_SET_USE_STATEMENT_IMPORTS = END_SET_BLOCK.union(LIST_SEPARATORS);
 
     public static final AnchorUnion END_SET_STRING_CODE_LITERAL = AnchorUnion.leaf(List.of(TokenType.STRING_LITERAL_CODE_END));
 
-    public static final AnchorUnion FIRST_SET_LET_STATEMENT = FIRST_SET_EXPRESSION.union(AnchorUnion.leaf(List.of(TokenType.COLON, TokenType.EQUAL)));
-    public static final AnchorUnion MIDDLE_SET_LET_STATEMENT = FIRST_SET_EXPRESSION.union(AnchorUnion.leaf(List.of(TokenType.EQUAL)));
+    public static final AnchorUnion FIRST_SET_LET_STATEMENT_NAME = FIRST_SET_EXPRESSION.union(AnchorUnion.leaf(List.of(TokenType.COLON, TokenType.EQUAL)));
+    public static final AnchorUnion FIRST_SET_LET_STATEMENT_INITIALIZER = FIRST_SET_EXPRESSION.union(AnchorUnion.leaf(List.of(TokenType.EQUAL)));
 
-    public static final AnchorUnion FIRST_SET_FUNCTION = FIRST_SET_EXPRESSION.union(AnchorUnion.leaf(List.of(TokenType.L_PAREN, TokenType.LESS)));
+    public static final AnchorUnion FIRST_SET_FUNCTION_PARAMETERS = FIRST_SET_EXPRESSION.union(AnchorUnion.leaf(List.of(TokenType.L_PAREN, TokenType.LESS)));
 
-    public static final AnchorUnion FIRST_SET_STRUCT = FIRST_SET_BLOCK.union(AnchorUnion.leaf(List.of(TokenType.LESS)));
-    public static final AnchorUnion MIDDLE_SET_STRUCT = AnchorUnion.leaf(List.of(TokenType.KEYWORD_FN, TokenType.IDENTIFIER, TokenType.R_CURLY_PAREN));
+    public static final AnchorUnion FIRST_SET_STRUCT_BODY = FIRST_SET_BLOCK.union(AnchorUnion.leaf(List.of(TokenType.LESS)));
+    public static final AnchorUnion FIRST_SET_STRUCT_MEMBER = AnchorUnion.leaf(List.of(TokenType.KEYWORD_FN, TokenType.IDENTIFIER, TokenType.R_CURLY_PAREN));
 }

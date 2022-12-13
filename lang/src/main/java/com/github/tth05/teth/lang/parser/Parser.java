@@ -59,7 +59,7 @@ public class Parser {
 
         var path = parseStringLiteralExpression();
         if (path == null) {
-            reportAndRecover(anchorSet.union(AnchorSets.FIRST_SET_USE_STATEMENT), this.stream.peek().span(), "Expected string literal path");
+            reportAndRecover(anchorSet.union(AnchorSets.FIRST_SET_USE_STATEMENT_IMPORTS), this.stream.peek().span(), "Expected string literal path");
         } else {
             if (!path.isSingleString()) {
                 this.problems.add(new Problem(path.getSpan(), "Expressions in string literals are not allowed here"));
@@ -69,14 +69,14 @@ public class Parser {
         }
 
         consumeLineBreaks();
-        var temp = expectToken(TokenType.L_CURLY_PAREN, anchorSet.union(AnchorSets.END_SET_USE_STATEMENT), () -> "Expected '{' after use statement");
+        var temp = expectToken(TokenType.L_CURLY_PAREN, anchorSet.union(AnchorSets.END_SET_USE_STATEMENT_IMPORTS), () -> "Expected '{' after use statement");
         if (!temp.isInvalid())
             lastSpan = temp.span();
 
         var imports = new ArrayList<IdentifierExpression>(8);
         while (true) {
             consumeLineBreaks();
-            var part = expectIdentifier(AnchorSets.END_SET_USE_STATEMENT.union(AnchorSets.FIRST_SET_STATEMENT_EXPRESSIONLESS), () -> "Expected identifier");
+            var part = expectIdentifier(AnchorSets.END_SET_USE_STATEMENT_IMPORTS.union(AnchorSets.FIRST_SET_STATEMENT_EXPRESSIONLESS), () -> "Expected identifier");
             consumeLineBreaks();
             if (!part.isInvalid())
                 imports.add(new IdentifierExpression(lastSpan = part.span()));
@@ -189,7 +189,7 @@ public class Parser {
             consumeLineBreaks();
 
             if (this.stream.peek().is(TokenType.KEYWORD_LET))
-                variableDeclarations.add(parseVariableDeclaration(anchorSet.union(AnchorSets.END_SET_PARENTHESISED_LIST)));
+                variableDeclarations.add(parseVariableDeclaration(anchorSet.union(AnchorSets.PARENTHESISED_LIST)));
             else
                 break;
 
@@ -198,7 +198,7 @@ public class Parser {
         }
 
         if (hasCondition)
-            condition = parseExpression(anchorSet.union(AnchorSets.END_SET_PARENTHESISED_LIST));
+            condition = parseExpression(anchorSet.union(AnchorSets.PARENTHESISED_LIST));
         if (hasCondition && this.stream.peek().is(TokenType.COMMA)) {
             consume(false);
             // Well, this will make for some interesting code
@@ -248,7 +248,7 @@ public class Parser {
         var firstSpan = consume(false).span();
         var lastSpan = firstSpan;
         consumeLineBreaks();
-        var name = expectIdentifier(anchorSet.union(AnchorSets.FIRST_SET_LET_STATEMENT), () -> "Expected variable name");
+        var name = expectIdentifier(anchorSet.union(AnchorSets.FIRST_SET_LET_STATEMENT_NAME), () -> "Expected variable name");
         if (!name.isInvalid())
             lastSpan = name.span();
         consumeLineBreaks();
@@ -256,7 +256,7 @@ public class Parser {
         TypeExpression type = null;
         if (this.stream.peek().is(TokenType.COLON)) {
             consume(false);
-            type = parseType(anchorSet.union(AnchorSets.MIDDLE_SET_LET_STATEMENT));
+            type = parseType(anchorSet.union(AnchorSets.FIRST_SET_LET_STATEMENT_INITIALIZER));
             if (type.getSpan() != null)
                 lastSpan = type.getSpan();
             consumeLineBreaks();
@@ -283,7 +283,7 @@ public class Parser {
     private FunctionDeclaration parseFunctionDeclaration(AnchorUnion anchorSet, boolean instanceMethod) {
         var firstSpan = consume(false).span();
         consumeLineBreaks();
-        var functionName = expectIdentifier(anchorSet.union(AnchorSets.FIRST_SET_FUNCTION), () -> "Expected function name");
+        var functionName = expectIdentifier(anchorSet.union(AnchorSets.FIRST_SET_FUNCTION_PARAMETERS), () -> "Expected function name");
         consumeLineBreaks();
 
         // TODO: Maybe this could skip invalid tokens? Something like fn foo>() breaks completely without it
@@ -356,7 +356,7 @@ public class Parser {
 
             consumeLineBreaks();
             var tokensLeft = this.stream.tokensLeft();
-            list.add(expressionSupplier.apply(anchorSet.union(AnchorSets.FIRST_SET_LIST)));
+            list.add(expressionSupplier.apply(anchorSet.union(AnchorSets.LIST_SEPARATORS)));
             // Prevent infinite loops
             if (tokensLeft == this.stream.tokensLeft() && !this.stream.peek().is(TokenType.COMMA))
                 break;
@@ -369,10 +369,10 @@ public class Parser {
     private StructDeclaration parseStructDeclaration(AnchorUnion anchorSet) {
         var firstSpan = consume(false).span();
         consumeLineBreaks();
-        var structName = expectIdentifier(anchorSet.union(AnchorSets.FIRST_SET_STRUCT), () -> "Expected struct name");
+        var structName = expectIdentifier(anchorSet.union(AnchorSets.FIRST_SET_STRUCT_BODY), () -> "Expected struct name");
         consumeLineBreaks();
 
-        var genericParameters = parseGenericParameterDeclarations(anchorSet.union(AnchorSets.FIRST_SET_STRUCT));
+        var genericParameters = parseGenericParameterDeclarations(anchorSet.union(AnchorSets.FIRST_SET_STRUCT_BODY));
 
         consumeLineBreaks();
         // Deal-breaker. Code after this will be parsed normally
@@ -392,7 +392,7 @@ public class Parser {
         var fields = new ArrayList<StructDeclaration.FieldDeclaration>();
         var functions = new ArrayList<FunctionDeclaration>();
 
-        anchorSet = AnchorSets.MIDDLE_SET_STRUCT;
+        anchorSet = AnchorSets.FIRST_SET_STRUCT_MEMBER;
 
         Token currentToken;
         while (!(currentToken = this.stream.peek()).is(TokenType.EOF) && !currentToken.is(TokenType.R_CURLY_PAREN)) {
