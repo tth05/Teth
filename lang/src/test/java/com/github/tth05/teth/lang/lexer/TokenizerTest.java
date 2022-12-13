@@ -258,6 +258,14 @@ public class TokenizerTest extends AbstractTokenizerTest {
     }
 
     @Test
+    public void testIntrinsic() {
+        createStreams("intrinsic");
+        assertIterableEquals(tokenList(
+                new Token(makeSpan(0, 9), TokenType.KEYWORD_INTRINSIC)
+        ), tokensIntoList());
+    }
+
+    @Test
     public void testInvocation() {
         createStreams("a<|long, double>()");
         assertIterableEquals(tokenList(

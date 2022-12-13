@@ -15,6 +15,7 @@ public enum TokenType {
     KEYWORD_STRUCT("struct"),
     KEYWORD_USE("use"),
     KEYWORD_NULL("null"),
+    KEYWORD_INTRINSIC("intrinsic"),
     LONG_LITERAL("Long"),
     DOUBLE_LITERAL("Double"),
     STRING_LITERAL("String"),

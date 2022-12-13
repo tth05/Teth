@@ -1028,8 +1028,4 @@ public class ParserTest extends AbstractParserTest {
                 }
                 """);
     }
-
-    private static Span Span.fromString(String text) {
-        return new Span(new InMemorySource("a", text), 0, text.length());
-    }
 }

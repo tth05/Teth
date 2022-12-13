@@ -85,6 +85,7 @@ public class Tokenizer {
             case "struct" -> TokenType.KEYWORD_STRUCT;
             case "use" -> TokenType.KEYWORD_USE;
             case "null" -> TokenType.KEYWORD_NULL;
+            case "intrinsic" -> TokenType.KEYWORD_INTRINSIC;
             default -> throw new IllegalStateException("Unexpected value: " + ident.text());
         }));
     }
@@ -318,15 +319,18 @@ public class Tokenizer {
     }
 
     public static boolean isKeyword(Token value) {
-        return value.textEquals("if") || value.textEquals("else") || value.textEquals("fn") || value.textEquals("return") ||
-               value.textEquals("let") || value.textEquals("loop") || value.textEquals("break") || value.textEquals("continue") ||
-               value.textEquals("new") || value.textEquals("struct") || value.textEquals("use") || value.textEquals("null");
+        return value.textEquals("if") || value.textEquals("else") || value.textEquals("fn") ||
+               value.textEquals("return") || value.textEquals("let") || value.textEquals("loop") ||
+               value.textEquals("break") || value.textEquals("continue") || value.textEquals("new") ||
+               value.textEquals("struct") || value.textEquals("use") || value.textEquals("null") ||
+               value.textEquals("intrinsic");
     }
 
     public static boolean isKeyword(String value) {
         return value.equals("if") || value.equals("else") || value.equals("fn") || value.equals("return") ||
                value.equals("let") || value.equals("loop") || value.equals("break") || value.equals("continue") ||
-               value.equals("new") || value.equals("struct") || value.equals("use") || value.equals("null");
+               value.equals("new") || value.equals("struct") || value.equals("use") || value.equals("null") ||
+               value.equals("intrinsic");
     }
 
     private static boolean isBooleanLiteral(Token value) {
