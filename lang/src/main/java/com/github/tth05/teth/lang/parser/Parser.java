@@ -23,25 +23,35 @@ public class Parser {
 
     private final ProblemList problems;
     private final TokenStream stream;
+    private final boolean allowIntrinsic;
 
     private SourceFileUnit currentUnit;
 
     private boolean suppressErrors;
 
     private Parser(TokenizerResult tokenizerResult) {
-        this(tokenizerResult.getTokenStream(), tokenizerResult.getProblems());
+        this(tokenizerResult, false);
+    }
+
+    private Parser(TokenizerResult tokenizerResult, boolean allowIntrinsic) {
+        this(tokenizerResult.getTokenStream(), tokenizerResult.getProblems(), allowIntrinsic);
     }
 
     private Parser(TokenStream stream) {
-        this(stream, ProblemList.of());
+        this(stream, false);
     }
 
-    private Parser(TokenStream stream, ProblemList problems) {
+    private Parser(TokenStream stream, boolean allowIntrinsic) {
+        this(stream, ProblemList.of(), allowIntrinsic);
+    }
+
+    private Parser(TokenStream stream, ProblemList problems, boolean allowIntrinsic) {
         this.stream = stream.sanitized();
         this.problems = problems;
+        this.allowIntrinsic = allowIntrinsic;
     }
 
-    public ParserResult parse() {
+    private ParserResult parse() {
         this.currentUnit = new SourceFileUnit(this.stream.getSource().getModuleName());
         this.currentUnit.setStatements(parseStatementList(AnchorSets.FIRST_SET_STATEMENT, TokenType.EOF));
         expectToken(TokenType.EOF, AnchorSets.EMPTY, () -> "Expected end of file");
@@ -283,6 +293,9 @@ public class Parser {
     private FunctionDeclaration parseFunctionDeclaration(AnchorUnion anchorSet, boolean instanceMethod) {
         var firstSpan = consume(false).span();
         consumeLineBreaks();
+
+        var isIntrinsic = parseIntrinsicKeyword();
+
         var functionName = expectIdentifier(anchorSet.union(AnchorSets.FIRST_SET_FUNCTION_PARAMETERS), () -> "Expected function name");
         consumeLineBreaks();
 
@@ -307,16 +320,20 @@ public class Parser {
             return new FunctionDeclaration.ParameterDeclaration(paramFirstSpan == null ? null : Span.of(paramFirstSpan, paramLastSpan), type, new IdentifierExpression(nameToken.span()));
         }, ArrayListWithSpan::new, TokenType.R_PAREN);
 
-        expectToken(TokenType.R_PAREN, anchorSet.union(AnchorSets.FIRST_SET_STATEMENT), () -> "Expected closing ')'");
+        var rParen = expectToken(TokenType.R_PAREN, anchorSet.union(AnchorSets.FIRST_SET_STATEMENT), () -> "Expected closing ')'");
         consumeLineBreaks();
 
         var returnType = this.stream.peek().is(TokenType.IDENTIFIER) ? parseType(anchorSet.union(AnchorSets.FIRST_SET_STATEMENT)) : null;
-        var body = parseBlock(anchorSet);
+
+        BlockStatement body = null;
+        if (!isIntrinsic)
+            body = parseBlock(anchorSet);
         return new FunctionDeclaration(
-                Span.of(firstSpan, body.getSpan()),
+                Span.of(firstSpan, body != null ? body.getSpan() : returnType != null ? returnType.getSpan() : rParen.span()),
                 this.currentUnit,
                 new IdentifierExpression(functionName.span()),
-                genericParameters, parameters, returnType, body, instanceMethod
+                genericParameters, parameters, returnType, body,
+                instanceMethod, isIntrinsic
         );
     }
 
@@ -369,6 +386,9 @@ public class Parser {
     private StructDeclaration parseStructDeclaration(AnchorUnion anchorSet) {
         var firstSpan = consume(false).span();
         consumeLineBreaks();
+
+        var isIntrinsic = parseIntrinsicKeyword();
+
         var structName = expectIdentifier(anchorSet.union(AnchorSets.FIRST_SET_STRUCT_BODY), () -> "Expected struct name");
         consumeLineBreaks();
 
@@ -430,7 +450,8 @@ public class Parser {
                 new IdentifierExpression(structName.span()),
                 genericParameters,
                 fields,
-                functions
+                functions,
+                isIntrinsic
         );
     }
 
@@ -697,6 +718,19 @@ public class Parser {
         return new TypeExpression(Span.of(firstSpan, secondSpan), new IdentifierExpression(current.span()), genericParameters);
     }
 
+    private boolean parseIntrinsicKeyword() {
+        if (this.stream.peek().is(TokenType.KEYWORD_INTRINSIC)) {
+            if (!this.allowIntrinsic)
+                this.problems.add(new Problem(this.stream.peek().span(), "Intrinsic keyword is not enabled in this context"));
+
+            consume(false);
+            consumeLineBreaks();
+            return true;
+        }
+
+        return false;
+    }
+
     private Token expectIdentifier(AnchorUnion anchorSet, Supplier<String> messageSupplier) {
         return expectToken(TokenType.IDENTIFIER, anchorSet, messageSupplier);
     }
@@ -736,20 +770,36 @@ public class Parser {
     }
 
     public static ParserResult parse(ISource source) {
+        return parse(source, false);
+    }
+
+    public static ParserResult parse(ISource source, boolean allowIntrinsic) {
         var tokenizerResult = Tokenizer.tokenize(CharStream.fromSource(source));
-        return new Parser(tokenizerResult).parse();
+        return new Parser(tokenizerResult, allowIntrinsic).parse();
     }
 
     public static ParserResult parse(TokenStream tokenStream) {
-        return new Parser(tokenStream).parse();
+        return parse(tokenStream, false);
+    }
+
+    public static ParserResult parse(TokenStream tokenStream, boolean allowIntrinsic) {
+        return new Parser(tokenStream, allowIntrinsic).parse();
     }
 
     public static ParserResult parse(TokenizerResult result) {
-        return new Parser(result).parse();
+        return parse(result, false);
+    }
+
+    public static ParserResult parse(TokenizerResult result, boolean allowIntrinsic) {
+        return new Parser(result, allowIntrinsic).parse();
     }
 
     public static List<ParserResult> parse(List<? extends ISource> sources) {
-        return sources.stream().map(Parser::parse).toList();
+        return parse(sources, false);
+    }
+
+    public static List<ParserResult> parse(List<? extends ISource> sources, boolean allowIntrinsic) {
+        return sources.stream().map(s -> parse(s, allowIntrinsic)).toList();
     }
 
     /**
@@ -760,6 +810,10 @@ public class Parser {
      * @return The parser results
      */
     public static List<ParserResult> parseParallel(List<? extends ISource> sources) {
-        return sources.stream().map(Parser::parse).toList();
+        return parseParallel(sources, false);
+    }
+
+    public static List<ParserResult> parseParallel(List<? extends ISource> sources, boolean allowIntrinsic) {
+        return sources.stream().parallel().map(s -> parse(s, allowIntrinsic)).toList();
     }
 }

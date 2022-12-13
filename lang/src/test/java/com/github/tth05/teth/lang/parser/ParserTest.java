@@ -819,6 +819,10 @@ public class ParserTest extends AbstractParserTest {
                     fn test(self: long) {}
                 }
                 """));
+        // Intrinsic keyword is not enabled in this parser
+        assertThrows(RuntimeException.class, () -> createAST("""
+                struct intrinsic d {}
+                """));
     }
 
     @Test
