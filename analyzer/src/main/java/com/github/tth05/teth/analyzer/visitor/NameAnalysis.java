@@ -149,8 +149,6 @@ public class NameAnalysis extends AnalysisASTVisitor {
 
     @Override
     public void visit(FunctionDeclaration.ParameterDeclaration parameter) {
-        validateNotAReservedName(parameter.getNameExpr());
-
         { // Don't want to visit parameter name here
             parameter.getTypeExpr().accept(this);
         }
@@ -167,9 +165,6 @@ public class NameAnalysis extends AnalysisASTVisitor {
 
     @Override
     public void visit(StructDeclaration declaration) {
-        if (!declaration.isIntrinsic())
-            validateNotAReservedName(declaration.getNameExpr());
-
         validateNoDuplicates(declaration.getGenericParameters(), "Duplicate generic parameter name");
         validateNoDuplicates(BiIterator.of(declaration.getFields(), declaration.getFunctions()), "Duplicate member name");
 
@@ -186,8 +181,6 @@ public class NameAnalysis extends AnalysisASTVisitor {
 
     @Override
     public void visit(StructDeclaration.FieldDeclaration declaration) {
-        validateNotAReservedName(declaration.getNameExpr());
-
         // Pre-process 2 did this already in the global namespace
         if (isInNestedFunction())
             declaration.getTypeExpr().accept(this);
@@ -227,8 +220,6 @@ public class NameAnalysis extends AnalysisASTVisitor {
 
     @Override
     public void visit(VariableDeclaration declaration) {
-        validateNotAReservedName(declaration.getNameExpr());
-
         { // Don't want to visit name here
             var typeExpr = declaration.getTypeExpr();
             if (typeExpr != null)
@@ -275,8 +266,6 @@ public class NameAnalysis extends AnalysisASTVisitor {
 
     @Override
     public void visit(GenericParameterDeclaration declaration) {
-        validateNotAReservedName(declaration.getNameExpr());
-
         addDeclaration(declaration);
     }
 
@@ -290,12 +279,7 @@ public class NameAnalysis extends AnalysisASTVisitor {
             return;
 
         var type = typeExpression.getNameExpr().getSpan();
-
-        Statement decl;
-        if (Prelude.isBuiltInTypeName(type))
-            decl = Prelude.getStructForTypeName(type);
-        else
-            decl = this.scopeStack.resolveIdentifier(type);
+        var decl = this.scopeStack.resolveIdentifier(type);
 
         if (decl == null) {
             report(span, "Unknown type " + type.getText());
@@ -339,9 +323,6 @@ public class NameAnalysis extends AnalysisASTVisitor {
     }
 
     private void visitFunctionDeclarationHeader(FunctionDeclaration declaration) {
-        if (!declaration.isIntrinsic())
-            validateNotAReservedName(declaration.getNameExpr());
-
         validateNoDuplicates(declaration.getGenericParameters(), "Duplicate generic parameter name");
         declaration.getGenericParameters().forEach(p -> p.accept(this));
 
@@ -392,11 +373,6 @@ public class NameAnalysis extends AnalysisASTVisitor {
             if (!DUPLICATION_SET.add(el.getNameExpr().getSpan()))
                 report(el.getNameExpr().getSpan(), message);
         }
-    }
-
-    private void validateNotAReservedName(IdentifierExpression expression) {
-        if (Prelude.isBuiltInTypeName(expression.getSpan()))
-            report(expression.getSpan(), "Reserved name '" + expression.getSpan().getText() + "'");
     }
 
     private void addDeclaration(Statement declaration) {
