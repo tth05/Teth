@@ -285,6 +285,11 @@ public class InstructionsImpl {
                 case OpCodes.LD_EQUAL -> {
                     var right = interpreter.pop();
                     var left = interpreter.pop();
+                    if (left == ObjectValue.NULL || right == ObjectValue.NULL) {
+                        interpreter.push(left == right);
+                        return;
+                    }
+
                     boolean useDouble = validateLongDoubleOperands(left, right);
                     var leftNum = (Number) left;
                     var rightNum = (Number) right;

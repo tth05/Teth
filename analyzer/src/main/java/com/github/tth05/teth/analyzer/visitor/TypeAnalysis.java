@@ -311,13 +311,6 @@ public class TypeAnalysis extends AnalysisASTVisitor {
                 report(expression.getSpan(), "Operator " + expression.getOperator().asString() + " cannot be applied to " + this.typeCache.toString(leftType) + " and " + this.typeCache.toString(rightType));
                 return;
             }
-
-            // Disallow null comparisons for non-nullable types
-            var nonNullType = leftType == SemanticType.NULL ? rightType : leftType;
-            if (nonNullType == this.typeCache.getType(Prelude.getLongStruct()) || nonNullType == this.typeCache.getType(Prelude.getDoubleStruct()) || nonNullType == this.typeCache.getType(Prelude.getBoolStruct())) {
-                report(expression.getSpan(), "Operator " + expression.getOperator().asString() + " cannot be applied to " + this.typeCache.toString(leftType) + " and " + this.typeCache.toString(rightType));
-                return;
-            }
         } else if (!typesMatch || // Make sure types match and operator is allowed for that type otherwise
                    !this.binaryOperatorsAllowedTypes.containsKey(leftType.getTypeId()) ||
                    Arrays.stream(this.binaryOperatorsAllowedTypes.get(leftType.getTypeId())).noneMatch(op -> op == expression.getOperator())) {

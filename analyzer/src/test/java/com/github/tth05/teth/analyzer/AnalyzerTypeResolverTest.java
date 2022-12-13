@@ -39,18 +39,6 @@ public class AnalyzerTypeResolverTest extends AbstractAnalyzerTest {
         assertFalse(problems.isEmpty());
         assertEquals(1, problems.size());
         assertEquals("Operator * cannot be applied to double and string", problems.get(0).message());
-
-        problems = analyze("null == 5");
-
-        assertFalse(problems.isEmpty());
-        assertEquals(1, problems.size());
-        assertEquals("Operator == cannot be applied to null and long", problems.get(0).message());
-
-        problems = analyze("5.0 > null");
-
-        assertFalse(problems.isEmpty());
-        assertEquals(1, problems.size());
-        assertEquals("Operator > cannot be applied to double and null", problems.get(0).message());
     }
 
     @Test

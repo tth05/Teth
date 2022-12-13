@@ -1,6 +1,7 @@
 package com.github.tth05.teth.analyzer.prelude;
 
 import com.github.tth05.teth.lang.parser.Parser;
+import com.github.tth05.teth.lang.parser.StatementList;
 import com.github.tth05.teth.lang.parser.ast.FunctionDeclaration;
 import com.github.tth05.teth.lang.parser.ast.IHasName;
 import com.github.tth05.teth.lang.parser.ast.Statement;
@@ -66,6 +67,13 @@ public class Prelude {
         return PRELUDE_FUNCTIONS.values().toArray(new FunctionDeclaration[0]);
     }
 
+    public static StatementList getAllDeclarations() {
+        var list = StatementList.of();
+        list.addAll(PRELUDE_STRUCTS.values());
+        list.addAll(PRELUDE_FUNCTIONS.values());
+        return list;
+    }
+
     public static StructDeclaration getStructForTypeName(Span name) {
         if (name == null)
             throw new IllegalArgumentException();
@@ -87,46 +95,46 @@ public class Prelude {
         for (var struct : PRELUDE_STRUCTS.values())
             statements.add(0, struct);
     }
-
     /**
      * Quick accessors
      */
     private static StructDeclaration LONG_STRUCT;
+
     public static StructDeclaration getLongStruct() {
         if (LONG_STRUCT == null)
             LONG_STRUCT = Objects.requireNonNull(getStructForTypeName(Span.fromString("long")));
         return LONG_STRUCT;
     }
-
     private static StructDeclaration DOUBLE_STRUCT;
+
     public static StructDeclaration getDoubleStruct() {
         if (DOUBLE_STRUCT == null)
             DOUBLE_STRUCT = Objects.requireNonNull(getStructForTypeName(Span.fromString("double")));
         return DOUBLE_STRUCT;
     }
-
     private static StructDeclaration BOOL_STRUCT;
+
     public static StructDeclaration getBoolStruct() {
         if (BOOL_STRUCT == null)
             BOOL_STRUCT = Objects.requireNonNull(getStructForTypeName(Span.fromString("bool")));
         return BOOL_STRUCT;
     }
-
     private static StructDeclaration STRING_STRUCT;
+
     public static StructDeclaration getStringStruct() {
         if (STRING_STRUCT == null)
             STRING_STRUCT = Objects.requireNonNull(getStructForTypeName(Span.fromString("string")));
         return STRING_STRUCT;
     }
-
     private static StructDeclaration LIST_STRUCT;
+
     public static StructDeclaration getListStruct() {
         if (LIST_STRUCT == null)
             LIST_STRUCT = Objects.requireNonNull(getStructForTypeName(Span.fromString("list")));
         return LIST_STRUCT;
     }
-
     private static StructDeclaration ANY_STRUCT;
+
     public static StructDeclaration getAnyStruct() {
         if (ANY_STRUCT == null)
             ANY_STRUCT = Objects.requireNonNull(getStructForTypeName(Span.fromString("any")));
