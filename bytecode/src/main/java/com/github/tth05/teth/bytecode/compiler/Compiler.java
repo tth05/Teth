@@ -75,8 +75,11 @@ public class Compiler {
         if (analyzerResults.stream().anyMatch(AnalyzerResult::hasProblems))
             return new CompilationResult(this.analyzer, analyzerResults);
 
+        var generator = new BytecodeGeneratorVisitor(this.analyzer, true);
+        generator.visit(new SourceFileUnit("__prelude__", Prelude.getAllDeclarations()));
+
         for (int i = 0; i < this.units.size(); i++) {
-            var generator = new BytecodeGeneratorVisitor(this.analyzer, i != 0);
+            generator = new BytecodeGeneratorVisitor(this.analyzer, i != 0);
             generator.visit(this.units.get(i));
         }
 
