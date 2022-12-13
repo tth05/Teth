@@ -34,7 +34,8 @@ object TethTokenTypes {
             TokenType.BOOLEAN_LITERAL -> KEYWORD
             TokenType.KEYWORD_IF, TokenType.KEYWORD_ELSE, TokenType.KEYWORD_FN, TokenType.KEYWORD_LET,
             TokenType.KEYWORD_BREAK, TokenType.KEYWORD_CONTINUE, TokenType.KEYWORD_LOOP, TokenType.KEYWORD_STRUCT,
-            TokenType.KEYWORD_NEW, TokenType.KEYWORD_RETURN, TokenType.KEYWORD_USE, TokenType.KEYWORD_NULL -> KEYWORD
+            TokenType.KEYWORD_NEW, TokenType.KEYWORD_RETURN, TokenType.KEYWORD_USE, TokenType.KEYWORD_NULL,
+            TokenType.KEYWORD_INTRINSIC -> KEYWORD
 
             TokenType.COLON, TokenType.DOT, TokenType.STRING_LITERAL_CODE_END, TokenType.STRING_LITERAL_CODE_START -> SEPARATOR
 

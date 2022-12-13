@@ -1,5 +1,6 @@
 package com.github.tth05.tethintellijplugin.run
 
+import com.github.tth05.tethintellijplugin.psi.TethPsiFile
 import com.intellij.execution.actions.ConfigurationContext
 import com.intellij.execution.actions.LazyRunConfigurationProducer
 import com.intellij.execution.configurations.ConfigurationFactory
@@ -17,6 +18,8 @@ class TethRunConfigurationProducer : LazyRunConfigurationProducer<TethRunConfigu
         sourceElement: Ref<PsiElement>
     ): Boolean {
         val file = context.psiLocation?.containingFile ?: return false
+        if (file !is TethPsiFile) return false
+
         configuration.filePath = file.virtualFile?.toNioPath()?.absolutePathString() ?: return false
         sourceElement.set(file)
         return true
