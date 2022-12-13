@@ -44,6 +44,10 @@ public class SemanticTypeTest {
     public void testIsSubTypeOfNull() {
         var nullType = SemanticType.NULL;
         var nullSuperTypes = List.of(
+                this.typeCache.getType(Prelude.getAnyStruct()),
+                this.typeCache.getType(Prelude.getBoolStruct()),
+                this.typeCache.getType(Prelude.getDoubleStruct()),
+                this.typeCache.getType(Prelude.getLongStruct()),
                 this.typeCache.getType(Prelude.getStringStruct()),
                 new SemanticType(56),
                 new SemanticType(78, List.of(new SemanticType(7999)))
@@ -51,17 +55,6 @@ public class SemanticTypeTest {
 
         for (var t : nullSuperTypes) {
             assertTrue(this.typeCache.isSubtypeOf(nullType, t), () -> "Type " + t + " is not supertype of null");
-            assertFalse(this.typeCache.isSubtypeOf(t, nullType), () -> "Type " + t + " is subtype of null");
-        }
-
-        var nonNullableTypes = List.of(
-                this.typeCache.getType(Prelude.getBoolStruct()),
-                this.typeCache.getType(Prelude.getDoubleStruct()),
-                this.typeCache.getType(Prelude.getLongStruct())
-        );
-
-        for (var t : nonNullableTypes) {
-            assertFalse(this.typeCache.isSubtypeOf(nullType, t), () -> "Type " + t + " is supertype of null");
             assertFalse(this.typeCache.isSubtypeOf(t, nullType), () -> "Type " + t + " is subtype of null");
         }
     }

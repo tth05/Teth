@@ -204,7 +204,7 @@ public class TypeAnalysis extends AnalysisASTVisitor {
         var member = structDeclaration.getMember(expression.getMemberNameExpr().getSpan());
 
         if (member == null) {
-            report(expression.getMemberNameExpr().getSpan(), "Member " + expression.getMemberNameExpr().getSpan().getText() + " not found in type " + this.typeCache.toString(type));
+            report(expression.getMemberNameExpr().getSpan(), "Member '" + Optional.ofNullable(expression.getMemberNameExpr().getSpan()).map(Span::getText).orElse("???") + "' not found in type " + this.typeCache.toString(type));
             return;
         }
 

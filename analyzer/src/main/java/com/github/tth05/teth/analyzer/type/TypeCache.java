@@ -56,7 +56,7 @@ public class TypeCache {
         if (type == SemanticType.NULL)
             return false;
         if (subType == SemanticType.NULL)
-            return type != getType(Prelude.getLongStruct()) && type != getType(Prelude.getDoubleStruct()) && type != getType(Prelude.getBoolStruct());
+            return true;
 
         var ANY = getType(Prelude.getAnyStruct());
         if (subType == type)

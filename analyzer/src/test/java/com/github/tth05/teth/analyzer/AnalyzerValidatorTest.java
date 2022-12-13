@@ -165,13 +165,13 @@ public class AnalyzerValidatorTest extends AbstractAnalyzerTest {
 
         assertFalse(problems.isEmpty());
         assertEquals(1, problems.size());
-        assertEquals("Member toStringg not found in type long", problems.get(0).message());
+        assertEquals("Member 'toStringg' not found in type long", problems.get(0).message());
 
         problems = analyze("struct b {a:long} new b(5).b");
 
         assertFalse(problems.isEmpty());
         assertEquals(1, problems.size());
-        assertEquals("Member b not found in type b", problems.get(0).message());
+        assertEquals("Member 'b' not found in type b", problems.get(0).message());
     }
 
     @Test
