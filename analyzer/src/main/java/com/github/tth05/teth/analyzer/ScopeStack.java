@@ -3,6 +3,7 @@ package com.github.tth05.teth.analyzer;
 import com.github.tth05.teth.lang.parser.ast.FunctionDeclaration;
 import com.github.tth05.teth.lang.parser.ast.IHasName;
 import com.github.tth05.teth.lang.parser.ast.Statement;
+import com.github.tth05.teth.lang.parser.ast.StructDeclaration;
 import com.github.tth05.teth.lang.span.Span;
 
 import java.util.ArrayDeque;
@@ -71,7 +72,14 @@ public class ScopeStack {
     }
 
     public void addDeclaration(Span value, Statement declaration) {
-        this.stack.getLast().declarations.put(value, declaration);
+        var declarations = this.stack.getLast().declarations;
+        var existing = declarations.get(value);
+        // Ignore re-declarations of intrinsics
+        if ((existing instanceof FunctionDeclaration func && func.isIntrinsic()) ||
+            (existing instanceof StructDeclaration struct && struct.isIntrinsic()))
+            return;
+
+        declarations.put(value, declaration);
     }
 
     public void beginScope(Statement owner) {
