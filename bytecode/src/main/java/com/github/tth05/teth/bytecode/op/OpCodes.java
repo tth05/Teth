@@ -22,6 +22,8 @@ package com.github.tth05.teth.bytecode.op;
  */
 public interface OpCodes {
 
+    byte L_TO_D = 0;
+    byte D_TO_L = L_TO_D + 1;
     /**
      * Negates a long/double.
      * <br>
@@ -30,7 +32,8 @@ public interface OpCodes {
      * value1 -> result
      * </code></pre>
      */
-    byte LD_NEGATE = 0;
+    byte L_NEGATE = D_TO_L + 1;
+    byte D_NEGATE = L_NEGATE + 1;
     /**
      * Adds two longs/doubles. If any operand is a double, the result is a double.
      * <br>
@@ -39,7 +42,8 @@ public interface OpCodes {
      * value1, value2 -> result
      * </code></pre>
      */
-    byte LD_ADD = LD_NEGATE + 1;
+    byte L_ADD = D_NEGATE + 1;
+    byte D_ADD = L_ADD + 1;
     /**
      * Subtracts two longs/doubles. If any operand is a double, the result is a double.
      * <br>
@@ -48,7 +52,8 @@ public interface OpCodes {
      * value1, value2 -> result
      * </code></pre>
      */
-    byte LD_SUB = LD_ADD + 1;
+    byte L_SUB = D_ADD + 1;
+    byte D_SUB = L_SUB + 1;
     /**
      * Multiplies two longs/doubles.  If any operand is a double, the result is a double.
      * <br>
@@ -57,7 +62,8 @@ public interface OpCodes {
      * value1, value2 -> result
      * </code></pre>
      */
-    byte LD_MUL = LD_SUB + 1;
+    byte L_MUL = D_SUB + 1;
+    byte D_MUL = L_MUL + 1;
     /**
      * Divides two longs/doubles.  If any operand is a double, the result is a double.
      * <br>
@@ -66,13 +72,20 @@ public interface OpCodes {
      * value1, value2 -> result
      * </code></pre>
      */
-    byte LD_DIV = LD_MUL + 1;
-    byte LD_POW = LD_DIV + 1;
-    byte LD_EQUAL = LD_POW + 1;
-    byte LD_LESS = LD_EQUAL + 1;
-    byte LD_LESS_EQUAL = LD_LESS + 1;
-    byte LD_GREATER = LD_LESS_EQUAL + 1;
-    byte LD_GREATER_EQUAL = LD_GREATER + 1;
+    byte L_DIV = D_MUL + 1;
+    byte D_DIV = L_DIV + 1;
+    byte L_POW = D_DIV + 1;
+    byte D_POW = L_POW + 1;
+    byte L_EQUAL = D_POW + 1;
+    byte D_EQUAL = L_EQUAL + 1;
+    byte L_LESS = D_EQUAL + 1;
+    byte D_LESS = L_LESS + 1;
+    byte L_LESS_EQUAL = D_LESS + 1;
+    byte D_LESS_EQUAL = L_LESS_EQUAL + 1;
+    byte L_GREATER = D_LESS_EQUAL + 1;
+    byte D_GREATER = L_GREATER + 1;
+    byte L_GREATER_EQUAL = D_GREATER + 1;
+    byte D_GREATER_EQUAL = L_GREATER_EQUAL + 1;
     /**
      * Logical ORs two booleans.
      * <br>
@@ -81,7 +94,7 @@ public interface OpCodes {
      * value1, value2 -> result
      * </code></pre>
      */
-    byte B_OR = LD_GREATER_EQUAL + 1;
+    byte B_OR = D_GREATER_EQUAL + 1;
     /**
      * Logical ANDs two booleans.
      * <br>

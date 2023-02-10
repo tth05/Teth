@@ -1,24 +1,13 @@
 package com.github.tth05.teth.bytecode.op;
 
-public class LOAD_MEMBER_Insn implements IInstrunction {
+public class LOAD_MEMBER_Insn extends AbstractMemberInsn {
 
-    private final short fieldIndex;
-
-    public LOAD_MEMBER_Insn(short fieldIndex) {
-        this.fieldIndex = fieldIndex;
-    }
-
-    public short getFieldIndex() {
-        return this.fieldIndex;
+    public LOAD_MEMBER_Insn(int fieldIndex) {
+        super(fieldIndex);
     }
 
     @Override
     public byte getOpCode() {
         return OpCodes.LOAD_MEMBER;
-    }
-
-    @Override
-    public String getDebugParametersString() {
-        return this.fieldIndex + "";
     }
 }

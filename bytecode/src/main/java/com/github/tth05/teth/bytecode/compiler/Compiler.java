@@ -164,6 +164,8 @@ public class Compiler {
         private static final FunctionDeclaration.ParameterDeclaration SELF_PLACEHOLDER = new FunctionDeclaration.ParameterDeclaration(null, null, new IdentifierExpression(Span.fromString("self")));
         private static final FunctionDeclaration STRING_CONCAT_FUNCTION = (FunctionDeclaration) Prelude.getStructForTypeName(Span.fromString("string")).getMember(Span.fromString("concat"));
         private static final FunctionDeclaration LIST_ADD_FUNCTION = (FunctionDeclaration) Prelude.getStructForTypeName(Span.fromString("list")).getMember(Span.fromString("add"));
+        private static final FunctionDeclaration LONG_TO_DOUBLE_FUNCTION = (FunctionDeclaration) Prelude.getStructForTypeName(Span.fromString("long")).getMember(Span.fromString("toDouble"));
+        private static final FunctionDeclaration DOUBLE_TO_LONG_FUNCTION = (FunctionDeclaration) Prelude.getStructForTypeName(Span.fromString("double")).getMember(Span.fromString("toLong"));
 
 
         private final Analyzer analyzer;
@@ -235,7 +237,12 @@ public class Compiler {
 
             var reference = (FunctionDeclaration) this.analyzer.resolvedReference(((IDeclarationReference) invocation.getTarget()));
             if (reference.isIntrinsic()) {
-                this.currentFunctionInsn.add(new INVOKE_INTRINSIC_Insn(reference));
+                if (reference == LONG_TO_DOUBLE_FUNCTION)
+                    this.currentFunctionInsn.add(new L_TO_D_Insn());
+                else if (reference == DOUBLE_TO_LONG_FUNCTION)
+                    this.currentFunctionInsn.add(new D_TO_L_Insn());
+                else
+                    this.currentFunctionInsn.add(new INVOKE_INTRINSIC_Insn(reference));
             } else {
                 this.currentFunctionInsn.add(new PlaceholderInvokeInsn(reference));
             }
@@ -367,21 +374,35 @@ public class Compiler {
                 return;
             }
 
-            super.visit(expression);
+            var doubleType = this.analyzer.getTypeCache().getType(Prelude.getDoubleStruct());
+            var leftDouble = this.analyzer.resolvedExpressionType(expression.getLeft()).equals(doubleType);
+            var rightDouble = this.analyzer.resolvedExpressionType(expression.getRight()).equals(doubleType);
+            var anyDouble = leftDouble || rightDouble;
+            {
+                expression.getLeft().accept(this);
+                if (anyDouble && !leftDouble)
+                    this.currentFunctionInsn.add(new L_TO_D_Insn());
+                expression.getRight().accept(this);
+                if (anyDouble && !rightDouble)
+                    this.currentFunctionInsn.add(new L_TO_D_Insn());
+            }
 
             switch (expression.getOperator()) {
-                case OP_ADD -> this.currentFunctionInsn.add(new LD_ADD_Insn());
-                case OP_SUBTRACT -> this.currentFunctionInsn.add(new LD_SUB_Insn());
-                case OP_MULTIPLY -> this.currentFunctionInsn.add(new LD_MUL_Insn());
-                case OP_DIVIDE -> this.currentFunctionInsn.add(new LD_DIV_Insn());
-                case OP_POW -> this.currentFunctionInsn.add(new LD_POW_Insn());
-                case OP_LESS -> this.currentFunctionInsn.add(new LD_LESS_Insn());
-                case OP_LESS_EQUAL -> this.currentFunctionInsn.add(new LD_LESS_EQUAL_Insn());
-                case OP_GREATER -> this.currentFunctionInsn.add(new LD_GREATER_Insn());
-                case OP_GREATER_EQUAL -> this.currentFunctionInsn.add(new LD_GREATER_EQUAL_Insn());
-                case OP_EQUAL -> this.currentFunctionInsn.add(new LD_EQUAL_Insn());
+                case OP_ADD -> this.currentFunctionInsn.add(anyDouble ? new D_ADD_Insn() : new L_ADD_Insn());
+                case OP_SUBTRACT -> this.currentFunctionInsn.add(anyDouble ? new D_SUB_Insn() : new L_SUB_Insn());
+                case OP_MULTIPLY -> this.currentFunctionInsn.add(anyDouble ? new D_MUL_Insn() : new L_MUL_Insn());
+                case OP_DIVIDE -> this.currentFunctionInsn.add(anyDouble ? new D_DIV_Insn() : new L_DIV_Insn());
+                case OP_POW -> this.currentFunctionInsn.add(anyDouble ? new D_POW_Insn() : new L_POW_Insn());
+                case OP_LESS -> this.currentFunctionInsn.add(anyDouble ? new D_LESS_Insn() : new L_LESS_Insn());
+                case OP_LESS_EQUAL ->
+                        this.currentFunctionInsn.add(anyDouble ? new D_LESS_EQUAL_Insn() : new L_LESS_EQUAL_Insn());
+                case OP_GREATER ->
+                        this.currentFunctionInsn.add(anyDouble ? new D_GREATER_Insn() : new L_GREATER_Insn());
+                case OP_GREATER_EQUAL ->
+                        this.currentFunctionInsn.add(anyDouble ? new D_GREATER_EQUAL_Insn() : new L_GREATER_EQUAL_Insn());
+                case OP_EQUAL -> this.currentFunctionInsn.add(anyDouble ? new D_EQUAL_Insn() : new L_EQUAL_Insn());
                 case OP_NOT_EQUAL -> {
-                    this.currentFunctionInsn.add(new LD_EQUAL_Insn());
+                    this.currentFunctionInsn.add(anyDouble ? new D_EQUAL_Insn() : new L_EQUAL_Insn());
                     this.currentFunctionInsn.add(new B_INVERT_Insn());
                 }
                 case OP_AND -> this.currentFunctionInsn.add(new B_AND_Insn());
@@ -394,9 +415,11 @@ public class Compiler {
         public void visit(UnaryExpression expression) {
             super.visit(expression);
 
+            var doubleType = this.analyzer.getTypeCache().getType(Prelude.getDoubleStruct());
+            var isDouble = this.analyzer.resolvedExpressionType(expression).equals(doubleType);
             switch (expression.getOperator()) {
                 case OP_NOT -> this.currentFunctionInsn.add(new B_INVERT_Insn());
-                case OP_NEGATE -> this.currentFunctionInsn.add(new LD_NEGATE_Insn());
+                case OP_NEGATE -> this.currentFunctionInsn.add(isDouble ? new D_NEGATE_Insn() : new L_NEGATE_Insn());
                 default -> throw new UnsupportedOperationException("Unsupported operator: " + expression.getOperator());
             }
         }

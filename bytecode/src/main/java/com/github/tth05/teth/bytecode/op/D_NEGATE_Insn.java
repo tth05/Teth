@@ -1,10 +1,10 @@
 package com.github.tth05.teth.bytecode.op;
 
-public class LD_MUL_Insn implements IInstrunction {
+public class D_NEGATE_Insn implements IInstrunction {
 
     @Override
     public byte getOpCode() {
-        return OpCodes.LD_MUL;
+        return OpCodes.D_NEGATE;
     }
 
     @Override

@@ -7,10 +7,7 @@ import com.github.tth05.teth.lang.span.Span;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class InstructionsImpl {
 
@@ -93,74 +90,57 @@ public class InstructionsImpl {
                     var left = (Boolean) interpreter.pop();
                     interpreter.push(left || right);
                 }
-                case OpCodes.LD_NEGATE -> {
-                    var value = (Number) interpreter.pop();
-                    if (value instanceof Long)
-                        value = -value.longValue();
-                    else
-                        value = -value.doubleValue();
-
-                    interpreter.push(value);
+                case OpCodes.L_NEGATE -> interpreter.push(-((Long) interpreter.pop()));
+                case OpCodes.D_NEGATE -> interpreter.push(-((Double) interpreter.pop()));
+                case OpCodes.L_ADD -> {
+                    var right = (Long) interpreter.pop();
+                    var left = (Long) interpreter.pop();
+                    interpreter.push(left + right);
                 }
-                case OpCodes.LD_ADD -> {
-                    var left = interpreter.pop();
-                    var right = interpreter.pop();
-                    boolean useDouble = validateLongDoubleOperands(left, right);
-                    var leftNum = (Number) right;
-                    var rightNum = (Number) left;
-
-                    if (useDouble)
-                        interpreter.push(leftNum.doubleValue() + rightNum.doubleValue());
-                    else
-                        interpreter.push(leftNum.longValue() + rightNum.longValue());
+                case OpCodes.D_ADD -> {
+                    var right = (Double) interpreter.pop();
+                    var left = (Double) interpreter.pop();
+                    interpreter.push(left + right);
                 }
-                case OpCodes.LD_SUB -> {
-                    var left = interpreter.pop();
-                    var right = interpreter.pop();
-                    boolean useDouble = validateLongDoubleOperands(left, right);
-                    var leftNum = (Number) right;
-                    var rightNum = (Number) left;
-
-                    if (useDouble)
-                        interpreter.push(leftNum.doubleValue() - rightNum.doubleValue());
-                    else
-                        interpreter.push(leftNum.longValue() - rightNum.longValue());
+                case OpCodes.L_SUB -> {
+                    var right = (Long) interpreter.pop();
+                    var left = (Long) interpreter.pop();
+                    interpreter.push(left - right);
                 }
-                case OpCodes.LD_MUL -> {
-                    var left = interpreter.pop();
-                    var right = interpreter.pop();
-                    boolean useDouble = validateLongDoubleOperands(left, right);
-                    var leftNum = (Number) right;
-                    var rightNum = (Number) left;
-
-                    if (useDouble)
-                        interpreter.push(leftNum.doubleValue() * rightNum.doubleValue());
-                    else
-                        interpreter.push(leftNum.longValue() * rightNum.longValue());
+                case OpCodes.D_SUB -> {
+                    var right = (Double) interpreter.pop();
+                    var left = (Double) interpreter.pop();
+                    interpreter.push(left - right);
                 }
-                case OpCodes.LD_DIV -> {
-                    var left = interpreter.pop();
-                    var right = interpreter.pop();
-                    boolean useDouble = validateLongDoubleOperands(left, right);
-                    var leftNum = (Number) right;
-                    var rightNum = (Number) left;
-
-                    if (useDouble)
-                        interpreter.push(leftNum.doubleValue() / rightNum.doubleValue());
-                    else
-                        interpreter.push(leftNum.longValue() / rightNum.longValue());
+                case OpCodes.L_MUL -> {
+                    var right = (Long) interpreter.pop();
+                    var left = (Long) interpreter.pop();
+                    interpreter.push(left * right);
                 }
-                case OpCodes.LD_POW -> {
-                    var left = interpreter.pop();
-                    var right = interpreter.pop();
-                    boolean useDouble = validateLongDoubleOperands(left, right);
-                    var leftNum = (Number) right;
-                    var rightNum = (Number) left;
-
-                    if (useDouble)
-                        interpreter.push(Math.pow(leftNum.doubleValue(), rightNum.doubleValue()));
-                    else
-                        interpreter.push((long) Math.pow(leftNum.longValue(), rightNum.longValue()));
+                case OpCodes.D_MUL -> {
+                    var right = (Double) interpreter.pop();
+                    var left = (Double) interpreter.pop();
+                    interpreter.push(left * right);
+                }
+                case OpCodes.L_DIV -> {
+                    var right = (Long) interpreter.pop();
+                    var left = (Long) interpreter.pop();
+                    interpreter.push(left / right);
+                }
+                case OpCodes.D_DIV -> {
+                    var right = (Double) interpreter.pop();
+                    var left = (Double) interpreter.pop();
+                    interpreter.push(left / right);
+                }
+                case OpCodes.L_POW -> {
+                    var right = (Long) interpreter.pop();
+                    var left = (Long) interpreter.pop();
+                    interpreter.push((long) Math.pow(left, right));
+                }
+                case OpCodes.D_POW -> {
+                    var right = (Double) interpreter.pop();
+                    var left = (Double) interpreter.pop();
+                    interpreter.push(Math.pow(left, right));
                 }
                 case OpCodes.L_CONST -> {
                     var value = ((L_CONST_Insn) insn).getValue();
@@ -252,50 +232,67 @@ public class InstructionsImpl {
                         interpreter.popStackBoundary();
                     interpreter.jumpToReturnAddress();
                 }
-                case OpCodes.LD_LESS_EQUAL, OpCodes.LD_LESS -> {
-                    var right = interpreter.pop();
-                    var left = interpreter.pop();
-                    boolean useDouble = validateLongDoubleOperands(left, right);
-                    var leftNum = (Number) left;
-                    var rightNum = (Number) right;
-
+                case OpCodes.L_LESS_EQUAL, OpCodes.L_LESS -> {
+                    var right = (Long) interpreter.pop();
+                    var left = (Long) interpreter.pop();
                     boolean result;
-                    if (code == OpCodes.LD_LESS)
-                        result = useDouble ? leftNum.doubleValue() < rightNum.doubleValue() : leftNum.longValue() < rightNum.longValue();
+                    if (code == OpCodes.L_LESS)
+                        result = left < right;
                     else
-                        result = useDouble ? leftNum.doubleValue() <= rightNum.doubleValue() : leftNum.longValue() <= rightNum.longValue();
+                        result = left <= right;
 
                     interpreter.push(result);
                 }
-                case OpCodes.LD_GREATER_EQUAL, OpCodes.LD_GREATER -> {
-                    var right = interpreter.pop();
-                    var left = interpreter.pop();
-                    boolean useDouble = validateLongDoubleOperands(left, right);
-                    var leftNum = (Number) left;
-                    var rightNum = (Number) right;
-
+                case OpCodes.D_LESS_EQUAL, OpCodes.D_LESS -> {
+                    var right = (Double) interpreter.pop();
+                    var left = (Double) interpreter.pop();
                     boolean result;
-                    if (code == OpCodes.LD_GREATER)
-                        result = useDouble ? leftNum.doubleValue() > rightNum.doubleValue() : leftNum.longValue() > rightNum.longValue();
+                    if (code == OpCodes.D_LESS)
+                        result = left < right;
                     else
-                        result = useDouble ? leftNum.doubleValue() >= rightNum.doubleValue() : leftNum.longValue() >= rightNum.longValue();
+                        result = left <= right;
 
                     interpreter.push(result);
                 }
-                case OpCodes.LD_EQUAL -> {
-                    var right = interpreter.pop();
-                    var left = interpreter.pop();
-                    if (left == ObjectValue.NULL || right == ObjectValue.NULL) {
-                        interpreter.push(left == right);
-                        return;
-                    }
+                case OpCodes.L_GREATER_EQUAL, OpCodes.L_GREATER -> {
+                    var right = (Long) interpreter.pop();
+                    var left = (Long) interpreter.pop();
+                    boolean result;
+                    if (code == OpCodes.L_GREATER)
+                        result = left > right;
+                    else
+                        result = left >= right;
 
-                    boolean useDouble = validateLongDoubleOperands(left, right);
-                    var leftNum = (Number) left;
-                    var rightNum = (Number) right;
-
-                    boolean result = useDouble ? leftNum.doubleValue() == rightNum.doubleValue() : leftNum.longValue() == rightNum.longValue();
                     interpreter.push(result);
+                }
+                case OpCodes.D_GREATER_EQUAL, OpCodes.D_GREATER -> {
+                    var right = (Double) interpreter.pop();
+                    var left = (Double) interpreter.pop();
+                    boolean result;
+                    if (code == OpCodes.D_GREATER)
+                        result = left > right;
+                    else
+                        result = left >= right;
+
+                    interpreter.push(result);
+                }
+                case OpCodes.L_EQUAL -> {
+                    var right = (Long) interpreter.pop();
+                    var left = (Long) interpreter.pop();
+                    interpreter.push(Objects.equals(left, right));
+                }
+                case OpCodes.D_EQUAL -> {
+                    var right = (Double) interpreter.pop();
+                    var left = (Double) interpreter.pop();
+                    interpreter.push(Objects.equals(left, right));
+                }
+                case OpCodes.L_TO_D -> {
+                    var value = (Long) interpreter.pop();
+                    interpreter.push(value.doubleValue());
+                }
+                case OpCodes.D_TO_L -> {
+                    var value = (Double) interpreter.pop();
+                    interpreter.push(value.longValue());
                 }
                 case OpCodes.EXIT -> interpreter.exit();
                 default -> interpreter.handleUnknownOpCode(code, insn);
@@ -319,13 +316,6 @@ public class InstructionsImpl {
         }
 
         return ARGS_ARRAY;
-    }
-
-    private static boolean validateLongDoubleOperands(Object left, Object right) {
-        if (!(left instanceof Number) || !(right instanceof Number))
-            throw new IllegalStateException("Top of stack did not contain two numbers");
-
-        return left instanceof Double || right instanceof Double;
     }
 
     private static FunctionDeclaration prelude(String struct, String function) {

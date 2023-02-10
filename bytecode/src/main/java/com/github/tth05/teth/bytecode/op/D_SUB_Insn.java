@@ -1,10 +1,10 @@
 package com.github.tth05.teth.bytecode.op;
 
-public class LD_DIV_Insn implements IInstrunction {
+public class D_SUB_Insn implements IInstrunction {
 
     @Override
     public byte getOpCode() {
-        return OpCodes.LD_DIV;
+        return OpCodes.D_SUB;
     }
 
     @Override

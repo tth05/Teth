@@ -26,7 +26,9 @@ public class StackCleaningOptimizer implements IOptimizer, OpCodes {
             var instruction = instructions.get(i);
             switch (instruction.getOpCode()) {
                 // 2 -> 1
-                case LD_ADD, LD_SUB, LD_MUL, LD_DIV, LD_POW, LD_EQUAL, LD_LESS, LD_LESS_EQUAL, LD_GREATER, LD_GREATER_EQUAL, B_OR, B_AND -> {
+                case L_ADD, D_ADD, L_SUB, D_SUB, L_MUL, D_MUL, L_DIV, D_DIV, L_POW, D_POW, L_EQUAL, D_EQUAL,
+                        L_LESS, D_LESS, L_LESS_EQUAL, D_LESS_EQUAL, L_GREATER, D_GREATER, L_GREATER_EQUAL,
+                        D_GREATER_EQUAL, B_OR, B_AND -> {
                     unusedStackValues.pop();
                     unusedStackValues.pop();
                     unusedStackValues.push(new Marker(i, instruction));
@@ -37,7 +39,7 @@ public class StackCleaningOptimizer implements IOptimizer, OpCodes {
                     unusedStackValues.pop();
                 }
                 // 1 -> 1
-                case LD_NEGATE, B_INVERT, LOAD_MEMBER -> {
+                case L_NEGATE, D_NEGATE, L_TO_D, D_TO_L, B_INVERT, LOAD_MEMBER -> {
                     unusedStackValues.pop();
                     unusedStackValues.push(new Marker(i, instruction));
                 }
@@ -192,12 +194,13 @@ public class StackCleaningOptimizer implements IOptimizer, OpCodes {
     private static int getPopCount(IInstrunction instruction) {
         return switch (instruction.getOpCode()) {
             // 2 -> 1
-            case LD_ADD, LD_SUB, LD_MUL, LD_DIV, LD_POW, LD_EQUAL, LD_LESS, LD_LESS_EQUAL, LD_GREATER, LD_GREATER_EQUAL,
-                    B_OR, B_AND -> 2;
+            case L_ADD, D_ADD, L_SUB, D_SUB, L_MUL, D_MUL, L_DIV, D_DIV, L_POW, D_POW, L_EQUAL, D_EQUAL,
+                    L_LESS, D_LESS, L_LESS_EQUAL, D_LESS_EQUAL, L_GREATER, D_GREATER, L_GREATER_EQUAL,
+                    D_GREATER_EQUAL, B_OR, B_AND -> 2;
             // 2 -> 0
             case STORE_MEMBER -> 2;
             // 1 -> 1
-            case LD_NEGATE, B_INVERT, LOAD_MEMBER -> 1;
+            case L_NEGATE, D_NEGATE, L_TO_D, D_TO_L, B_INVERT, LOAD_MEMBER -> 1;
             // 1 -> 0
             case STORE_LOCAL, POP -> 1;
             case JUMP_IF_FALSE -> 1;

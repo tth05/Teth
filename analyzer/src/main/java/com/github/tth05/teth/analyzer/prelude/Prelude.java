@@ -18,6 +18,7 @@ public class Prelude {
 
     private static final String PRELUDE_TEXT = """
             struct intrinsic long {
+                fn intrinsic toDouble() double
                 fn intrinsic toString() string
             }
             struct intrinsic double {

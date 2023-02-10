@@ -19,7 +19,7 @@ public class StackCleaningOptimizerTest implements OpCodes {
         var list = list(
                 new LOAD_LOCAL_Insn(0),
                 new L_CONST_Insn(1),
-                new LD_ADD_Insn(),
+                new L_ADD_Insn(),
                 new DUP_Insn(),
                 new DUP_Insn(),
                 new DUP_Insn(),
@@ -32,7 +32,7 @@ public class StackCleaningOptimizerTest implements OpCodes {
         assertArrayEquals(new byte[]{
                 LOAD_LOCAL,
                 L_CONST,
-                LD_ADD,
+                L_ADD,
                 STORE_LOCAL
         }, toOpCodes(list));
     }
@@ -42,7 +42,7 @@ public class StackCleaningOptimizerTest implements OpCodes {
         var list = list(
                 new L_CONST_Insn(1),
                 new L_CONST_Insn(1),
-                new LD_ADD_Insn()
+                new L_ADD_Insn()
         );
 
         new StackCleaningOptimizer().method(list);
@@ -57,12 +57,12 @@ public class StackCleaningOptimizerTest implements OpCodes {
 
                 new L_CONST_Insn(1),
                 new L_CONST_Insn(1),
-                new LD_ADD_Insn(),
+                new L_ADD_Insn(),
                 new L_CONST_Insn(1),
                 new L_CONST_Insn(1),
                 createPlaceholderInvokeInsn(3, true),
 
-                new LD_ADD_Insn()
+                new L_ADD_Insn()
         );
 
         new StackCleaningOptimizer().method(list);
@@ -70,7 +70,7 @@ public class StackCleaningOptimizerTest implements OpCodes {
         assertArrayEquals(new byte[]{
                 L_CONST,
                 L_CONST,
-                LD_ADD,
+                L_ADD,
                 L_CONST,
                 L_CONST,
                 INVOKE,
@@ -93,12 +93,12 @@ public class StackCleaningOptimizerTest implements OpCodes {
                 // body
                 new L_CONST_Insn(1),
                 new L_CONST_Insn(1),
-                new LD_ADD_Insn(),
+                new L_ADD_Insn(),
                 new JUMP_Insn(3),
                 // else
                 new L_CONST_Insn(1),
                 new L_CONST_Insn(1),
-                new LD_ADD_Insn(),
+                new L_ADD_Insn(),
                 new JUMP_Insn(3),
                 new JUMP_Insn(5),
                 new EXIT_Insn()
@@ -129,13 +129,13 @@ public class StackCleaningOptimizerTest implements OpCodes {
                 // while i < 10
                 new LOAD_LOCAL_Insn(0),
                 new L_CONST_Insn(10),
-                new LD_LESS_Insn(),
+                new L_LESS_Insn(),
                 new JUMP_IF_FALSE_Insn(6),
                 // body
                 // i = i + 1
                 new LOAD_LOCAL_Insn(0),
                 new L_CONST_Insn(1),
-                new LD_ADD_Insn(),
+                new L_ADD_Insn(),
                 new DUP_Insn(),
                 new STORE_LOCAL_Insn(0),
                 // jump back
@@ -150,11 +150,11 @@ public class StackCleaningOptimizerTest implements OpCodes {
                 STORE_LOCAL,
                 LOAD_LOCAL,
                 L_CONST,
-                LD_LESS,
+                L_LESS,
                 JUMP_IF_FALSE,
                 LOAD_LOCAL,
                 L_CONST,
-                LD_ADD,
+                L_ADD,
                 STORE_LOCAL,
                 JUMP,
                 EXIT

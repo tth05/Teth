@@ -1,10 +1,10 @@
 package com.github.tth05.teth.bytecode.op;
 
-public class LD_GREATER_EQUAL_Insn implements IInstrunction {
+public class D_TO_L_Insn implements IInstrunction {
 
     @Override
     public byte getOpCode() {
-        return OpCodes.LD_GREATER_EQUAL;
+        return OpCodes.D_TO_L;
     }
 
     @Override
